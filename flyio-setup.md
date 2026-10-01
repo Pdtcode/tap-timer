@@ -55,14 +55,14 @@ fly launch --no-deploy
 ```
 
 - It detects the `Dockerfile`. Accept it.
-- Pick an app name. It becomes `https://<name>.fly.dev`, so e.g. `taptimer` (this app: `https://taptimer.fly.dev`).
+- Pick an app name. It becomes `https://<name>.fly.dev`, so e.g. `tap-timer` (this app: `https://tap-timer.fly.dev`).
 - Pick a primary region close to most players, e.g. `dfw` (Dallas, US Central; this app uses it), `iad` (US East) or `lhr` (London). Latency barely matters for this game since timing happens on the device.
 - Say **no** to Postgres, Redis, Tigris and other add-ons. The app needs none.
 
 It writes a `fly.toml`. Replace it with this (keep your app name and region):
 
 ```toml
-app = "taptimer"
+app = "tap-timer"
 primary_region = "dfw"
 
 [build]
@@ -71,7 +71,7 @@ primary_region = "dfw"
 [env]
   APP_ENV = "production"
   PORT = "8080"
-  BASE_URL = "https://taptimer.fly.dev"   # change to https://tap-timer.com later
+  BASE_URL = "https://tap-timer.fly.dev"   # change to https://tap-timer.com later
   APP_STORE_ID = "6802904982"
   # Optional public settings (can also go in secrets):
   # GA_MEASUREMENT_ID = "G-XXXXXXX"
@@ -129,10 +129,10 @@ Fly builds the image on its remote builder (no local Docker needed) and starts t
 ```sh
 fly status
 fly logs                                         # JSON logs, incl. app_store_click lines
-curl -I https://taptimer.fly.dev/               # 200, security headers, HSTS
-curl -I https://taptimer.fly.dev/healthz        # 200
-curl -s https://taptimer.fly.dev/robots.txt     # Sitemap: https://taptimer.fly.dev/sitemap.xml
-curl -sI "https://taptimer.fly.dev/get?src=header" | grep -i location   # App Store URL
+curl -I https://tap-timer.fly.dev/               # 200, security headers, HSTS
+curl -I https://tap-timer.fly.dev/healthz        # 200
+curl -s https://tap-timer.fly.dev/robots.txt     # Sitemap: https://tap-timer.fly.dev/sitemap.xml
+curl -sI "https://tap-timer.fly.dev/get?src=header" | grep -i location   # App Store URL
 fly open
 ```
 
@@ -152,7 +152,7 @@ fly open
    New apps usually have a shared IPv4 and a dedicated IPv6. That's enough for an HTTPS website. A dedicated IPv4 costs extra and is only needed for non-HTTP services. **(verify)**
 3. At your DNS provider:
    - `tap-timer.com`: an `A` record to the IPv4 and an `AAAA` record to the IPv6,
-   - `www.tap-timer.com`: a `CNAME` to `taptimer.fly.dev`.
+   - `www.tap-timer.com`: a `CNAME` to `tap-timer.fly.dev`.
 
    Follow whatever `fly certs show tap-timer.com` asks for. It may also want an `_acme-challenge` CNAME for validation.
 4. Wait for `fly certs check tap-timer.com` to show the certificate as issued.
@@ -164,7 +164,7 @@ fly open
    ```sh
    fly deploy
    ```
-   The app now 301-redirects `www.tap-timer.com` and `taptimer.fly.dev` to `https://tap-timer.com`. That's the canonical-host middleware, so only one copy of the site gets indexed.
+   The app now 301-redirects `www.tap-timer.com` and `tap-timer.fly.dev` to `https://tap-timer.com`. That's the canonical-host middleware, so only one copy of the site gets indexed.
 6. Do the README's **SEO checklist**: Search Console and Bing verification, submit the sitemap, Rich Results Test.
 
 **Cloudflare in front (optional):** if you proxy the domain through Cloudflare (orange cloud) for caching and DDoS protection, set SSL/TLS to **Full (strict)**. Fly certificate validation then needs the `_acme-challenge` DNS record, because Fly can't reach the domain directly through the proxy. **(verify)**
@@ -208,7 +208,7 @@ Every push to `main` then runs the tests and deploys only if they pass.
 | List releases | `fly releases` |
 | Roll back | `fly deploy --image <previous image from fly releases --image>` **(verify flag)** |
 | SSH into the machine | `fly ssh console` (the image is distroless, so there's no shell; use logs instead) |
-| Restart | `fly apps restart taptimer` |
+| Restart | `fly apps restart tap-timer` |
 | Usage and billing | Fly dashboard → Billing |
 
 ## 9. Scaling
