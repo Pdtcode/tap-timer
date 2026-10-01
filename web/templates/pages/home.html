@@ -16,10 +16,15 @@
           <button type="button" class="chip" role="radio" aria-checked="false" data-target="15">15s</button>
           <button type="button" class="chip" role="radio" aria-checked="false" data-target="30">30s</button>
         </div>
-        <button type="button" class="chip eye-toggle" data-stealth aria-pressed="true" aria-label="Stealth mode" title="Stealth on: the clock hides while it runs">
-          <svg class="eye eye--shut" viewBox="0 0 13 9" width="26" height="18" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="M1 0h2v1h-2zM2 1h2v1h-2zM5 1h4v1h-4zM3 2h2v1h-2zM9 2h2v1h-2zM1 3h1v1h-1zM4 3h2v1h-2zM7 3h1v1h-1zM11 3h1v1h-1zM0 4h1v1h-1zM5 4h2v1h-2zM12 4h1v1h-1zM1 5h1v1h-1zM6 5h2v1h-2zM11 5h1v1h-1zM2 6h2v1h-2zM7 6h2v1h-2zM10 6h1v1h-1zM4 7h3v1h-3zM8 7h2v1h-2zM9 8h2v1h-2z"/></svg>
-          <svg class="eye eye--open" viewBox="0 0 13 9" width="26" height="18" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="M4 1h5v1h-5zM2 2h2v1h-2zM9 2h2v1h-2zM1 3h1v1h-1zM5 3h3v1h-3zM11 3h1v1h-1zM0 4h1v1h-1zM5 4h3v1h-3zM12 4h1v1h-1zM1 5h1v1h-1zM5 5h3v1h-3zM11 5h1v1h-1zM2 6h2v1h-2zM9 6h2v1h-2zM4 7h5v1h-5z"/></svg>
-        </button>
+        <div class="targets__tools">
+          <button type="button" class="chip eye-toggle" data-stealth aria-pressed="true" aria-label="Stealth mode" title="Stealth on: the clock hides while it runs">
+            <svg class="eye eye--shut" viewBox="0 0 13 9" width="26" height="18" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="M1 0h2v1h-2zM2 1h2v1h-2zM5 1h4v1h-4zM3 2h2v1h-2zM9 2h2v1h-2zM1 3h1v1h-1zM4 3h2v1h-2zM7 3h1v1h-1zM11 3h1v1h-1zM0 4h1v1h-1zM5 4h2v1h-2zM12 4h1v1h-1zM1 5h1v1h-1zM6 5h2v1h-2zM11 5h1v1h-1zM2 6h2v1h-2zM7 6h2v1h-2zM10 6h1v1h-1zM4 7h3v1h-3zM8 7h2v1h-2zM9 8h2v1h-2z"/></svg>
+            <svg class="eye eye--open" viewBox="0 0 13 9" width="26" height="18" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="M4 1h5v1h-5zM2 2h2v1h-2zM9 2h2v1h-2zM1 3h1v1h-1zM5 3h3v1h-3zM11 3h1v1h-1zM0 4h1v1h-1zM5 4h3v1h-3zM12 4h1v1h-1zM1 5h1v1h-1zM5 5h3v1h-3zM11 5h1v1h-1zM2 6h2v1h-2zM9 6h2v1h-2zM4 7h5v1h-5z"/></svg>
+          </button>
+          <button type="button" class="chip stats-reset" data-reset-stats aria-label="Reset stats" title="Reset best, average and rounds">
+            <svg class="reset-icon" viewBox="0 0 9 8" width="20" height="18" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="M2 0h4v1h-4zM7 0h1v1h-1zM1 1h1v1h-1zM6 1h2v1h-2zM0 2h1v1h-1zM5 2h3v1h-3zM0 3h1v3h-1zM8 4h1v2h-1zM1 6h1v1h-1zM7 6h1v1h-1zM2 7h5v1h-5z"/></svg>
+          </button>
+        </div>
       </div>
 
       <button type="button" class="tapzone" data-tapzone data-state="idle" aria-describedby="solo-hint">
@@ -36,7 +41,7 @@
 
       <div class="nudge" data-nudge hidden>
         <p><strong>Playing with friends?</strong> The app adds Tournament brackets and Teams mode.</p>
-        <a class="app-badge" href="/get?src=solo_nudge" data-cta="solo_nudge"><img src="{{asset "img/app-store-badge.svg"}}" width="120" height="40" alt="Download on the App Store"></a>
+        <a class="get-app" href="/get?src=solo_nudge" data-cta="solo_nudge">Try it free</a>
       </div>
 
       <dl class="stats pixel" data-stats>
@@ -84,7 +89,7 @@
         </tbody>
       </table>
       <p class="compare__price">Free to download and try. Love it? Unlock everything with a one-time purchase. No subscription.</p>
-      <a class="app-badge" href="/get?src=compare" data-cta="compare"><img src="{{asset "img/app-store-badge.svg"}}" width="144" height="48" alt="Download on the App Store"></a>
+      <a class="get-app" href="/get?src=compare" data-cta="compare">Try it free on iPhone</a>
     </section>
 
     {{template "ad" (ad "footer")}}

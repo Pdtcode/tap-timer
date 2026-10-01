@@ -140,10 +140,14 @@ kbd {
 .site-nav a { color: var(--muted); text-decoration: none; padding: 6px 0; }
 .site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--text); }
 .site-nav a[aria-current="page"] { box-shadow: 0 2px 0 var(--seg-on); }
-.site-header .app-badge { margin-left: auto; }
+.site-header .get-app { margin-left: auto; }
 
-@media (max-width: 560px) {
-  .site-nav { order: 3; width: 100%; justify-content: space-between; gap: 8px; }
+/* Phones: one row (icon, nav, badge) so the game starts higher up. The
+   icon already reads "5.00 TAP TIMER", so the wordmark can go. */
+@media (max-width: 559px) {
+  .site-header__inner { flex-wrap: nowrap; gap: 18px; min-height: 60px; padding-top: 8px; padding-bottom: 8px; }
+  .site-header .wordmark { display: none; }
+  .site-nav { gap: 18px; font-size: 15px; }
 }
 
 .site-footer { border-top: 1px solid var(--border); margin-top: 64px; padding: 32px 0 24px; }
@@ -177,6 +181,29 @@ kbd {
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn--primary { background: var(--seg-on); border-color: transparent; color: var(--on-accent); box-shadow: 0 0 24px color-mix(in srgb, var(--seg-on) 30%, transparent); }
 .btn--primary:hover { color: var(--on-accent); filter: brightness(1.08); }
+/* Themed App Store link for secondary placements (header, nudge, compare),
+   so the official black badge appears once per page, in the promo card. */
+.get-app {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 2px solid color-mix(in srgb, var(--seg-on) 55%, transparent);
+  background: color-mix(in srgb, var(--seg-on) 8%, transparent);
+  color: var(--seg-on);
+  font: 8px/1 var(--pixel);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-shadow: 0 0 8px var(--seg-glow);
+  white-space: nowrap;
+}
+.get-app::after { content: "→"; font: 700 14px/1 var(--sans); }
+.get-app:hover { color: var(--on-accent); background: var(--seg-on); border-color: var(--seg-on); text-shadow: none; }
+.get-app:active { transform: translateY(1px); }
+@media (min-width: 560px) { .get-app { font-size: 10px; } }
+
 /* Apple's official badge: shown unmodified, at least 40px tall. */
 .app-badge { display: inline-block; line-height: 0; border-radius: 8px; transition: transform 0.08s ease; }
 .app-badge img { display: block; width: auto; }
@@ -227,8 +254,12 @@ kbd {
 /* ==========================================================================
    Cards & page layout
    ========================================================================== */
-.card { background: var(--surface); border-radius: var(--radius); padding: 16px; }
+/* Sections float on the page with no panel behind them. The only boxed
+   things are the game controls (chips, stats, buttons, leaderboard rows)
+   and the tap zone. */
+.card { background: none; padding: 0; }
 .page-hero { padding: 40px 0 24px; }
+@media (max-width: 559px) { .page-hero { padding: 20px 0 16px; } }
 .page-hero.center .lede { margin-inline: auto; }
 
 .home-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; }
@@ -260,8 +291,6 @@ kbd {
 .display--mini { --digit-h: 34px; }
 .display--404 { --digit-h: 72px; margin-bottom: 28px; }
 
-.game { padding: 20px; }
-@media (min-width: 560px) { .game { padding: 28px; } }
 .targets, .targets__goals { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; }
 
 .tapzone {
@@ -303,13 +332,34 @@ kbd {
   opacity: 0.6;
   animation: tap-glow 6s ease-in-out infinite;
 }
+/* Mouse spotlight: a soft glow that follows the cursor while hovering.
+   app.js sets --mx/--my; touch screens never show it. */
+.tapzone::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(180px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--seg-on) 18%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+@media (hover: hover) {
+  .tapzone:hover::before { opacity: 1; }
+}
 .tapzone > :not(.particles) { position: relative; }
-.particles { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+/* Each panel's view of the page's particle field: above the panel's background, under its content. */
+.particles { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; }
 .tapzone:active { transform: scale(0.997); }
 .tapzone[data-state="running"] { box-shadow: 0 0 36px color-mix(in srgb, var(--seg-on) 20%, transparent); }
 .tapzone[data-state="running"]::after { box-shadow: inset 0 0 72px color-mix(in srgb, var(--seg-on) 22%, transparent); animation-duration: 3.6s; }
 .tapzone[data-state="locked"]::after { animation: none; opacity: 0.3; }
 .tapzone .display { --digit-h: clamp(84px, 22vw, 150px); }
+/* Phones: a shorter zone and less space above it, so the goals, the zone and
+   the result after a round fit on one screen. */
+@media (max-width: 559px) {
+  .tapzone { min-height: clamp(220px, 34svh, 420px); margin-top: 20px; gap: 12px; }
+}
 /* Stealth mode: dimmed dashes, gently breathing, like the app. */
 .tapzone[data-state="running"] .display { opacity: 0.7; animation: breathe 2.4s ease-in-out infinite; }
 .tapzone[data-state="locked"] .display { opacity: 0.35; }
@@ -357,7 +407,7 @@ kbd {
 /* ==========================================================================
    Promo
    ========================================================================== */
-.promo { display: grid; gap: 24px; margin-top: 32px; padding: 24px; overflow: hidden; }
+.promo { display: grid; gap: 24px; margin-top: 56px; overflow: hidden; }
 .promo__brand { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
 .promo__brand img { width: 52px; height: 52px; border-radius: 12px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 6px 24px rgba(0, 0, 0, 0.5); }
 .promo__brand .eyebrow { margin: 0; }
@@ -399,7 +449,7 @@ kbd {
 .steps { margin-top: 48px; }
 .steps__list { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 12px; }
 @media (min-width: 640px) { .steps__list { grid-template-columns: repeat(3, 1fr); } }
-.steps__list li { background: var(--surface); border-radius: var(--radius); padding: 18px; }
+.steps__list li { padding: 4px 0; }
 .steps__list p { color: var(--muted); margin: 0; font-size: 15px; }
 .steps__num {
   display: inline-grid; place-items: center; width: 28px; height: 28px; margin-bottom: 12px;
@@ -409,15 +459,16 @@ kbd {
 .link-arrow { color: var(--seg-on); font-weight: 600; }
 .link-arrow::after { content: " →"; }
 
-/* Web vs app comparison: pixel column heads, green ticks, app column tinted. */
+/* Web vs app comparison: pixel column heads, green ticks, hairline rows. */
 .compare { margin-top: 48px; }
-.compare__table { width: 100%; border-collapse: separate; border-spacing: 0 6px; margin: 8px 0 20px; }
-.compare__table th, .compare__table td { padding: 12px 14px; background: var(--surface); }
+.compare__table { width: 100%; border-collapse: collapse; margin: 8px 0 20px; }
+.compare__table th, .compare__table td { padding: 12px 14px; }
+.compare__table tbody tr { border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent); }
 .compare__table thead th { background: none; padding-bottom: 4px; font: 8px/1.6 var(--pixel); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-align: center; }
 .compare__table thead th:last-child { color: var(--seg-on); }
-.compare__table tbody th { text-align: left; font-weight: 500; font-size: 15px; border-radius: 10px 0 0 10px; }
+.compare__table tbody th { text-align: left; font-weight: 500; font-size: 15px; padding-left: 0; }
 .compare__table td { width: 64px; text-align: center; line-height: 0; }
-.compare__table td:last-child { background: color-mix(in srgb, var(--seg-on) 10%, var(--surface)); border-radius: 0 10px 10px 0; }
+
 .compare__no { font: 12px/1 var(--pixel); color: var(--muted); }
 .compare__price { color: var(--muted); font-size: 15px; margin-bottom: 14px; }
 .check { width: 21px; height: 18px; color: var(--seg-on); filter: drop-shadow(0 0 4px var(--seg-glow)); vertical-align: middle; }
@@ -431,7 +482,7 @@ kbd {
 /* ==========================================================================
    Party
    ========================================================================== */
-.party { padding: 20px; }
+.party { padding: 0; }
 .party-playing .page-hero { display: none; }
 .party-playing .party { margin-top: 16px; }
 .screen--center { text-align: center; padding: 24px 0; }
@@ -588,13 +639,16 @@ kbd {
 .pixel.stats dd { font: var(--pixel-size)/1 var(--pixel); }
 
 
-/* Stealth toggle: pixel eye, slashed = clock hidden, open = clock visible. */
-.pixel .eye-toggle { color: var(--seg-on); padding: 0 12px; }
-.pixel .eye { display: block; height: 18px; width: auto; filter: drop-shadow(0 0 4px var(--seg-glow)); }
+/* Stealth toggle: pixel eye, slashed = clock hidden, open = clock visible.
+   Stats reset sits next to it, kept together so they wrap as a pair. */
+.targets__tools { display: flex; gap: 8px; }
+.pixel .targets__tools { gap: 6px; }
+.pixel .eye-toggle, .pixel .stats-reset { color: var(--seg-on); padding: 0 12px; }
+.pixel .eye, .pixel .reset-icon { display: block; height: 18px; width: auto; filter: drop-shadow(0 0 4px var(--seg-glow)); }
 .eye-toggle[aria-pressed="true"] .eye--open, .eye-toggle[aria-pressed="false"] .eye--shut { display: none; }
 @media (min-width: 560px) {
-  .pixel .eye { height: 27px; }
-  .pixel .eye-toggle { margin-left: 8px; }
+  .pixel .eye, .pixel .reset-icon { height: 27px; }
+  .pixel .targets__tools { margin-left: 8px; }
 }
 
 /* Solo result: the rating in green pixel type. Better tiers glow brighter;
@@ -651,6 +705,10 @@ kbd {
 .pixel .leader__diff { font: 8px/1.4 var(--pixel); }
 .pixel .result__actions { gap: 16px; margin-top: 12px; }
 .pixel .result__actions .btn { padding: 0 20px; }
+@media (max-width: 559px) {
+  .pixel .result__actions { flex-direction: column; gap: 12px; }
+  .pixel .result__actions .btn { width: 100%; }
+}
 
 /* Share panel: result-card preview beside pixel share buttons. */
 .share { margin-top: 28px; }

@@ -93,48 +93,66 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Ambient particles: slow drifting motes like the app's screen, plus a burst
-  // on every tap. Canvas sits behind the display; paused when off-screen.
-  // The same class also fills a fixed full-page layer behind all content.
+  // Ambient particles: one field of slow drifting motes covering the viewport,
+  // like the app's screen, plus a burst on every tap. It's drawn on a fixed
+  // full-page layer behind all content, and again inside each opaque panel
+  // (cards, tap zones) at the same screen positions, so a mote drifting out of
+  // the tap zone carries on across the page instead of vanishing at the edge.
   // ---------------------------------------------------------------------------
   class Particles {
     /** @param {{density?:number, max?:number}} opts  one mote per `density` px², capped at `max` */
-    constructor(host, { density = 8000, max = 46 } = {}) {
-      this.host = host;
+    constructor(host, { density = 14000, max = 80 } = {}) {
       this.density = density;
       this.max = max;
-      this.canvas = document.createElement('canvas');
-      this.canvas.className = 'particles';
-      this.canvas.setAttribute('aria-hidden', 'true');
-      host.prepend(this.canvas);
-      this.ctx = this.canvas.getContext('2d');
+      this.layers = [];
       this.ambient = [];
       this.sparks = [];
-      this.visible = true;
       this.raf = 0;
       this.w = 0;
       this.h = 0;
-      this.readColor();
-      new ResizeObserver(() => this.resize()).observe(host);
-      new IntersectionObserver(([e]) => { this.visible = e.isIntersecting; this.kick(); }).observe(host);
+      this.base = this.addLayer(host);
+      this.resize();
+      window.addEventListener('resize', () => this.resize());
+      // Paused (reduced motion), panels still need redrawing as the page scrolls under the fixed field.
+      window.addEventListener('scroll', () => { if (!this.running()) this.draw(); }, { passive: true });
       document.addEventListener('visibilitychange', () => this.kick());
-      document.addEventListener('tt:theme', () => { this.readColor(); this.draw(); });
+      document.addEventListener('tt:theme', () => { this.layers.forEach((l) => this.readColor(l)); this.draw(); });
     }
 
-    readColor() {
-      this.color = getComputedStyle(this.host).getPropertyValue('--seg-on').trim() || '#30fc60';
+    // Show the field inside `host`. The canvas sits under the host's content
+    // but above its background.
+    addLayer(host) {
+      const canvas = document.createElement('canvas');
+      canvas.className = 'particles';
+      canvas.setAttribute('aria-hidden', 'true');
+      if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+      host.style.isolation = 'isolate';
+      host.prepend(canvas);
+      const layer = { host, canvas, ctx: canvas.getContext('2d'), w: 0, h: 0 };
+      this.readColor(layer);
+      this.layers.push(layer);
+      new ResizeObserver(() => { this.sizeLayer(layer); this.draw(); }).observe(host);
+      return layer;
+    }
+
+    readColor(layer) {
+      layer.color = getComputedStyle(layer.host).getPropertyValue('--seg-on').trim() || '#30fc60';
+    }
+
+    sizeLayer(layer) {
+      const { width, height } = layer.host.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      layer.w = width;
+      layer.h = height;
+      layer.canvas.width = Math.round(width * dpr);
+      layer.canvas.height = Math.round(height * dpr);
+      layer.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     resize() {
-      const { width, height } = this.host.getBoundingClientRect();
-      if (!width || !height) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      this.w = width;
-      this.h = height;
-      this.canvas.width = Math.round(width * dpr);
-      this.canvas.height = Math.round(height * dpr);
-      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const target = Math.round(Math.min(this.max, Math.max(14, (width * height) / this.density)));
+      this.w = window.innerWidth;
+      this.h = window.innerHeight;
+      const target = Math.round(Math.min(this.max, (this.w * this.h) / this.density));
       while (this.ambient.length < target) this.ambient.push(this.mote(true));
       this.ambient.length = target;
       this.draw();
@@ -155,11 +173,11 @@
       };
     }
 
-    // Burst from (x, y) in host coordinates. Particles fly out, slow down and
-    // linger as extra ambient motes before fading.
+    // Burst from (x, y) in viewport coordinates. Particles fly out (past the
+    // tap zone's edge if they get that far), slow down and linger as extra
+    // ambient motes before fading.
     burst(x, y, count = 28) {
       if (reducedMotion || !this.w) return;
-      this.readColor(); // party turns tint the zone per player
       for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
         const speed = 40 + Math.random() * 240;
@@ -177,7 +195,7 @@
       this.kick();
     }
 
-    running() { return this.visible && !document.hidden && !reducedMotion; }
+    running() { return !document.hidden && !reducedMotion; }
 
     kick() {
       if (this.raf || !this.running()) return;
@@ -211,25 +229,38 @@
     }
 
     draw() {
-      const { ctx } = this;
-      ctx.clearRect(0, 0, this.w, this.h);
-      ctx.fillStyle = this.color;
-      for (const p of this.ambient) {
-        ctx.globalAlpha = p.a * (0.65 + 0.35 * Math.sin(p.tw));
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fill();
+      for (const l of this.layers) {
+        if (!l.w || !l.h) continue; // hidden (e.g. a Party screen not on show)
+        const r = l === this.base ? { left: 0, top: 0, bottom: this.h } : l.host.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > this.h) continue; // scrolled out of view
+        const { ctx } = l;
+        ctx.clearRect(0, 0, l.w, l.h);
+        ctx.fillStyle = l.color;
+        for (const p of this.ambient) {
+          const x = p.x - r.left;
+          const y = p.y - r.top;
+          if (x < -8 || y < -8 || x > l.w + 8 || y > l.h + 8) continue;
+          ctx.globalAlpha = p.a * (0.65 + 0.35 * Math.sin(p.tw));
+          ctx.beginPath();
+          ctx.arc(x, y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        for (const s of this.sparks) {
+          const x = s.x - r.left;
+          const y = s.y - r.top;
+          if (x < -8 || y < -8 || x > l.w + 8 || y > l.h + 8) continue;
+          const k = 1 - s.life / s.max;
+          ctx.globalAlpha = s.a * k * k;
+          ctx.beginPath();
+          ctx.arc(x, y, s.r * (0.5 + 0.5 * k), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
       }
-      for (const s of this.sparks) {
-        const k = 1 - s.life / s.max;
-        ctx.globalAlpha = s.a * k * k;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r * (0.5 + 0.5 * k), 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
     }
   }
+
+  let field; // the page's particle field, created at boot
 
   const fmt = (s) => Math.min(Math.max(s, 0), MAX_SECONDS).toFixed(2);
   const isExact = (diff) => Math.abs(diff) < 0.005;
@@ -262,17 +293,23 @@
       this.t0 = 0;
       this.lockUntil = 0;
       this.capTimer = 0;
-      this.fx = new Particles(zone);
+      field.addLayer(zone);
 
       zone.addEventListener('pointerdown', (e) => {
         if (!e.isPrimary || e.button !== 0) return;
         e.preventDefault(); // no text selection / double-tap zoom; also suppresses mouse-driven focus…
         zone.focus({ preventScroll: true, focusVisible: false }); // …so focus it ourselves (no ring for pointer users), keeping Space bound to the timer
         this.tap(eventTime(e)); // time first; effects after
-        const r = zone.getBoundingClientRect();
-        this.fx.burst(e.clientX - r.left, e.clientY - r.top);
+        field.burst(e.clientX, e.clientY);
       });
       zone.addEventListener('contextmenu', (e) => e.preventDefault());
+      // Position the hover spotlight (CSS ::before) under the mouse.
+      zone.addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse') return;
+        const r = zone.getBoundingClientRect();
+        zone.style.setProperty('--mx', `${e.clientX - r.left}px`);
+        zone.style.setProperty('--my', `${e.clientY - r.top}px`);
+      });
       document.addEventListener('keydown', (e) => {
         if (e.repeat || (e.code !== 'Space' && e.key !== 'Enter')) return;
         if (!isShown(zone)) return;
@@ -280,7 +317,8 @@
         if (a && a !== document.body && a !== zone) return; // let focused controls handle their own keys
         e.preventDefault();
         this.tap(eventTime(e));
-        this.fx.burst(this.fx.w / 2, this.fx.h / 2);
+        const r = zone.getBoundingClientRect();
+        field.burst(r.left + r.width / 2, r.top + r.height / 2);
       });
     }
 
@@ -452,19 +490,45 @@
     ctx.fillStyle = '#eef1f7';
     ctx.fillText(brand, x0 + iconW, 144);
 
+    // With a stats row (solo), everything above it moves up and the clock shrinks a little.
+    const y = r.stats
+      ? { headline: 272, clock: 560, clockH: 220, goal: 628, line: 672, cta: 872, url: 914, badge: 934 }
+      : { headline: 300, clock: 620, clockH: 250, goal: 700, line: 752, cta: 850, url: 900, badge: 930 };
     ctx.textAlign = 'center';
-    pixelText(ctx, r.headline.toUpperCase(), mid, 300, 64, GREEN, 920, true);
-    drawSevenSeg(ctx, fmt(r.time), mid, 620, 250);
-    pixelText(ctx, `GOAL ${fmt(r.target)}s`, mid, 700, 28, 'rgba(48, 252, 96, 0.75)', 920);
-    pixelText(ctx, r.line, mid, 752, 20, '#93a89b', 920);
-    pixelText(ctx, 'CAN YOU BEAT IT?', mid, 850, 36, '#ebf3ee', 920);
-    pixelText(ctx, `PLAY FREE AT ${location.host.toUpperCase()}`, mid, 900, 16, '#93a89b', 920);
+    pixelText(ctx, r.headline.toUpperCase(), mid, y.headline, 64, GREEN, 920, true);
+    drawSevenSeg(ctx, fmt(r.time), mid, y.clock, y.clockH);
+    pixelText(ctx, `GOAL ${fmt(r.target)}s`, mid, y.goal, 28, 'rgba(48, 252, 96, 0.75)', 920);
+    pixelText(ctx, r.line, mid, y.line, 20, '#93a89b', 920);
+    if (r.stats) drawStats(ctx, r.stats, mid, 704);
+    pixelText(ctx, 'CAN YOU BEAT IT?', mid, y.cta, 36, '#ebf3ee', 920);
+    pixelText(ctx, `PLAY FREE AT ${location.host.toUpperCase()}`, mid, y.url, 16, '#93a89b', 920);
     if (badge) {
       const bh = 80;
       const bw = (bh * 119.664) / 40; // badge aspect ratio
-      ctx.drawImage(badge, mid - bw / 2, 930, bw, bh);
+      ctx.drawImage(badge, mid - bw / 2, y.badge, bw, bh);
     }
     return canvas;
+  }
+
+  // The site's Best / Average / Rounds boxes, drawn as notched pixel frames.
+  function drawStats(ctx, stats, mid, top) {
+    const w = 240;
+    const h = 104;
+    const gap = 24;
+    const t = 4;
+    const cells = [['BEST', stats.best], ['AVERAGE', stats.avg], ['ROUNDS', stats.rounds]];
+    cells.forEach(([label, value], i) => {
+      const x = mid - (3 * w + 2 * gap) / 2 + i * (w + gap);
+      ctx.fillStyle = 'rgba(48, 252, 96, 0.06)';
+      ctx.fillRect(x, top, w, h);
+      ctx.fillStyle = 'rgba(48, 252, 96, 0.35)';
+      ctx.fillRect(x + t, top - t, w - 2 * t, t);
+      ctx.fillRect(x + t, top + h, w - 2 * t, t);
+      ctx.fillRect(x - t, top, t, h);
+      ctx.fillRect(x + w, top, t, h);
+      pixelText(ctx, label, x + w / 2, top + 38, 16, '#93a89b', w - 24);
+      pixelText(ctx, value, x + w / 2, top + 82, 28, '#ebf3ee', w - 24);
+    });
   }
 
   function createSharePanel(el) {
@@ -565,6 +629,7 @@
     const nudge = root.querySelector('[data-nudge]');
     const targetBtns = [...root.querySelectorAll('[data-target]')];
     const stealthBtn = root.querySelector('[data-stealth]');
+    const resetBtn = root.querySelector('[data-reset-stats]');
     const statEls = Object.fromEntries([...root.querySelectorAll('[data-stat]')].map((el) => [el.dataset.stat, el]));
 
     const fromUrl = Number(new URLSearchParams(location.search).get('t'));
@@ -572,9 +637,14 @@
     if (!TARGETS.includes(target)) target = 5;
     let last = null;
     let sessionRounds = 0;
+    // Stats cover this page view only: they reset on refresh or navigation.
+    const stats = {};
+    try { localStorage.removeItem('tt.stats'); } catch { /* ignore */ } // drop stats saved by older versions
     // Stealth on (default) hides the clock while it runs. Off is practice:
-    // the clock counts up, and rounds aren't saved to stats or shareable.
-    let stealth = store.get('tt.stealth', true) !== false;
+    // the clock counts up. Rounds still count toward stats but aren't shareable.
+    // Every visit starts in stealth; turning it off lasts for this page view only.
+    let stealth = true;
+    try { localStorage.removeItem('tt.stealth'); } catch { /* ignore */ } // drop the choice saved by older versions
     let tick = 0;
 
     const timer = new HiddenTimer(zone, {
@@ -584,7 +654,7 @@
         share.hide();
         zone.dataset.state = 'running';
         hint.textContent = 'Tap to stop';
-        [...targetBtns, stealthBtn].forEach((b) => (b.disabled = true));
+        [...targetBtns, stealthBtn, resetBtn].forEach((b) => (b.disabled = true));
         if (stealth) {
           display.set('-.--');
         } else {
@@ -599,9 +669,9 @@
         cancelAnimationFrame(tick);
         zone.dataset.state = 'done';
         hint.textContent = '';
-        [...targetBtns, stealthBtn].forEach((b) => (b.disabled = false));
+        [...targetBtns, stealthBtn, resetBtn].forEach((b) => (b.disabled = false));
         last = { elapsed, target, diff: elapsed - target, practice: !stealth };
-        if (!last.practice) recordStats(last);
+        recordStats(last);
         sessionRounds++;
         track('round_complete', { mode: 'solo', target, stealth, diff: Number(Math.abs(last.diff).toFixed(2)) });
         showResult(last); // show the final time immediately so the stop feels instant
@@ -617,13 +687,14 @@
         ? `Dead on ${fmt(r.target)}s!`
         : `${fmtDiff(r.diff)} ${r.diff > 0 ? 'over' : 'under'} the goal`;
       if (r.practice) {
-        deltaEl.textContent += ' · practice, not saved';
+        deltaEl.textContent += ' · practice (clock visible)';
         share.hide();
       } else {
         share.show({
           headline: label,
           time: r.elapsed,
           target: r.target,
+          stats: statText(r.target),
           line: isExact(r.diff) ? 'DEAD ON!' : `${fmtDiff(r.diff)} ${r.diff > 0 ? 'OVER' : 'UNDER'}`,
           text: isExact(r.diff)
             ? `⏱️ I stopped the hidden clock at exactly ${fmt(r.target)}s on Tap Timer. Can you?`
@@ -632,6 +703,10 @@
         });
       }
       resultEl.hidden = false;
+      // On short phone screens the rating can land just below the fold: nudge it into view.
+      if (resultEl.getBoundingClientRect().bottom > window.innerHeight) {
+        resultEl.scrollIntoView({ block: 'nearest', behavior: reducedMotion ? 'auto' : 'smooth' });
+      }
       hint.textContent = 'Tap to go again';
       renderStats();
       if (sessionRounds >= 3 && !session.get('tt.nudged')) {
@@ -641,27 +716,26 @@
     }
 
     function recordStats(r) {
-      const all = store.get('tt.stats', {});
-      const s = all[r.target] || { best: null, rounds: 0, total: 0 };
+      const s = stats[r.target] || (stats[r.target] = { best: null, rounds: 0, signed: 0 });
       const abs = Math.abs(r.diff);
       s.rounds += 1;
-      s.total += abs;
-      // Signed sum for the +/- average. Tracked separately because stats saved
-      // before it existed only have the unsigned total.
-      s.signed = (s.signed || 0) + r.diff;
-      s.signedRounds = (s.signedRounds || 0) + 1;
+      s.signed += r.diff; // signed sum for the +/- average
       if (s.best == null || abs < s.best) s.best = abs;
-      all[r.target] = s;
-      store.set('tt.stats', all);
+    }
+
+    // Best / Average / Rounds for a goal, as shown in the stat line and on the share card.
+    function statText(t) {
+      const s = stats[t];
+      return {
+        best: s ? s.best.toFixed(2) + 's' : '–',
+        avg: s ? fmtDiff(s.signed / s.rounds) : '–', // + late, - early
+        rounds: s ? String(s.rounds) : '0',
+      };
     }
 
     function renderStats() {
-      const s = store.get('tt.stats', {})[target];
-      statEls.best.textContent = s && s.best != null ? s.best.toFixed(2) + 's' : '–';
-      statEls.avg.textContent = !s || !s.rounds ? '–'
-        : s.signedRounds ? fmtDiff(s.signed / s.signedRounds) // + late, - early
-          : (s.total / s.rounds).toFixed(2) + 's';
-      statEls.rounds.textContent = s ? String(s.rounds) : '0';
+      const text = statText(target);
+      for (const key in text) statEls[key].textContent = text[key];
     }
 
     function setTarget(t) {
@@ -688,10 +762,15 @@
     }
     stealthBtn.addEventListener('click', () => {
       setStealth(!stealth);
-      store.set('tt.stealth', stealth);
       track('stealth_toggle', { stealth });
     });
     setStealth(stealth);
+
+    resetBtn.addEventListener('click', () => {
+      for (const t in stats) delete stats[t];
+      renderStats();
+      track('stats_reset', { target });
+    });
 
     setTarget(target);
   }
@@ -730,8 +809,9 @@
 
     function show(name) {
       for (const key in screens) screens[key].hidden = key !== name;
-      // Mid-game, drop the page intro so the tap zone and "Pass to…" button fit on a phone screen.
-      document.body.classList.toggle('party-playing', name === 'pass' || name === 'turn');
+      // Mid-game and at the reveal, drop the page intro so the tap zone, "Pass to…"
+      // button and leaderboard fit on a phone screen.
+      document.body.classList.toggle('party-playing', name !== 'setup');
       const top = root.getBoundingClientRect().top + window.scrollY - 12;
       if (window.scrollY > top) window.scrollTo({ top, behavior: reducedMotion ? 'auto' : 'smooth' });
     }
@@ -939,7 +1019,7 @@
   ambient.className = 'ambient';
   ambient.setAttribute('aria-hidden', 'true');
   document.body.prepend(ambient);
-  new Particles(ambient, { density: 14000, max: 80 });
+  field = new Particles(ambient);
 
   document.querySelectorAll('[data-mini-display]').forEach((el) => {
     const text = el.dataset.miniDisplay;

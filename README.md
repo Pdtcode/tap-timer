@@ -16,7 +16,7 @@ All configuration is via environment variables. See [`.env.example`](.env.exampl
 
 | Path | What it is |
 |---|---|
-| `/` | Solo game: pick a goal (3–30s), the clock hides, tap to stop. Tracks best/average per goal locally and has a "Challenge a friend" share. |
+| `/` | Solo game: pick a goal (3–30s), the clock hides, tap to stop. Shows best/average per goal for the current visit (resets on refresh) and has a "Challenge a friend" share. |
 | `/party` | Goal Challenge pass-the-phone mode for 2–8 players, with a hidden-until-reveal leaderboard. |
 | `/how-to-play` | Rules, modes and tips. This is SEO content, and AdSense needs substantive content like this. |
 | `/privacy` | Privacy policy covering AdSense cookies (required by AdSense). |
