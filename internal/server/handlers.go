@@ -28,6 +28,9 @@ type SiteData struct {
 	AdSenseClient string
 	GAID          string
 	ContactEmail  string
+
+	GoogleSiteVerification string
+	BingSiteVerification   string
 }
 
 // Pages listed in the sitemap.
@@ -48,6 +51,9 @@ func (s *Server) pageData(c *gin.Context, page, title, desc string) PageData {
 			AdSenseClient: s.cfg.AdSenseClient,
 			GAID:          s.cfg.GAMeasurementID,
 			ContactEmail:  s.cfg.ContactEmail,
+
+			GoogleSiteVerification: s.cfg.GoogleSiteVerification,
+			BingSiteVerification:   s.cfg.BingSiteVerification,
 		},
 	}
 }

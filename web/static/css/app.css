@@ -1,6 +1,12 @@
+@font-face {
+  font-family: "Press Start 2P"; /* SIL OFL 1.1, see fonts/OFL.txt */
+  src: url("../fonts/press-start-2p.woff2") format("woff2");
+  font-display: swap;
+}
+
 /* ==========================================================================
    Tokens
-   Default theme matches the iOS app: neon-green pill segments on a green-black
+   Matches the iOS app's classic theme: neon-green pill segments on a green-black
    screen, clean system type with wide-tracked uppercase labels.
    ========================================================================== */
 :root {
@@ -25,26 +31,11 @@
   --tier-bad: #ff6b6b;
 
   --radius: 16px;
+  --pixel: "Press Start 2P", ui-monospace, monospace;
   --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
   color-scheme: dark;
 }
-
-/* Alternate themes swap the display colour and use neutral (untinted) surfaces. */
-[data-theme="red"], [data-theme="amber"], [data-theme="ice"] {
-  --bg: #0b0c10;
-  --surface: #13151c;
-  --surface-2: #1b1e28;
-  --border: #282c39;
-  --screen-top: #0f1117;
-  --screen: #050608;
-  --text: #eceef3;
-  --muted: #9aa1b3;
-  --on-accent: #0b0c10;
-}
-[data-theme="red"]   { --seg-on: #ff4136; --seg-glow: rgba(255, 65, 54, 0.45); }
-[data-theme="amber"] { --seg-on: #ffb627; --seg-glow: rgba(255, 182, 39, 0.4); }
-[data-theme="ice"]   { --seg-on: #56ccff; --seg-glow: rgba(86, 204, 255, 0.4); }
 
 /* ==========================================================================
    Base
@@ -64,6 +55,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 main { flex: 1; }
+/* Full-page ambient particles sit behind everything. */
+.ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.site-header, main, .site-footer { position: relative; z-index: 1; }
 a { color: inherit; text-underline-offset: 3px; }
 a:hover { color: var(--seg-on); }
 h1, h2, h3 { line-height: 1.2; margin: 0 0 0.6em; letter-spacing: -0.01em; }
@@ -96,7 +90,7 @@ kbd {
 [hidden] { display: none !important; }
 
 /* Wide-tracked uppercase label, as used throughout the app ("GOAL 5.00s"). */
-.label-caps, .eyebrow, .label, .tapzone__goal, .tapzone__hint, .stats dt, .themes__label, .table th, .tag {
+.label-caps, .eyebrow, .label, .tapzone__goal, .tapzone__hint, .stats dt, .table th, .tag {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-weight: 600;
@@ -115,6 +109,9 @@ kbd {
 .center .eyebrow::after, .eyebrow.center::after { content: ""; width: 22px; height: 2px; border-radius: 2px; background: currentColor; box-shadow: 0 0 8px currentColor; }
 .accent { color: var(--seg-on); text-shadow: 0 0 24px var(--seg-glow); }
 .lede { color: var(--muted); font-size: 18px; max-width: 56ch; }
+/* The app's tagline, in the pixel font. */
+.tagline { font: 12px/1.6 var(--pixel); color: var(--seg-on); text-shadow: 0 0 12px var(--seg-glow); margin: 0; }
+@media (min-width: 560px) { .tagline { font-size: 16px; } }
 
 /* ==========================================================================
    Brand
@@ -143,7 +140,7 @@ kbd {
 .site-nav a { color: var(--muted); text-decoration: none; padding: 6px 0; }
 .site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--text); }
 .site-nav a[aria-current="page"] { box-shadow: 0 2px 0 var(--seg-on); }
-.site-header .btn--app { margin-left: auto; }
+.site-header .app-badge { margin-left: auto; }
 
 @media (max-width: 560px) {
   .site-nav { order: 3; width: 100%; justify-content: space-between; gap: 8px; }
@@ -180,8 +177,10 @@ kbd {
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn--primary { background: var(--seg-on); border-color: transparent; color: var(--on-accent); box-shadow: 0 0 24px color-mix(in srgb, var(--seg-on) 30%, transparent); }
 .btn--primary:hover { color: var(--on-accent); filter: brightness(1.08); }
-.btn--app { background: #fff; border-color: transparent; color: #000; }
-.btn--app:hover { color: #000; background: #e9e9ee; }
+/* Apple's official badge: shown unmodified, at least 40px tall. */
+.app-badge { display: inline-block; line-height: 0; border-radius: 8px; transition: transform 0.08s ease; }
+.app-badge img { display: block; width: auto; }
+.app-badge:active { transform: translateY(1px); }
 .btn--ghost { background: transparent; border-style: dashed; }
 .btn--sm { min-height: 36px; padding: 0 14px; font-size: 13px; }
 .btn--lg { min-height: 54px; font-size: 16px; }
@@ -228,7 +227,7 @@ kbd {
 /* ==========================================================================
    Cards & page layout
    ========================================================================== */
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.card { background: var(--surface); border-radius: var(--radius); padding: 16px; }
 .page-hero { padding: 40px 0 24px; }
 .page-hero.center .lede { margin-inline: auto; }
 
@@ -261,8 +260,9 @@ kbd {
 .display--mini { --digit-h: 34px; }
 .display--404 { --digit-h: 72px; margin-bottom: 28px; }
 
-.game { padding: 16px; }
-.targets { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.game { padding: 20px; }
+@media (min-width: 560px) { .game { padding: 28px; } }
+.targets, .targets__goals { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; }
 
 .tapzone {
   position: relative;
@@ -274,9 +274,9 @@ kbd {
   gap: 18px;
   width: 100%;
   min-height: clamp(280px, 46vh, 420px);
-  margin-top: 14px;
+  margin-top: 22px;
   padding: 32px 16px;
-  border: 1px solid color-mix(in srgb, var(--seg-on) 14%, var(--border));
+  border: 0;
   border-radius: 20px;
   background:
     radial-gradient(60% 45% at 50% 55%, color-mix(in srgb, var(--seg-on) 7%, transparent), transparent 75%),
@@ -289,17 +289,35 @@ kbd {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--seg-on) 12%, transparent);
+}
+/* Subtle green glow that slowly pulses. Only opacity animates (GPU-composited),
+   so it stays smooth; with reduced motion it rests at a steady mid glow. */
+.tapzone::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 0 56px color-mix(in srgb, var(--seg-on) 16%, transparent);
+  opacity: 0.6;
+  animation: tap-glow 6s ease-in-out infinite;
 }
 .tapzone > :not(.particles) { position: relative; }
 .particles { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.tapzone:hover { border-color: color-mix(in srgb, var(--seg-on) 40%, var(--border)); }
 .tapzone:active { transform: scale(0.997); }
-.tapzone[data-state="running"] { border-color: color-mix(in srgb, var(--seg-on) 70%, transparent); box-shadow: 0 0 32px color-mix(in srgb, var(--seg-on) 18%, transparent), inset 0 0 48px color-mix(in srgb, var(--seg-on) 10%, transparent); }
+.tapzone[data-state="running"] { box-shadow: 0 0 36px color-mix(in srgb, var(--seg-on) 20%, transparent); }
+.tapzone[data-state="running"]::after { box-shadow: inset 0 0 72px color-mix(in srgb, var(--seg-on) 22%, transparent); animation-duration: 3.6s; }
+.tapzone[data-state="locked"]::after { animation: none; opacity: 0.3; }
 .tapzone .display { --digit-h: clamp(84px, 22vw, 150px); }
 /* Stealth mode: dimmed dashes, gently breathing, like the app. */
 .tapzone[data-state="running"] .display { opacity: 0.7; animation: breathe 2.4s ease-in-out infinite; }
 .tapzone[data-state="locked"] .display { opacity: 0.35; }
+/* Stealth off (practice): the clock counts up at full brightness. */
+.tapzone[data-stealth="off"][data-state="running"] .display { opacity: 1; animation: none; }
+/* Quick flash when the clock stops, so the stop reads as instant. */
+.tapzone[data-state="done"] .display { animation: stop-flash 0.35s ease-out; }
+@keyframes stop-flash { from { filter: brightness(1.8) drop-shadow(0 0 calc(var(--digit-h) * 0.2) var(--seg-glow)); } }
 .tapzone__goal { text-transform: none; } /* keeps the app's lowercase "s" in "GOAL 5.00s" */
 .tapzone__goal, .tapzone__hint { font-size: 13px; line-height: 1.4; color: color-mix(in srgb, var(--seg-on) 68%, var(--bg)); }
 .tapzone__hint { min-height: 1.4em; }
@@ -309,6 +327,7 @@ kbd {
 @media (hover: none) { .keyhint { display: none; } }
 
 @keyframes breathe { 50% { opacity: 0.45; } }
+@keyframes tap-glow { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
 .result { text-align: center; margin-top: 20px; }
 .result__rating { font: 800 clamp(22px, 5vw, 30px)/1.2 var(--sans); letter-spacing: 0.08em; margin-bottom: 6px; }
@@ -334,16 +353,6 @@ kbd {
 .stats dt { font-size: 10px; color: var(--muted); margin-bottom: 6px; }
 .stats dd { margin: 0; font: 700 18px/1 var(--sans); font-variant-numeric: tabular-nums; }
 
-.themes { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin-top: 16px; font-size: 14px; }
-.themes__label { font-size: 10px; color: var(--muted); }
-.themes__swatches { display: flex; gap: 8px; }
-.swatch {
-  width: 28px; height: 28px; border-radius: 50%;
-  border: 2px solid var(--surface); background: var(--swatch);
-  box-shadow: 0 0 0 1px var(--border); cursor: pointer;
-}
-.swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--swatch), 0 0 12px var(--swatch); }
-.themes__more { margin-left: auto; color: var(--muted); font-size: 13px; }
 
 /* ==========================================================================
    Promo
@@ -390,7 +399,7 @@ kbd {
 .steps { margin-top: 48px; }
 .steps__list { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 12px; }
 @media (min-width: 640px) { .steps__list { grid-template-columns: repeat(3, 1fr); } }
-.steps__list li { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+.steps__list li { background: var(--surface); border-radius: var(--radius); padding: 18px; }
 .steps__list p { color: var(--muted); margin: 0; font-size: 15px; }
 .steps__num {
   display: inline-grid; place-items: center; width: 28px; height: 28px; margin-bottom: 12px;
@@ -400,10 +409,24 @@ kbd {
 .link-arrow { color: var(--seg-on); font-weight: 600; }
 .link-arrow::after { content: " →"; }
 
-.faq { margin-top: 40px; }
-.faq details { border-bottom: 1px solid var(--border); padding: 14px 0; }
-.faq summary { cursor: pointer; font-weight: 600; }
-.faq details p { color: var(--muted); margin: 10px 0 0; }
+/* Web vs app comparison: pixel column heads, green ticks, app column tinted. */
+.compare { margin-top: 48px; }
+.compare__table { width: 100%; border-collapse: separate; border-spacing: 0 6px; margin: 8px 0 20px; }
+.compare__table th, .compare__table td { padding: 12px 14px; background: var(--surface); }
+.compare__table thead th { background: none; padding-bottom: 4px; font: 8px/1.6 var(--pixel); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-align: center; }
+.compare__table thead th:last-child { color: var(--seg-on); }
+.compare__table tbody th { text-align: left; font-weight: 500; font-size: 15px; border-radius: 10px 0 0 10px; }
+.compare__table td { width: 64px; text-align: center; line-height: 0; }
+.compare__table td:last-child { background: color-mix(in srgb, var(--seg-on) 10%, var(--surface)); border-radius: 0 10px 10px 0; }
+.compare__no { font: 12px/1 var(--pixel); color: var(--muted); }
+.compare__price { color: var(--muted); font-size: 15px; margin-bottom: 14px; }
+.check { width: 21px; height: 18px; color: var(--seg-on); filter: drop-shadow(0 0 4px var(--seg-glow)); vertical-align: middle; }
+@media (max-width: 420px) {
+  .compare__table th, .compare__table td { padding: 10px; }
+  .compare__table td { width: 48px; }
+  .compare__table tbody th { font-size: 14px; }
+}
+
 
 /* ==========================================================================
    Party
@@ -475,6 +498,176 @@ kbd {
   color: var(--muted); font-size: 13px;
 }
 .ad--sidebar { min-height: 600px; }
+@media (max-width: 559px) { .ad { margin: 32px auto; } }
+/* With the sidebar showing, the home page's bottom unit would be a third ad;
+   hidden units are never requested (see initAds). */
+@media (min-width: 1100px) { .home-main .ad--footer { display: none; } }
+
+/* ==========================================================================
+   Pixel UI (settings: goal presets, stats, solo result, party setup and results)
+   Square corners, a notched 1-"pixel" frame drawn with hard box-shadows,
+   and a top/bottom bevel. Press Start 2P is drawn on an 8px grid, so sizes
+   stay at multiples of 4 (crisp at 1x for 8/16, at 2x for 12).
+   ========================================================================== */
+.pixel { --px: 3px; --pixel-size: 12px; font-family: var(--pixel); }
+@media (min-width: 560px) { .pixel { --pixel-size: 16px; } }
+
+.pixel .label, .pixel.stats dt {
+  font: 8px/1.8 var(--pixel);
+  letter-spacing: 0.06em;
+}
+
+.pixel .chip, .pixel .btn, .pixel .input, .pixel .select, .pixel.stats div, .pixel .leader {
+  --edge: var(--border);
+  --fill: var(--surface-2);
+  --hi: rgba(255, 255, 255, 0.08);
+  --lo: rgba(0, 0, 0, 0.4);
+  border: 0;
+  border-radius: 0;
+  background: var(--fill);
+  box-shadow:
+    0 calc(var(--px) * -1) 0 var(--edge),
+    0 var(--px) 0 var(--edge),
+    calc(var(--px) * -1) 0 0 var(--edge),
+    var(--px) 0 0 var(--edge),
+    inset 0 var(--px) 0 var(--hi),
+    inset 0 calc(var(--px) * -1) 0 var(--lo);
+  transition: none;
+}
+.pixel :focus-visible { outline: var(--px) solid var(--text); outline-offset: calc(var(--px) * 2); }
+
+/* Pressed: flip the bevel and sink by one pixel. */
+.pixel .chip:active:not(:disabled), .pixel .btn:active:not(:disabled) {
+  --hi: rgba(0, 0, 0, 0.4);
+  --lo: rgba(255, 255, 255, 0.08);
+  transform: translateY(var(--px));
+}
+
+.pixel .chip {
+  --edge: color-mix(in srgb, var(--seg-on) 30%, var(--border));
+  min-height: 40px;
+  margin: var(--px);
+  padding: 0 10px;
+  font: var(--pixel-size)/1 var(--pixel);
+}
+@media (max-width: 559px) {
+  .pixel .chip { min-width: 0; padding: 0 8px; }
+  .targets.pixel, .pixel .targets__goals { gap: 6px; }
+}
+.pixel .chip:hover:not(:disabled) { --edge: color-mix(in srgb, var(--seg-on) 70%, var(--border)); }
+.pixel .chip[aria-checked="true"] {
+  --fill: var(--seg-on);
+  --edge: color-mix(in srgb, var(--seg-on) 50%, #fff);
+  --hi: rgba(255, 255, 255, 0.45);
+  --lo: rgba(0, 0, 0, 0.3);
+}
+
+.pixel .btn { min-height: 48px; margin: var(--px) 0; font: var(--pixel-size)/1.2 var(--pixel); }
+.pixel .btn:hover { --edge: color-mix(in srgb, var(--seg-on) 60%, var(--border)); }
+.pixel .btn--primary { --fill: var(--seg-on); --edge: color-mix(in srgb, var(--seg-on) 50%, #fff); --hi: rgba(255, 255, 255, 0.45); --lo: rgba(0, 0, 0, 0.3); filter: none; }
+.pixel .btn--ghost { --fill: transparent; --hi: transparent; --lo: transparent; }
+.pixel .btn--lg { min-height: 56px; }
+
+.pixel .input, .pixel .select { --fill: var(--bg); --hi: rgba(0, 0, 0, 0.5); --lo: transparent; font: 16px var(--pixel); }
+.pixel .input:focus, .pixel .select:focus { --edge: var(--seg-on); outline: none; }
+.pixel .select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' shape-rendering='crispEdges' fill='%23fff' fill-opacity='.6'%3E%3Cpath d='M0 0h10v2H0zM2 2h6v2H2zM4 4h2v2H4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 10px 6px;
+}
+.pixel .players { gap: 14px; margin-top: 14px; }
+.pixel .player-dot { border-radius: 0; box-shadow: none; }
+.pixel .icon-btn { border-radius: 0; font-family: var(--pixel); }
+
+.pixel.stats div { --fill: color-mix(in srgb, var(--seg-on) 5%, var(--surface)); margin: var(--px); padding: 12px 4px; }
+.pixel.stats dd { font: var(--pixel-size)/1 var(--pixel); }
+
+
+/* Stealth toggle: pixel eye, slashed = clock hidden, open = clock visible. */
+.pixel .eye-toggle { color: var(--seg-on); padding: 0 12px; }
+.pixel .eye { display: block; height: 18px; width: auto; filter: drop-shadow(0 0 4px var(--seg-glow)); }
+.eye-toggle[aria-pressed="true"] .eye--open, .eye-toggle[aria-pressed="false"] .eye--shut { display: none; }
+@media (min-width: 560px) {
+  .pixel .eye { height: 27px; }
+  .pixel .eye-toggle { margin-left: 8px; }
+}
+
+/* Solo result: the rating in green pixel type. Better tiers glow brighter;
+   PERFECT! also blinks like the party winner. */
+.pixel .result__rating[data-tier] {
+  font: clamp(16px, 5vw, 24px)/1.6 var(--pixel);
+  letter-spacing: 0;
+  color: var(--seg-on);
+  text-shadow: var(--px) var(--px) 0 color-mix(in srgb, var(--seg-on) 25%, #000);
+  margin-bottom: 10px;
+}
+.pixel .result__rating[data-tier="perfect"],
+.pixel .result__rating[data-tier="great"] { text-shadow: var(--px) var(--px) 0 color-mix(in srgb, var(--seg-on) 25%, #000), 0 0 18px var(--seg-glow); }
+.pixel .result__rating[data-tier="perfect"] { animation: winner-blink 1.2s steps(2, jump-none) 3; }
+.pixel .result__rating[data-tier="ok"] { color: color-mix(in srgb, var(--seg-on) 75%, var(--muted)); }
+.pixel .result__rating[data-tier="bad"] { color: color-mix(in srgb, var(--seg-on) 45%, var(--muted)); }
+.pixel .result__delta { font: 8px/1.8 var(--pixel); letter-spacing: 0.06em; }
+@media (min-width: 560px) { .pixel .result__delta { font-size: 12px; } }
+
+/* Party results: arcade-style "PLAYER 1 WINS!" in green, pixel leaderboard. */
+.pixel .eyebrow { font: 8px/1.8 var(--pixel); letter-spacing: 0.06em; }
+.pixel .eyebrow::before, .pixel .eyebrow::after { border-radius: 0; height: var(--px); box-shadow: none; }
+.pixel .winner {
+  font: clamp(16px, 5vw, 24px)/1.6 var(--pixel);
+  color: var(--seg-on);
+  text-transform: uppercase;
+  text-shadow: var(--px) var(--px) 0 color-mix(in srgb, var(--seg-on) 25%, #000), 0 0 18px var(--seg-glow);
+  margin: 12px 0 24px;
+  animation: winner-blink 1.2s steps(2, jump-none) 3;
+}
+@keyframes winner-blink { 50% { opacity: 0.35; } }
+
+.pixel .leaderboard { gap: 14px; margin: 0 var(--px) 20px; }
+.pixel .leader {
+  --fill: var(--surface-2);
+  padding: 12px;
+  font: var(--pixel-size)/1.4 var(--pixel);
+}
+.pixel .leader--first {
+  --fill: color-mix(in srgb, var(--seg-on) 14%, var(--surface-2));
+  --edge: var(--seg-on);
+  color: var(--seg-on);
+}
+/* Rank badge in the player's colour, so turns stay easy to tell apart. */
+.pixel .leader__rank {
+  display: grid; place-items: center;
+  width: 24px; height: 24px;
+  background: var(--player);
+  color: var(--on-accent);
+  font: 8px/1 var(--pixel);
+}
+.pixel .leader--first .leader__rank { color: var(--on-accent); }
+.pixel .leader__name, .pixel .leader__time { font-weight: 400; }
+.pixel .leader__diff { font: 8px/1.4 var(--pixel); }
+.pixel .result__actions { gap: 16px; margin-top: 12px; }
+.pixel .result__actions .btn { padding: 0 20px; }
+
+/* Share panel: result-card preview beside pixel share buttons. */
+.share { margin-top: 28px; }
+.share__title { font: 8px/1.8 var(--pixel); letter-spacing: 0.06em; text-transform: uppercase; color: var(--seg-on); text-align: center; margin-bottom: 16px; }
+.share__body { display: grid; gap: 20px; justify-items: center; }
+.share__preview { display: block; width: min(240px, 70vw); line-height: 0; box-shadow: 0 0 24px color-mix(in srgb, var(--seg-on) 18%, transparent); }
+.share__preview img { width: 100%; height: auto; aspect-ratio: 1; background: var(--screen); }
+.share__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; width: 100%; max-width: 420px; padding: 0 var(--px); }
+.share__actions [data-share-native], .share__actions [data-share-save] { grid-column: 1 / -1; }
+.pixel .share__actions .btn { min-height: 44px; margin: var(--px) 0; padding: 0 8px; font-size: 8px; }
+.share__app { font: 14px/1.5 var(--sans); color: var(--muted); text-align: center; margin: 18px 0 0; }
+.share__app a { color: var(--seg-on); }
+@media (min-width: 560px) {
+  .share__body { grid-template-columns: 220px 1fr; align-items: center; justify-items: stretch; }
+  .share__preview { width: 220px; }
+  .pixel .share__actions .btn { font-size: 12px; }
+}
 
 /* ==========================================================================
    Motion preferences

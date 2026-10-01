@@ -32,6 +32,10 @@ type Config struct {
 
 	GAMeasurementID string // optional GA4 id, e.g. G-XXXXXXX
 	ContactEmail    string // shown on the privacy page
+
+	// Optional search-engine ownership tokens, rendered as <meta> verification tags.
+	GoogleSiteVerification string
+	BingSiteVerification   string
 }
 
 func Load() (Config, error) {
@@ -45,6 +49,9 @@ func Load() (Config, error) {
 		AdSlots:               map[string]string{},
 		GAMeasurementID:       os.Getenv("GA_MEASUREMENT_ID"),
 		ContactEmail:          os.Getenv("CONTACT_EMAIL"),
+
+		GoogleSiteVerification: os.Getenv("GOOGLE_SITE_VERIFICATION"),
+		BingSiteVerification:   os.Getenv("BING_SITE_VERIFICATION"),
 	}
 	for _, name := range AdSlotNames {
 		c.AdSlots[name] = os.Getenv("ADSENSE_SLOT_" + strings.ToUpper(name))
@@ -53,8 +60,14 @@ func Load() (Config, error) {
 }
 
 func (c Config) validate() error {
-	if u, err := url.Parse(c.BaseURL); err != nil || u.Scheme == "" || u.Host == "" {
+	u, err := url.Parse(c.BaseURL)
+	if err != nil || u.Scheme == "" || u.Host == "" {
 		return fmt.Errorf("BASE_URL must be an absolute URL, got %q", c.BaseURL)
+	}
+	// Canonical URLs, the sitemap and the host redirect all come from BASE_URL,
+	// so a localhost or http value in production would get indexed wrongly.
+	if c.IsProduction() && (u.Scheme != "https" || u.Hostname() == "localhost" || u.Hostname() == "127.0.0.1") {
+		return fmt.Errorf("in production BASE_URL must be the public https origin, got %q", c.BaseURL)
 	}
 	if !digitsRe.MatchString(c.AppStoreID) {
 		return fmt.Errorf("APP_STORE_ID must be numeric, got %q", c.AppStoreID)

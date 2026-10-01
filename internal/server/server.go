@@ -8,7 +8,9 @@ import (
 	"html/template"
 	"io/fs"
 	"log/slog"
+	"mime"
 	"net/http"
+	"net/url"
 	"path"
 
 	"github.com/gin-gonic/gin"
@@ -52,7 +54,14 @@ func New(cfg config.Config) (*gin.Engine, error) {
 		return nil, err
 	}
 	r.Use(gin.Recovery(), gin.LoggerWithConfig(gin.LoggerConfig{SkipPaths: []string{"/healthz"}}), s.securityHeaders())
+	if cfg.IsProduction() {
+		r.Use(s.canonicalHost())
+	}
 
+	// Not in Go's built-in table, and nosniff means browsers need the real type.
+	if err = mime.AddExtensionType(".woff2", "font/woff2"); err != nil {
+		return nil, err
+	}
 	staticFS, err := fs.Sub(web.FS, "static")
 	if err != nil {
 		return nil, err
@@ -61,23 +70,29 @@ func New(cfg config.Config) (*gin.Engine, error) {
 	static := r.Group("/static", cacheControl("public, max-age=31536000, immutable"))
 	static.StaticFS("/", http.FS(filesOnly{staticFS}))
 
-	r.GET("/", s.page("home",
+	// Pages answer HEAD as well as GET: some crawlers and link checkers probe with HEAD.
+	// (net/http drops the body for HEAD responses.)
+	getHead := func(p string, h gin.HandlerFunc) {
+		r.GET(p, h)
+		r.HEAD(p, h)
+	}
+	getHead("/", s.page("home",
 		"Tap Timer — Can you stop the clock at exactly 5 seconds?",
 		"A free online timing game. The clock is hidden, so tap when you think 5 seconds have passed. Play solo or pass the phone with friends."))
-	r.GET("/party", s.page("party",
+	getHead("/party", s.page("party",
 		"Party Mode — The pass-the-phone timer game | Tap Timer",
 		"Pass one phone around your group. Everyone tries to hit the same goal time with the clock hidden. Closest wins."))
-	r.GET("/how-to-play", s.page("how-to-play",
+	getHead("/how-to-play", s.page("how-to-play",
 		"How to Play Tap Timer — Rules, Modes & Tips",
 		"Rules for Tap Timer's Goal Challenge, Tournament and Teams modes, plus tips for getting better at judging time."))
-	r.GET("/privacy", s.page("privacy",
+	getHead("/privacy", s.page("privacy",
 		"Privacy Policy | Tap Timer",
 		"How the Tap Timer website uses cookies, advertising and analytics."))
 
 	r.GET("/get", s.getApp)
-	r.GET("/ads.txt", s.adsTxt)
-	r.GET("/robots.txt", s.robotsTxt)
-	r.GET("/sitemap.xml", s.sitemap)
+	getHead("/ads.txt", s.adsTxt)
+	getHead("/robots.txt", s.robotsTxt)
+	getHead("/sitemap.xml", s.sitemap)
 	// Browsers and iOS request these at the root regardless of <link> tags.
 	r.GET("/favicon.ico", staticFile("static/img/favicon-32.png", "image/png"))
 	r.GET("/apple-touch-icon.png", staticFile("static/img/apple-touch-icon.png", "image/png"))
@@ -166,6 +181,22 @@ func (s *Server) securityHeaders() gin.HandlerFunc {
 			h.Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 		}
 		c.Next()
+	}
+}
+
+// canonicalHost 301-redirects requests on any other host (www., the hosting
+// platform's default domain, a bare IP) to BASE_URL, so search engines only
+// ever see one copy of the site. Health checks are exempt because platforms
+// probe them on internal hostnames.
+func (s *Server) canonicalHost() gin.HandlerFunc {
+	base, _ := url.Parse(s.cfg.BaseURL) // validated at startup
+	return func(c *gin.Context) {
+		if c.Request.Host == base.Host || c.Request.URL.Path == "/healthz" {
+			c.Next()
+			return
+		}
+		c.Redirect(http.StatusMovedPermanently, s.cfg.BaseURL+c.Request.URL.RequestURI())
+		c.Abort()
 	}
 }
 

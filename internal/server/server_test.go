@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -33,9 +34,16 @@ func newTestRouter(t *testing.T, cfg config.Config) *gin.Engine {
 	return r
 }
 
+// get requests target on the canonical host (testConfig's BASE_URL).
 func get(r http.Handler, target string) *httptest.ResponseRecorder {
+	return do(r, http.MethodGet, "taptimer.test", target)
+}
+
+func do(r http.Handler, method, host, target string) *httptest.ResponseRecorder {
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, target, nil))
+	req := httptest.NewRequest(method, target, nil)
+	req.Host = host
+	r.ServeHTTP(w, req)
 	return w
 }
 
@@ -202,5 +210,80 @@ func TestSitemapAndRobots(t *testing.T) {
 	}
 	if body := get(r, "/robots.txt").Body.String(); !strings.Contains(body, "Sitemap: https://taptimer.test/sitemap.xml") {
 		t.Errorf("robots: %s", body)
+	}
+}
+
+func TestHeadRequests(t *testing.T) {
+	r := newTestRouter(t, testConfig())
+	for _, p := range []string{"/", "/party", "/how-to-play", "/privacy", "/robots.txt", "/sitemap.xml"} {
+		if w := do(r, http.MethodHead, "taptimer.test", p); w.Code != http.StatusOK {
+			t.Errorf("HEAD %s: status %d", p, w.Code)
+		}
+	}
+}
+
+func TestCanonicalHostRedirect(t *testing.T) {
+	cfg := testConfig()
+	cfg.Env = "production"
+	r := newTestRouter(t, cfg)
+
+	w := do(r, http.MethodGet, "www.taptimer.test", "/party?x=1")
+	if w.Code != http.StatusMovedPermanently || w.Header().Get("Location") != "https://taptimer.test/party?x=1" {
+		t.Errorf("other host: status %d, location %q", w.Code, w.Header().Get("Location"))
+	}
+	if w := do(r, http.MethodGet, "10.0.0.5:8080", "/healthz"); w.Code != http.StatusOK {
+		t.Errorf("healthz on internal host: status %d, want 200", w.Code)
+	}
+	if w := get(r, "/party"); w.Code != http.StatusOK {
+		t.Errorf("canonical host: status %d", w.Code)
+	}
+
+	// Development serves any host (localhost, LAN IPs for phone testing).
+	if w := do(newTestRouter(t, testConfig()), http.MethodGet, "192.168.1.20:8080", "/"); w.Code != http.StatusOK {
+		t.Errorf("dev on another host: status %d, want 200", w.Code)
+	}
+}
+
+func TestSEOHead(t *testing.T) {
+	cfg := testConfig()
+	cfg.GoogleSiteVerification = "g-token"
+	cfg.BingSiteVerification = "b-token"
+	r := newTestRouter(t, cfg)
+	body := get(r, "/").Body.String()
+	for _, want := range []string{
+		`<meta name="google-site-verification" content="g-token">`,
+		`<meta name="msvalidate.01" content="b-token">`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("body missing %q", want)
+		}
+	}
+
+	m := regexp.MustCompile(`(?s)<script type="application/ld\+json">(.*?)</script>`).FindStringSubmatch(body)
+	if m == nil {
+		t.Fatal("JSON-LD block not found")
+	}
+	var ld struct {
+		Graph []struct {
+			Type string `json:"@type"`
+			URL  string `json:"url"`
+		} `json:"@graph"`
+	}
+	if err := json.Unmarshal([]byte(m[1]), &ld); err != nil {
+		t.Fatalf("JSON-LD is not valid JSON: %v\n%s", err, m[1])
+	}
+	var types []string
+	for _, n := range ld.Graph {
+		types = append(types, n.Type)
+		if n.URL != "https://taptimer.test/" {
+			t.Errorf("%s url = %q", n.Type, n.URL)
+		}
+	}
+	if strings.Join(types, ",") != "WebSite,WebApplication,MobileApplication" {
+		t.Errorf("JSON-LD types = %v", types)
+	}
+
+	if body := get(r, "/nope").Body.String(); !strings.Contains(body, `<meta name="robots" content="noindex">`) || strings.Contains(body, `rel="canonical"`) {
+		t.Error("404 should be noindex with no canonical")
 	}
 }

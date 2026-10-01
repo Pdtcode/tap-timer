@@ -1,0 +1,21 @@
+{{/* Share-your-result panel. Usage: {{template "share" "solo"}} — the string tags analytics and /get?src=share_<mode>.
+     app.js fills it after a round: a generated result card (with the App Store badge) plus share targets. */}}
+{{define "share"}}
+<section class="share pixel" data-share-panel data-mode="{{.}}" data-icon="{{asset "img/icon-128.png"}}" data-badge="{{asset "img/app-store-badge.svg"}}" aria-labelledby="share-title-{{.}}" hidden>
+  <p class="share__title" id="share-title-{{.}}">Share your result</p>
+  <div class="share__body">
+    <a class="share__preview" data-share-preview download="tap-timer-result.png" aria-label="Save result image">
+      <img data-share-img alt="" width="1080" height="1080">
+    </a>
+    <div class="share__actions">
+      <button type="button" class="btn btn--primary" data-share-native hidden>Share</button>
+      <a class="btn" data-share-to="x" target="_blank" rel="noopener">Post on X</a>
+      <a class="btn" data-share-to="facebook" target="_blank" rel="noopener">Facebook</a>
+      <a class="btn" data-share-to="whatsapp" target="_blank" rel="noopener">WhatsApp</a>
+      <button type="button" class="btn" data-share-copy>Copy link</button>
+      <a class="btn" data-share-save download="tap-timer-result.png">Save image</a>
+    </div>
+  </div>
+  <p class="share__app">Friends on iPhone or iPad? <a href="/get?src=share_{{.}}" data-cta="share_{{.}}">Get Tap Timer on the App Store</a> for Tournament and Teams.</p>
+</section>
+{{end}}
