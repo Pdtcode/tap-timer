@@ -11,7 +11,7 @@ primary_region = 'dfw'
 [env]
   APP_ENV = 'production'
   PORT = '8080'
-  BASE_URL = 'https://tap-timer.fly.dev' # change to https://tap-timer.com once the domain is set up
+  BASE_URL = 'https://tap-timer.com'
   APP_STORE_ID = '6802904982'
 
 [http_service]

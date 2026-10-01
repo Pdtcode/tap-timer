@@ -812,7 +812,8 @@
       // Mid-game and at the reveal, drop the page intro so the tap zone, "Pass to…"
       // button and leaderboard fit on a phone screen.
       document.body.classList.toggle('party-playing', name !== 'setup');
-      const top = root.getBoundingClientRect().top + window.scrollY - 12;
+      const header = document.querySelector('.site-header')?.offsetHeight || 0; // sticky, so it covers the top
+      const top = root.getBoundingClientRect().top + window.scrollY - header - 12;
       if (window.scrollY > top) window.scrollTo({ top, behavior: reducedMotion ? 'auto' : 'smooth' });
     }
 
