@@ -274,7 +274,7 @@ kbd {
   gap: 18px;
   width: 100%;
   min-height: clamp(280px, 46vh, 420px);
-  margin-top: 22px;
+  margin-top: 32px;
   padding: 32px 16px;
   border: 0;
   border-radius: 20px;
@@ -348,7 +348,7 @@ kbd {
 }
 .nudge p { margin: 0; font-size: 15px; }
 
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0 0; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 32px 0 0; }
 .stats div { background: color-mix(in srgb, var(--seg-on) 5%, var(--surface)); border: 1px solid var(--border); border-radius: 12px; padding: 12px 8px; text-align: center; }
 .stats dt { font-size: 10px; color: var(--muted); margin-bottom: 6px; }
 .stats dd { margin: 0; font: 700 18px/1 var(--sans); font-variant-numeric: tabular-nums; }
