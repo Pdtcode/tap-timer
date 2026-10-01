@@ -93,44 +93,66 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Ambient particles: slow drifting motes like the app's screen, plus a burst
-  // on every tap. Canvas sits behind the display; paused when off-screen.
+  // Ambient particles: one field of slow drifting motes covering the viewport,
+  // like the app's screen, plus a burst on every tap. It's drawn on a fixed
+  // full-page layer behind all content, and again inside each opaque panel
+  // (cards, tap zones) at the same screen positions, so a mote drifting out of
+  // the tap zone carries on across the page instead of vanishing at the edge.
   // ---------------------------------------------------------------------------
   class Particles {
-    constructor(host) {
-      this.host = host;
-      this.canvas = document.createElement('canvas');
-      this.canvas.className = 'particles';
-      this.canvas.setAttribute('aria-hidden', 'true');
-      host.prepend(this.canvas);
-      this.ctx = this.canvas.getContext('2d');
+    /** @param {{density?:number, max?:number}} opts  one mote per `density` px², capped at `max` */
+    constructor(host, { density = 14000, max = 80 } = {}) {
+      this.density = density;
+      this.max = max;
+      this.layers = [];
       this.ambient = [];
       this.sparks = [];
-      this.visible = true;
       this.raf = 0;
       this.w = 0;
       this.h = 0;
-      this.readColor();
-      new ResizeObserver(() => this.resize()).observe(host);
-      new IntersectionObserver(([e]) => { this.visible = e.isIntersecting; this.kick(); }).observe(host);
+      this.base = this.addLayer(host);
+      this.resize();
+      window.addEventListener('resize', () => this.resize());
+      // Paused (reduced motion), panels still need redrawing as the page scrolls under the fixed field.
+      window.addEventListener('scroll', () => { if (!this.running()) this.draw(); }, { passive: true });
       document.addEventListener('visibilitychange', () => this.kick());
-      document.addEventListener('tt:theme', () => { this.readColor(); this.draw(); });
+      document.addEventListener('tt:theme', () => { this.layers.forEach((l) => this.readColor(l)); this.draw(); });
     }
 
-    readColor() {
-      this.color = getComputedStyle(this.host).getPropertyValue('--seg-on').trim() || '#30fc60';
+    // Show the field inside `host`. The canvas sits under the host's content
+    // but above its background.
+    addLayer(host) {
+      const canvas = document.createElement('canvas');
+      canvas.className = 'particles';
+      canvas.setAttribute('aria-hidden', 'true');
+      if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+      host.style.isolation = 'isolate';
+      host.prepend(canvas);
+      const layer = { host, canvas, ctx: canvas.getContext('2d'), w: 0, h: 0 };
+      this.readColor(layer);
+      this.layers.push(layer);
+      new ResizeObserver(() => { this.sizeLayer(layer); this.draw(); }).observe(host);
+      return layer;
+    }
+
+    readColor(layer) {
+      layer.color = getComputedStyle(layer.host).getPropertyValue('--seg-on').trim() || '#30fc60';
+    }
+
+    sizeLayer(layer) {
+      const { width, height } = layer.host.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      layer.w = width;
+      layer.h = height;
+      layer.canvas.width = Math.round(width * dpr);
+      layer.canvas.height = Math.round(height * dpr);
+      layer.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     resize() {
-      const { width, height } = this.host.getBoundingClientRect();
-      if (!width || !height) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      this.w = width;
-      this.h = height;
-      this.canvas.width = Math.round(width * dpr);
-      this.canvas.height = Math.round(height * dpr);
-      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const target = Math.round(Math.min(46, Math.max(14, (width * height) / 8000)));
+      this.w = window.innerWidth;
+      this.h = window.innerHeight;
+      const target = Math.round(Math.min(this.max, (this.w * this.h) / this.density));
       while (this.ambient.length < target) this.ambient.push(this.mote(true));
       this.ambient.length = target;
       this.draw();
@@ -151,11 +173,11 @@
       };
     }
 
-    // Burst from (x, y) in host coordinates. Particles fly out, slow down and
-    // linger as extra ambient motes before fading.
+    // Burst from (x, y) in viewport coordinates. Particles fly out (past the
+    // tap zone's edge if they get that far), slow down and linger as extra
+    // ambient motes before fading.
     burst(x, y, count = 28) {
       if (reducedMotion || !this.w) return;
-      this.readColor(); // party turns tint the zone per player
       for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
         const speed = 40 + Math.random() * 240;
@@ -173,7 +195,7 @@
       this.kick();
     }
 
-    running() { return this.visible && !document.hidden && !reducedMotion; }
+    running() { return !document.hidden && !reducedMotion; }
 
     kick() {
       if (this.raf || !this.running()) return;
@@ -207,29 +229,42 @@
     }
 
     draw() {
-      const { ctx } = this;
-      ctx.clearRect(0, 0, this.w, this.h);
-      ctx.fillStyle = this.color;
-      for (const p of this.ambient) {
-        ctx.globalAlpha = p.a * (0.65 + 0.35 * Math.sin(p.tw));
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fill();
+      for (const l of this.layers) {
+        if (!l.w || !l.h) continue; // hidden (e.g. a Party screen not on show)
+        const r = l === this.base ? { left: 0, top: 0, bottom: this.h } : l.host.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > this.h) continue; // scrolled out of view
+        const { ctx } = l;
+        ctx.clearRect(0, 0, l.w, l.h);
+        ctx.fillStyle = l.color;
+        for (const p of this.ambient) {
+          const x = p.x - r.left;
+          const y = p.y - r.top;
+          if (x < -8 || y < -8 || x > l.w + 8 || y > l.h + 8) continue;
+          ctx.globalAlpha = p.a * (0.65 + 0.35 * Math.sin(p.tw));
+          ctx.beginPath();
+          ctx.arc(x, y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        for (const s of this.sparks) {
+          const x = s.x - r.left;
+          const y = s.y - r.top;
+          if (x < -8 || y < -8 || x > l.w + 8 || y > l.h + 8) continue;
+          const k = 1 - s.life / s.max;
+          ctx.globalAlpha = s.a * k * k;
+          ctx.beginPath();
+          ctx.arc(x, y, s.r * (0.5 + 0.5 * k), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
       }
-      for (const s of this.sparks) {
-        const k = 1 - s.life / s.max;
-        ctx.globalAlpha = s.a * k * k;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r * (0.5 + 0.5 * k), 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
     }
   }
 
+  let field; // the page's particle field, created at boot
+
   const fmt = (s) => Math.min(Math.max(s, 0), MAX_SECONDS).toFixed(2);
   const isExact = (diff) => Math.abs(diff) < 0.005;
-  const fmtDiff = (diff) => (isExact(diff) ? '±' : diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2) + 's';
+  const fmtDiff = (diff) => (isExact(diff) ? '±' : diff > 0 ? '+' : '-') + Math.abs(diff).toFixed(2) + 's';
 
   const RATINGS = [
     [0.005, 'PERFECT!', 'perfect'],
@@ -258,17 +293,23 @@
       this.t0 = 0;
       this.lockUntil = 0;
       this.capTimer = 0;
-      this.fx = new Particles(zone);
+      field.addLayer(zone);
 
       zone.addEventListener('pointerdown', (e) => {
         if (!e.isPrimary || e.button !== 0) return;
         e.preventDefault(); // no text selection / double-tap zoom; also suppresses mouse-driven focus…
         zone.focus({ preventScroll: true, focusVisible: false }); // …so focus it ourselves (no ring for pointer users), keeping Space bound to the timer
         this.tap(eventTime(e)); // time first; effects after
-        const r = zone.getBoundingClientRect();
-        this.fx.burst(e.clientX - r.left, e.clientY - r.top);
+        field.burst(e.clientX, e.clientY);
       });
       zone.addEventListener('contextmenu', (e) => e.preventDefault());
+      // Position the hover spotlight (CSS ::before) under the mouse.
+      zone.addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse') return;
+        const r = zone.getBoundingClientRect();
+        zone.style.setProperty('--mx', `${e.clientX - r.left}px`);
+        zone.style.setProperty('--my', `${e.clientY - r.top}px`);
+      });
       document.addEventListener('keydown', (e) => {
         if (e.repeat || (e.code !== 'Space' && e.key !== 'Enter')) return;
         if (!isShown(zone)) return;
@@ -276,7 +317,8 @@
         if (a && a !== document.body && a !== zone) return; // let focused controls handle their own keys
         e.preventDefault();
         this.tap(eventTime(e));
-        this.fx.burst(this.fx.w / 2, this.fx.h / 2);
+        const r = zone.getBoundingClientRect();
+        field.burst(r.left + r.width / 2, r.top + r.height / 2);
       });
     }
 
@@ -328,6 +370,251 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Share panel: draws a 1080×1080 result card (seven-segment time, pixel type,
+  // App Store badge) and wires native share, social links, copy and save.
+  // Every shared message carries the site link and the /get App Store link.
+  // ---------------------------------------------------------------------------
+  const CARD = 1080;
+  const GREEN = '#30fc60';
+  const PIXEL_FONT = '"Press Start 2P", monospace';
+
+  const loadImage = (src) => new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null); // the card still renders without it
+    img.src = src;
+  });
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x, y, w, h, r);
+    else ctx.rect(x, y, w, h);
+    ctx.fill();
+  }
+
+  // Centred pixel text, shrunk until it fits. `hero` adds a hard drop shadow and glow.
+  function pixelText(ctx, text, x, y, size, color, maxWidth, hero = false) {
+    ctx.font = `${size}px ${PIXEL_FONT}`;
+    while (size > 12 && ctx.measureText(text).width > maxWidth) {
+      size -= 4;
+      ctx.font = `${size}px ${PIXEL_FONT}`;
+    }
+    if (hero) {
+      ctx.fillStyle = '#0b4a1c';
+      ctx.fillText(text, x + size / 10, y + size / 10);
+      ctx.shadowColor = 'rgba(48, 252, 96, 0.55)';
+      ctx.shadowBlur = 28;
+    }
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+    ctx.shadowBlur = 0;
+  }
+
+  // Same geometry as createDisplay(): 64×108 digit cells, a 22-wide dot cell
+  // that tucks into its neighbours, dim ghost segments behind lit ones.
+  function drawSevenSeg(ctx, text, cx, bottom, h) {
+    const k = h / 108;
+    const gap = h * 0.09;
+    const overlap = h * 0.07;
+    const cells = [...text].map((ch) => (ch === '.' ? null : GLYPHS[ch] ?? ''));
+    let width = 0;
+    cells.forEach((g, i) => { width += (g === null ? 22 * k - 2 * overlap : 64 * k) + (i ? gap : 0); });
+    let x = cx - width / 2;
+    const top = bottom - h;
+    ctx.shadowColor = 'rgba(48, 252, 96, 0.6)';
+    cells.forEach((g, i) => {
+      if (i) x += gap;
+      if (g === null) {
+        x -= overlap;
+        ctx.fillStyle = GREEN;
+        ctx.shadowBlur = 28;
+        ctx.beginPath();
+        ctx.arc(x + 11 * k, top + 100 * k, 7 * k, 0, Math.PI * 2);
+        ctx.fill();
+        x += 22 * k - overlap;
+        return;
+      }
+      for (const name in SEGMENTS) {
+        const [sx, sy, sw, sh] = SEGMENTS[name];
+        const on = g.includes(name);
+        ctx.fillStyle = on ? GREEN : 'rgba(48, 252, 96, 0.09)';
+        ctx.shadowBlur = on ? 28 : 0;
+        roundRect(ctx, x + sx * k, top + sy * k, sw * k, sh * k, (SEG * k) / 2);
+      }
+      x += 64 * k;
+    });
+    ctx.shadowBlur = 0;
+  }
+
+  function renderCard(r, icon, badge) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = CARD;
+    const ctx = canvas.getContext('2d');
+    const mid = CARD / 2;
+
+    ctx.fillStyle = '#040e08';
+    ctx.fillRect(0, 0, CARD, CARD);
+    const glow = ctx.createRadialGradient(mid, 470, 0, mid, 470, 640);
+    glow.addColorStop(0, 'rgba(48, 252, 96, 0.16)');
+    glow.addColorStop(1, 'rgba(48, 252, 96, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, CARD, CARD);
+
+    // Ambient motes, like the site background.
+    ctx.fillStyle = GREEN;
+    for (let i = 0; i < 80; i++) {
+      ctx.globalAlpha = 0.08 + Math.random() * 0.35;
+      ctx.beginPath();
+      ctx.arc(Math.random() * CARD, Math.random() * CARD, 1 + Math.random() * 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Notched pixel frame (corners left open, like the pixel buttons).
+    const f = 36;
+    const t = 6;
+    ctx.fillStyle = 'rgba(48, 252, 96, 0.45)';
+    ctx.fillRect(f + t, f, CARD - 2 * (f + t), t);
+    ctx.fillRect(f + t, CARD - f - t, CARD - 2 * (f + t), t);
+    ctx.fillRect(f, f + t, t, CARD - 2 * (f + t));
+    ctx.fillRect(CARD - f - t, f + t, t, CARD - 2 * (f + t));
+
+    // Brand row: app icon + wordmark.
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = `32px ${PIXEL_FONT}`;
+    const brand = 'TAP TIMER';
+    const iconW = icon ? 96 : 0;
+    const x0 = mid - (iconW + ctx.measureText(brand).width) / 2;
+    if (icon) ctx.drawImage(icon, x0, 92, 72, 72);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#eef1f7';
+    ctx.fillText(brand, x0 + iconW, 144);
+
+    // With a stats row (solo), everything above it moves up and the clock shrinks a little.
+    const y = r.stats
+      ? { headline: 272, clock: 560, clockH: 220, goal: 628, line: 672, cta: 872, url: 914, badge: 934 }
+      : { headline: 300, clock: 620, clockH: 250, goal: 700, line: 752, cta: 850, url: 900, badge: 930 };
+    ctx.textAlign = 'center';
+    pixelText(ctx, r.headline.toUpperCase(), mid, y.headline, 64, GREEN, 920, true);
+    drawSevenSeg(ctx, fmt(r.time), mid, y.clock, y.clockH);
+    pixelText(ctx, `GOAL ${fmt(r.target)}s`, mid, y.goal, 28, 'rgba(48, 252, 96, 0.75)', 920);
+    pixelText(ctx, r.line, mid, y.line, 20, '#93a89b', 920);
+    if (r.stats) drawStats(ctx, r.stats, mid, 704);
+    pixelText(ctx, 'CAN YOU BEAT IT?', mid, y.cta, 36, '#ebf3ee', 920);
+    pixelText(ctx, `PLAY FREE AT ${location.host.toUpperCase()}`, mid, y.url, 16, '#93a89b', 920);
+    if (badge) {
+      const bh = 80;
+      const bw = (bh * 119.664) / 40; // badge aspect ratio
+      ctx.drawImage(badge, mid - bw / 2, y.badge, bw, bh);
+    }
+    return canvas;
+  }
+
+  // The site's Best / Average / Rounds boxes, drawn as notched pixel frames.
+  function drawStats(ctx, stats, mid, top) {
+    const w = 240;
+    const h = 104;
+    const gap = 24;
+    const t = 4;
+    const cells = [['BEST', stats.best], ['AVERAGE', stats.avg], ['ROUNDS', stats.rounds]];
+    cells.forEach(([label, value], i) => {
+      const x = mid - (3 * w + 2 * gap) / 2 + i * (w + gap);
+      ctx.fillStyle = 'rgba(48, 252, 96, 0.06)';
+      ctx.fillRect(x, top, w, h);
+      ctx.fillStyle = 'rgba(48, 252, 96, 0.35)';
+      ctx.fillRect(x + t, top - t, w - 2 * t, t);
+      ctx.fillRect(x + t, top + h, w - 2 * t, t);
+      ctx.fillRect(x - t, top, t, h);
+      ctx.fillRect(x + w, top, t, h);
+      pixelText(ctx, label, x + w / 2, top + 38, 16, '#93a89b', w - 24);
+      pixelText(ctx, value, x + w / 2, top + 82, 28, '#ebf3ee', w - 24);
+    });
+  }
+
+  function createSharePanel(el) {
+    if (!el) return { show() {}, hide() {} };
+    const mode = el.dataset.mode;
+    const img = el.querySelector('[data-share-img]');
+    const preview = el.querySelector('[data-share-preview]');
+    const saveBtn = el.querySelector('[data-share-save]');
+    const nativeBtn = el.querySelector('[data-share-native]');
+    const copyBtn = el.querySelector('[data-share-copy]');
+    const links = [...el.querySelectorAll('[data-share-to]')];
+    const enc = encodeURIComponent;
+    let assets = null;
+    let current = null;
+    let file = null;
+    let blobUrl = '';
+    let seq = 0;
+
+    nativeBtn.hidden = typeof navigator.share !== 'function';
+
+    /** @param {{headline:string, time:number, target:number, line:string, text:string, url:string}} r */
+    async function show(r) {
+      const appUrl = `${location.origin}/get?src=share_${mode}`;
+      const message = `${r.text}\n${r.url}\n\n📱 Tap Timer for iPhone & iPad: ${appUrl}`;
+      current = { ...r, message };
+      file = null;
+      const hrefs = {
+        x: `https://twitter.com/intent/tweet?text=${enc(`${r.text}\n\n📱 iPhone & iPad app: ${appUrl}`)}&url=${enc(r.url)}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${enc(r.url)}`,
+        whatsapp: `https://wa.me/?text=${enc(message)}`,
+      };
+      links.forEach((a) => (a.href = hrefs[a.dataset.shareTo]));
+      el.hidden = false;
+
+      const my = ++seq;
+      assets = assets || Promise.all([
+        loadImage(el.dataset.icon),
+        loadImage(el.dataset.badge),
+        document.fonts ? document.fonts.load(`32px ${PIXEL_FONT}`).catch(() => {}) : null,
+      ]);
+      const [icon, badge] = await assets;
+      if (my !== seq) return;
+      const blob = await new Promise((resolve) => renderCard(r, icon, badge).toBlob(resolve, 'image/png'));
+      if (my !== seq || !blob) return;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      blobUrl = URL.createObjectURL(blob);
+      file = new File([blob], 'tap-timer-result.png', { type: 'image/png' });
+      img.src = preview.href = saveBtn.href = blobUrl;
+      img.alt = `Result card: ${r.headline}, ${fmt(r.time)}s with a goal of ${fmt(r.target)}s`;
+    }
+
+    function hide() {
+      seq++;
+      el.hidden = true;
+    }
+
+    nativeBtn.addEventListener('click', async () => {
+      if (!current) return;
+      const data = { title: 'Tap Timer', text: current.message };
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) data.files = [file];
+      try {
+        await navigator.share(data);
+        track('share', { mode, method: 'native' });
+      } catch { /* cancelled or unsupported */ }
+    });
+    links.forEach((a) => a.addEventListener('click', () => track('share', { mode, method: a.dataset.shareTo })));
+    [saveBtn, preview].forEach((a) => a.addEventListener('click', (e) => {
+      if (!file) return e.preventDefault(); // card still rendering
+      track('share', { mode, method: 'image' });
+    }));
+    copyBtn.addEventListener('click', async () => {
+      if (!current) return;
+      try {
+        await navigator.clipboard.writeText(current.message);
+        copyBtn.textContent = 'Copied!';
+        track('share', { mode, method: 'copy' });
+      } catch {
+        copyBtn.textContent = 'Could not copy';
+      }
+      setTimeout(() => (copyBtn.textContent = 'Copy link'), 2000);
+    });
+
+    return { show, hide };
+  }
+
+  // ---------------------------------------------------------------------------
   // Solo mode (home page)
   // ---------------------------------------------------------------------------
   function initSolo(root) {
@@ -338,9 +625,11 @@
     const resultEl = root.querySelector('[data-result]');
     const ratingEl = root.querySelector('[data-rating]');
     const deltaEl = root.querySelector('[data-delta]');
-    const shareBtn = root.querySelector('[data-share]');
+    const share = createSharePanel(root.querySelector('[data-share-panel]'));
     const nudge = root.querySelector('[data-nudge]');
     const targetBtns = [...root.querySelectorAll('[data-target]')];
+    const stealthBtn = root.querySelector('[data-stealth]');
+    const resetBtn = root.querySelector('[data-reset-stats]');
     const statEls = Object.fromEntries([...root.querySelectorAll('[data-stat]')].map((el) => [el.dataset.stat, el]));
 
     const fromUrl = Number(new URLSearchParams(location.search).get('t'));
@@ -348,43 +637,46 @@
     if (!TARGETS.includes(target)) target = 5;
     let last = null;
     let sessionRounds = 0;
-    let raf = 0;
+    // Stats cover this page view only: they reset on refresh or navigation.
+    const stats = {};
+    try { localStorage.removeItem('tt.stats'); } catch { /* ignore */ } // drop stats saved by older versions
+    // Stealth on (default) hides the clock while it runs. Off is practice:
+    // the clock counts up. Rounds still count toward stats but aren't shareable.
+    // Every visit starts in stealth; turning it off lasts for this page view only.
+    let stealth = true;
+    try { localStorage.removeItem('tt.stealth'); } catch { /* ignore */ } // drop the choice saved by older versions
+    let tick = 0;
 
     const timer = new HiddenTimer(zone, {
       repeat: true,
       onStart() {
-        cancelAnimationFrame(raf);
         resultEl.hidden = true;
+        share.hide();
         zone.dataset.state = 'running';
-        display.set('-.--');
         hint.textContent = 'Tap to stop';
-        targetBtns.forEach((b) => (b.disabled = true));
+        [...targetBtns, stealthBtn, resetBtn].forEach((b) => (b.disabled = true));
+        if (stealth) {
+          display.set('-.--');
+        } else {
+          const run = () => {
+            display.set(fmt((performance.now() - timer.t0) / 1000));
+            tick = requestAnimationFrame(run);
+          };
+          run();
+        }
       },
       onStop(elapsed) {
+        cancelAnimationFrame(tick);
         zone.dataset.state = 'done';
         hint.textContent = '';
-        targetBtns.forEach((b) => (b.disabled = false));
-        last = { elapsed, target, diff: elapsed - target };
+        [...targetBtns, stealthBtn, resetBtn].forEach((b) => (b.disabled = false));
+        last = { elapsed, target, diff: elapsed - target, practice: !stealth };
         recordStats(last);
         sessionRounds++;
-        track('round_complete', { mode: 'solo', target, diff: Number(Math.abs(last.diff).toFixed(2)) });
-        reveal(last);
+        track('round_complete', { mode: 'solo', target, stealth, diff: Number(Math.abs(last.diff).toFixed(2)) });
+        showResult(last); // show the final time immediately so the stop feels instant
       },
     });
-
-    function reveal(r) {
-      if (reducedMotion) return showResult(r);
-      const start = performance.now();
-      const dur = Math.min(900, 300 + r.elapsed * 60);
-      const step = (now) => {
-        const p = Math.min(1, (now - start) / dur);
-        const eased = 1 - Math.pow(1 - p, 3);
-        display.set(fmt(r.elapsed * eased));
-        if (p < 1) raf = requestAnimationFrame(step);
-        else showResult(r);
-      };
-      raf = requestAnimationFrame(step);
-    }
 
     function showResult(r) {
       display.set(fmt(r.elapsed));
@@ -394,7 +686,27 @@
       deltaEl.textContent = isExact(r.diff)
         ? `Dead on ${fmt(r.target)}s!`
         : `${fmtDiff(r.diff)} ${r.diff > 0 ? 'over' : 'under'} the goal`;
+      if (r.practice) {
+        deltaEl.textContent += ' · practice (clock visible)';
+        share.hide();
+      } else {
+        share.show({
+          headline: label,
+          time: r.elapsed,
+          target: r.target,
+          stats: statText(r.target),
+          line: isExact(r.diff) ? 'DEAD ON!' : `${fmtDiff(r.diff)} ${r.diff > 0 ? 'OVER' : 'UNDER'}`,
+          text: isExact(r.diff)
+            ? `⏱️ I stopped the hidden clock at exactly ${fmt(r.target)}s on Tap Timer. Can you?`
+            : `⏱️ I stopped the hidden clock at ${fmt(r.elapsed)}s (goal ${fmt(r.target)}s) on Tap Timer, off by ${Math.abs(r.diff).toFixed(2)}s. Can you beat me?`,
+          url: `${location.origin}/?t=${r.target}`,
+        });
+      }
       resultEl.hidden = false;
+      // On short phone screens the rating can land just below the fold: nudge it into view.
+      if (resultEl.getBoundingClientRect().bottom > window.innerHeight) {
+        resultEl.scrollIntoView({ block: 'nearest', behavior: reducedMotion ? 'auto' : 'smooth' });
+      }
       hint.textContent = 'Tap to go again';
       renderStats();
       if (sessionRounds >= 3 && !session.get('tt.nudged')) {
@@ -404,21 +716,26 @@
     }
 
     function recordStats(r) {
-      const all = store.get('tt.stats', {});
-      const s = all[r.target] || { best: null, rounds: 0, total: 0 };
+      const s = stats[r.target] || (stats[r.target] = { best: null, rounds: 0, signed: 0 });
       const abs = Math.abs(r.diff);
       s.rounds += 1;
-      s.total += abs;
+      s.signed += r.diff; // signed sum for the +/- average
       if (s.best == null || abs < s.best) s.best = abs;
-      all[r.target] = s;
-      store.set('tt.stats', all);
+    }
+
+    // Best / Average / Rounds for a goal, as shown in the stat line and on the share card.
+    function statText(t) {
+      const s = stats[t];
+      return {
+        best: s ? s.best.toFixed(2) + 's' : '–',
+        avg: s ? fmtDiff(s.signed / s.rounds) : '–', // + late, - early
+        rounds: s ? String(s.rounds) : '0',
+      };
     }
 
     function renderStats() {
-      const s = store.get('tt.stats', {})[target];
-      statEls.best.textContent = s && s.best != null ? s.best.toFixed(2) + 's' : '–';
-      statEls.avg.textContent = s && s.rounds ? (s.total / s.rounds).toFixed(2) + 's' : '–';
-      statEls.rounds.textContent = s ? String(s.rounds) : '0';
+      const text = statText(target);
+      for (const key in text) statEls[key].textContent = text[key];
     }
 
     function setTarget(t) {
@@ -427,9 +744,9 @@
       targetBtns.forEach((b) => b.setAttribute('aria-checked', String(Number(b.dataset.target) === t)));
       goalEl.textContent = fmt(t);
       timer.reset();
-      cancelAnimationFrame(raf);
       zone.dataset.state = 'idle';
       resultEl.hidden = true;
+      share.hide();
       display.set('0.00');
       hint.textContent = 'Tap to start';
       renderStats();
@@ -437,25 +754,22 @@
 
     targetBtns.forEach((b) => b.addEventListener('click', () => setTarget(Number(b.dataset.target))));
 
-    shareBtn.addEventListener('click', async () => {
-      if (!last) return;
-      const url = `${location.origin}/?t=${last.target}`;
-      const text = isExact(last.diff)
-        ? `⏱️ I stopped the hidden clock at exactly ${fmt(last.target)}s on Tap Timer. Can you?`
-        : `⏱️ I stopped the hidden clock at ${fmt(last.elapsed)}s (goal ${fmt(last.target)}s), off by ${Math.abs(last.diff).toFixed(2)}s. Can you beat me?`;
-      track('share', { mode: 'solo' });
-      if (navigator.share) {
-        try { await navigator.share({ title: 'Tap Timer', text, url }); return; }
-        catch (e) { if (e && e.name === 'AbortError') return; }
-      }
-      const label = shareBtn.querySelector('span');
-      try {
-        await navigator.clipboard.writeText(`${text} ${url}`);
-        label.textContent = 'Copied to clipboard!';
-      } catch {
-        label.textContent = 'Could not copy';
-      }
-      setTimeout(() => (label.textContent = 'Challenge a friend'), 2000);
+    function setStealth(on) {
+      stealth = on;
+      stealthBtn.setAttribute('aria-pressed', String(on));
+      stealthBtn.title = on ? 'Stealth on: the clock hides while it runs' : 'Stealth off: practice with the clock visible';
+      zone.dataset.stealth = on ? 'on' : 'off';
+    }
+    stealthBtn.addEventListener('click', () => {
+      setStealth(!stealth);
+      track('stealth_toggle', { stealth });
+    });
+    setStealth(stealth);
+
+    resetBtn.addEventListener('click', () => {
+      for (const t in stats) delete stats[t];
+      renderStats();
+      track('stats_reset', { target });
     });
 
     setTarget(target);
@@ -482,6 +796,7 @@
     const display = createDisplay($('[data-display]'), '##.##');
     const hint = $('[data-hint]');
     const nextBtn = $('[data-next]');
+    const share = createSharePanel($('[data-share-panel]'));
 
     let names = store.get('tt.party.players', ['Player 1', 'Player 2']);
     if (!Array.isArray(names) || names.length < MIN_PLAYERS) names = ['Player 1', 'Player 2'];
@@ -494,9 +809,11 @@
 
     function show(name) {
       for (const key in screens) screens[key].hidden = key !== name;
-      // Mid-game, drop the page intro so the tap zone and "Pass to…" button fit on a phone screen.
-      document.body.classList.toggle('party-playing', name === 'pass' || name === 'turn');
-      const top = root.getBoundingClientRect().top + window.scrollY - 12;
+      // Mid-game and at the reveal, drop the page intro so the tap zone, "Pass to…"
+      // button and leaderboard fit on a phone screen.
+      document.body.classList.toggle('party-playing', name !== 'setup');
+      const header = document.querySelector('.site-header')?.offsetHeight || 0; // sticky, so it covers the top
+      const top = root.getBoundingClientRect().top + window.scrollY - header - 12;
       if (window.scrollY > top) window.scrollTo({ top, behavior: reducedMotion ? 'auto' : 'smooth' });
     }
 
@@ -657,6 +974,18 @@
         ? `It's a tie: ${winners.map((w) => w.name).join(' & ')}!`
         : `${winners[0].name} wins!`;
       $('[data-results-goal]').textContent = fmt(game.target);
+      const best = winners[0];
+      const off = Math.abs(best.diff).toFixed(2);
+      share.show({
+        headline: winners.length > 1 ? "It's a tie!" : `${best.name} wins!`,
+        time: best.elapsed,
+        target: game.target,
+        line: `${game.players.length} PLAYERS · ${isExact(best.diff) ? 'DEAD ON!' : `${off}s OFF`}`,
+        text: winners.length > 1
+          ? `🏆 Tie on Tap Timer party mode! ${winners.map((w) => w.name).join(' & ')} stopped the hidden clock ${off}s from ${fmt(game.target)}s. Think your group can do better?`
+          : `🏆 ${best.name} won Tap Timer party mode with ${fmt(best.elapsed)}s on a hidden ${fmt(game.target)}s clock, ${off}s off. Think your group can do better?`,
+        url: `${location.origin}/party`,
+      });
       track('party_complete', { target: game.target, players: game.players.length });
       show('results');
     }
@@ -666,26 +995,6 @@
 
     renderPlayers();
     show('setup');
-  }
-
-  // ---------------------------------------------------------------------------
-  // Themes
-  // ---------------------------------------------------------------------------
-  function initThemes() {
-    const buttons = document.querySelectorAll('[data-theme-option]');
-    if (!buttons.length) return;
-    const sync = () => {
-      const current = document.documentElement.dataset.theme || 'green';
-      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeOption === current)));
-    };
-    buttons.forEach((b) => b.addEventListener('click', () => {
-      document.documentElement.dataset.theme = b.dataset.themeOption;
-      store.set('tt.theme', b.dataset.themeOption);
-      document.dispatchEvent(new Event('tt:theme'));
-      track('theme_change', { theme: b.dataset.themeOption });
-      sync();
-    }));
-    sync();
   }
 
   // ---------------------------------------------------------------------------
@@ -707,13 +1016,18 @@
   // ---------------------------------------------------------------------------
   // Boot
   // ---------------------------------------------------------------------------
+  const ambient = document.createElement('div');
+  ambient.className = 'ambient';
+  ambient.setAttribute('aria-hidden', 'true');
+  document.body.prepend(ambient);
+  field = new Particles(ambient);
+
   document.querySelectorAll('[data-mini-display]').forEach((el) => {
     const text = el.dataset.miniDisplay;
     createDisplay(el, text.replace(/[^.]/g, '#')).set(text);
   });
   document.querySelectorAll('[data-solo]').forEach(initSolo);
   document.querySelectorAll('[data-party]').forEach(initParty);
-  initThemes();
   initAds();
 
   document.addEventListener('click', (e) => {

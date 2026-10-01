@@ -4,16 +4,27 @@
     <header class="page-hero">
       <p class="eyebrow">Beat the clock</p>
       <h1>Think you know what <span class="accent">5&nbsp;seconds</span> feels like?</h1>
-      <p class="lede">The clock is hidden. Tap to start, then tap again when it feels right. See how close you got.</p>
+      <p class="tagline">How close can you get?</p>
     </header>
 
     <section class="card game" data-solo aria-label="Tap Timer game">
-      <div class="targets" role="radiogroup" aria-label="Goal time">
-        <button type="button" class="chip" role="radio" aria-checked="false" data-target="3">3s</button>
-        <button type="button" class="chip" role="radio" aria-checked="true" data-target="5">5s</button>
-        <button type="button" class="chip" role="radio" aria-checked="false" data-target="10">10s</button>
-        <button type="button" class="chip" role="radio" aria-checked="false" data-target="15">15s</button>
-        <button type="button" class="chip" role="radio" aria-checked="false" data-target="30">30s</button>
+      <div class="targets pixel">
+        <div class="targets__goals" role="radiogroup" aria-label="Goal time">
+          <button type="button" class="chip" role="radio" aria-checked="false" data-target="3">3s</button>
+          <button type="button" class="chip" role="radio" aria-checked="true" data-target="5">5s</button>
+          <button type="button" class="chip" role="radio" aria-checked="false" data-target="10">10s</button>
+          <button type="button" class="chip" role="radio" aria-checked="false" data-target="15">15s</button>
+          <button type="button" class="chip" role="radio" aria-checked="false" data-target="30">30s</button>
+        </div>
+        <div class="targets__tools">
+          <button type="button" class="chip eye-toggle" data-stealth aria-pressed="true" aria-label="Stealth mode" title="Stealth on: the clock hides while it runs">
+            <svg class="eye eye--shut" viewBox="0 0 13 9" width="26" height="18" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="M1 0h2v1h-2zM2 1h2v1h-2zM5 1h4v1h-4zM3 2h2v1h-2zM9 2h2v1h-2zM1 3h1v1h-1zM4 3h2v1h-2zM7 3h1v1h-1zM11 3h1v1h-1zM0 4h1v1h-1zM5 4h2v1h-2zM12 4h1v1h-1zM1 5h1v1h-1zM6 5h2v1h-2zM11 5h1v1h-1zM2 6h2v1h-2zM7 6h2v1h-2zM10 6h1v1h-1zM4 7h3v1h-3zM8 7h2v1h-2zM9 8h2v1h-2z"/></svg>
+            <svg class="eye eye--open" viewBox="0 0 13 9" width="26" height="18" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="M4 1h5v1h-5zM2 2h2v1h-2zM9 2h2v1h-2zM1 3h1v1h-1zM5 3h3v1h-3zM11 3h1v1h-1zM0 4h1v1h-1zM5 4h3v1h-3zM12 4h1v1h-1zM1 5h1v1h-1zM5 5h3v1h-3zM11 5h1v1h-1zM2 6h2v1h-2zM9 6h2v1h-2zM4 7h5v1h-5z"/></svg>
+          </button>
+          <button type="button" class="chip stats-reset" data-reset-stats aria-label="Reset stats" title="Reset best, average and rounds">
+            <svg class="reset-icon" viewBox="0 0 9 8" width="20" height="18" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="M2 0h4v1h-4zM7 0h1v1h-1zM1 1h1v1h-1zM6 1h2v1h-2zM0 2h1v1h-1zM5 2h3v1h-3zM0 3h1v3h-1zM8 4h1v2h-1zM1 6h1v1h-1zM7 6h1v1h-1zM2 7h5v1h-5z"/></svg>
+          </button>
+        </div>
       </div>
 
       <button type="button" class="tapzone" data-tapzone data-state="idle" aria-describedby="solo-hint">
@@ -23,42 +34,30 @@
       </button>
       <p class="keyhint muted small">Tip: on a keyboard, press <kbd>Space</kbd>.</p>
 
-      <div class="result" data-result aria-live="polite" hidden>
+      <div class="result pixel" data-result aria-live="polite" hidden>
         <p class="result__rating" data-rating></p>
         <p class="result__delta" data-delta></p>
-        <div class="result__actions">
-          <button type="button" class="btn" data-share>
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0L7.5 7.5M12 3l4.5 4.5M5 12v8h14v-8"/></svg>
-            <span>Challenge a friend</span>
-          </button>
-        </div>
       </div>
 
       <div class="nudge" data-nudge hidden>
         <p><strong>Playing with friends?</strong> The app adds Tournament brackets and Teams mode.</p>
-        <a class="btn btn--app btn--sm" href="/get?src=solo_nudge" data-cta="solo_nudge">Get the app</a>
+        <a class="get-app" href="/get?src=solo_nudge" data-cta="solo_nudge">Try it free</a>
       </div>
 
-      <dl class="stats" data-stats>
+      <dl class="stats pixel" data-stats>
         <div><dt>Best</dt><dd data-stat="best">–</dd></div>
         <div><dt>Average</dt><dd data-stat="avg">–</dd></div>
         <div><dt>Rounds</dt><dd data-stat="rounds">0</dd></div>
       </dl>
 
-      <div class="themes">
-        <span class="themes__label">Theme</span>
-        <div class="themes__swatches">
-          <button type="button" class="swatch" style="--swatch:#30fc60" data-theme-option="green" aria-label="Classic green theme" aria-pressed="false"></button>
-          <button type="button" class="swatch" style="--swatch:#ff4136" data-theme-option="red" aria-label="Red LED theme" aria-pressed="false"></button>
-          <button type="button" class="swatch" style="--swatch:#ffb627" data-theme-option="amber" aria-label="Amber theme" aria-pressed="false"></button>
-          <button type="button" class="swatch" style="--swatch:#56ccff" data-theme-option="ice" aria-label="Ice blue theme" aria-pressed="false"></button>
-        </div>
-        <a class="themes__more" href="/get?src=themes" data-cta="themes">More in the app</a>
-      </div>
+      {{template "share" "solo"}}
+
       <noscript><p class="muted">Tap Timer needs JavaScript to run the clock.</p></noscript>
     </section>
 
     {{template "promo" "home"}}
+
+    {{template "ad" (ad "incontent")}}
 
     <section class="steps" aria-labelledby="how-title">
       <h2 id="how-title">How it works</h2>
@@ -70,27 +69,30 @@
       <p><a class="link-arrow" href="/party">Playing with friends? Try Party mode</a></p>
     </section>
 
-    {{template "ad" (ad "incontent")}}
-
-    <section class="faq" aria-labelledby="faq-title">
-      <h2 id="faq-title">FAQ</h2>
-      <details>
-        <summary>Is Tap Timer free?</summary>
-        <p>Yes. The web version is free and supported by ads. The iPhone app is a free download with an optional one-time Pro upgrade. It has no subscriptions and no ads.</p>
-      </details>
-      <details>
-        <summary>How accurate is the timer?</summary>
-        <p>We time your taps with your browser's high-resolution clock and measure from the moment your finger touches the screen. The result is shown to the hundredth of a second.</p>
-      </details>
-      <details>
-        <summary>What's the difference between the website and the app?</summary>
-        <p>On the web you can play Solo and Party (Goal Challenge). The app adds Tournament brackets, Teams mode, more themes, landscape play, sound, and Apple Watch and Apple TV support.</p>
-      </details>
-      <details>
-        <summary>Can I play with a group?</summary>
-        <p>Yes. <a href="/party">Party mode</a> lets up to 8 players pass one phone around. Everyone's time stays hidden until the final reveal.</p>
-      </details>
+    <section class="compare" aria-labelledby="compare-title">
+      <h2 id="compare-title">Even more on iPhone &amp; iPad</h2>
+      <p class="muted">The website is the quick version. The app is the full game.</p>
+      <table class="compare__table">
+        <thead>
+          <tr><th scope="col"><span class="sr-only">Feature</span></th><th scope="col">Web</th><th scope="col">App</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Solo play</th><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">Party mode (Goal Challenge)</th><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">Tournament brackets with shuffled seeding</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">Teams mode</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">Seven-segment and pixel-art themes</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">Custom player and team colours</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">Landscape mode</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">Sound</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">No ads</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+        </tbody>
+      </table>
+      <p class="compare__price">Free to download and try. Love it? Unlock everything with a one-time purchase. No subscription.</p>
+      <a class="get-app" href="/get?src=compare" data-cta="compare">Try it free on iPhone</a>
     </section>
+
+    {{template "ad" (ad "footer")}}
   </div>
 
   <aside class="home-side">

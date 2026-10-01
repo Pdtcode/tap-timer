@@ -1,11 +1,13 @@
 {{define "layout"}}<!doctype html>
-<html lang="en" data-theme="green">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{{.Title}}</title>
   {{if .Description}}<meta name="description" content="{{.Description}}">{{end}}
-  {{if ne .Page "404"}}<link rel="canonical" href="{{.Canonical}}">{{end}}
+  {{if eq .Page "404"}}<meta name="robots" content="noindex">{{else}}<link rel="canonical" href="{{.Canonical}}">{{end}}
+  {{with .Site.GoogleSiteVerification}}<meta name="google-site-verification" content="{{.}}">{{end}}
+  {{with .Site.BingSiteVerification}}<meta name="msvalidate.01" content="{{.}}">{{end}}
   <meta name="theme-color" content="#040e08">
   <!-- Safari on iOS shows a native "Open / Get" banner for the app -->
   <meta name="apple-itunes-app" content="app-id={{.Site.AppStoreID}}">
@@ -25,8 +27,8 @@
 
   <link rel="icon" href="{{asset "img/favicon-32.png"}}" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="{{asset "img/apple-touch-icon.png"}}">
+  <link rel="preload" href="/static/fonts/press-start-2p.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{asset "css/app.css"}}">
-  <script>try{var t=JSON.parse(localStorage.getItem("tt.theme"));t={led:"red",lcd:"green"}[t]||t;if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 
   {{if .Site.AdSenseClient}}
   <meta name="google-adsense-account" content="{{.Site.AdSenseClient}}">
@@ -37,16 +39,38 @@
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config",{{.Site.GAID}});</script>
   {{end}}
 
+  {{/* WebSite gives search engines the site name; WebApplication is the free
+       browser game; MobileApplication is the iPhone/iPad app it funnels to. */}}
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "MobileApplication",
-    "name": "Tap Timer: Beat the Clock",
-    "operatingSystem": "iOS 17.0 or later",
-    "applicationCategory": "GameApplication",
-    "url": {{.Site.BaseURL}},
-    "installUrl": "https://apps.apple.com/app/id{{.Site.AppStoreID}}",
-    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "name": "Tap Timer",
+        "url": {{print .Site.BaseURL "/"}}
+      },
+      {
+        "@type": "WebApplication",
+        "name": "Tap Timer",
+        "url": {{print .Site.BaseURL "/"}},
+        "description": "A free browser timing game: the clock is hidden, so stop it as close to the goal time as you can. Play solo or pass the phone with friends.",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Any (web browser)",
+        "browserRequirements": "Requires JavaScript",
+        "image": {{print .Site.BaseURL (asset "img/og.png")}},
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}
+      },
+      {
+        "@type": "MobileApplication",
+        "name": "Tap Timer: Beat the Clock",
+        "operatingSystem": "iOS 17.0 or later",
+        "applicationCategory": "GameApplication",
+        "url": {{print .Site.BaseURL "/"}},
+        "installUrl": {{print "https://apps.apple.com/app/id" .Site.AppStoreID}},
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}
+      }
+    ]
   }
   </script>
 </head>
@@ -62,9 +86,8 @@
       <nav class="site-nav" aria-label="Main">
         <a href="/" {{if eq .Page "home"}}aria-current="page"{{end}}>Solo</a>
         <a href="/party" {{if eq .Page "party"}}aria-current="page"{{end}}>Party</a>
-        <a href="/how-to-play" {{if eq .Page "how-to-play"}}aria-current="page"{{end}}>How to play</a>
       </nav>
-      <a class="btn btn--app btn--sm" href="/get?src=header" data-cta="header">Get the app</a>
+      <a class="get-app" href="/get?src=header" data-cta="header">Get the app</a>
     </div>
   </header>
 
@@ -79,7 +102,7 @@
           <img src="{{asset "img/icon-128.png"}}" width="26" height="26" alt="">
           <span class="wordmark">TAP TIMER</span>
         </a>
-        <p class="muted">The pass-the-phone timer game. On iPhone, iPad, Mac, Apple Watch, Apple TV &amp; Apple Vision.</p>
+        <p class="muted">The pass-the-phone timer game. On iPhone &amp; iPad.</p>
       </div>
       <nav class="footer-nav" aria-label="Footer">
         <a href="/">Play solo</a>

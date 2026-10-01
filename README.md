@@ -16,7 +16,7 @@ All configuration is via environment variables. See [`.env.example`](.env.exampl
 
 | Path | What it is |
 |---|---|
-| `/` | Solo game: pick a goal (3–30s), the clock hides, tap to stop. Tracks best/average per goal locally and has a "Challenge a friend" share. |
+| `/` | Solo game: pick a goal (3–30s), the clock hides, tap to stop. Shows best/average per goal for the current visit (resets on refresh) and has a "Challenge a friend" share. |
 | `/party` | Goal Challenge pass-the-phone mode for 2–8 players, with a hidden-until-reveal leaderboard. |
 | `/how-to-play` | Rules, modes and tips. This is SEO content, and AdSense needs substantive content like this. |
 | `/privacy` | Privacy policy covering AdSense cookies (required by AdSense). |
@@ -34,8 +34,9 @@ web/static               app.css, app.js (game engine + particles), app icons, o
 ## Funnel to the app
 
 - **Smart App Banner**: `<meta name="apple-itunes-app">` makes iOS Safari show a native Get/Open banner.
-- **Placements**: header, the promo card on Home and Party, a nudge after the 3rd solo round, the "More themes" link, How to play and the footer. Each has its own `src`.
-- **Web-exclusive gap**: Tournament, Teams, extra themes and Apple Watch/TV support are app-only, and the site says so wherever it's relevant.
+- **Placements**: header, the promo card on Home and Party, a nudge after the 3rd solo round, How to play, the footer, and the share panel (`share_solo` / `share_party`). Each has its own `src`.
+- **Sharing**: after a solo round (stealth on) or a party reveal, players get a 1080×1080 result card drawn in the browser, with the App Store badge on it. They can share it natively or post to X, Facebook or WhatsApp, copy the text, or save the image. Every shared message includes the site link and the `/get?src=share_<mode>` App Store link.
+- **Web-exclusive gap**: Tournament, Teams and extra themes are app-only (iPhone and iPad), and the site says so wherever it's relevant.
 - **Attribution**: set `APP_STORE_PROVIDER_TOKEN` to see installs per `ct=web-<src>` campaign in App Store Connect > App Analytics. Server logs record every click, and GA4 (optional) gets an `app_store_click` event.
 
 ## Ads (Google AdSense)
@@ -43,9 +44,11 @@ web/static               app.css, app.js (game engine + particles), app icons, o
 1. Get approved, then set `ADSENSE_CLIENT=ca-pub-…` and create three display ad units for `ADSENSE_SLOT_SIDEBAR` (300×600, desktop only), `ADSENSE_SLOT_INCONTENT` and `ADSENSE_SLOT_FOOTER`.
 2. `/ads.txt` is generated automatically from `ADSENSE_CLIENT`.
 3. In development, dashed placeholders show where the ads will go. In production, unconfigured slots render nothing.
-4. **Placement policy**: ads are intentionally kept away from the tap zone. AdSense bans placements that invite accidental clicks, and a game where people tap rapidly is a high-risk case. Don't put units next to the timer or the result buttons.
-5. **EU/UK/CH visitors**: Google requires a certified consent platform. The easiest option is AdSense's built-in *Privacy & messaging* → GDPR message, which needs no code changes.
-6. Units are only initialised when visible, so the desktop sidebar never requests an ad on phones.
+4. **Placements**: on the home page, phones get an in-content unit after the app promo card and a `footer` unit at the bottom. Desktop gets the in-content unit plus the 300×600 sidebar, and the bottom unit is hidden there. Party has one in-content unit, and How to play has in-content plus footer.
+5. **Placement policy**: ads are intentionally kept away from the tap zone. AdSense bans placements that invite accidental clicks, and a game where people tap rapidly is a high-risk case. Don't put units next to the timer or the result buttons.
+6. **Auto ads**: if you turn on AdSense Auto ads, disable **anchor** and **vignette** formats for this site (AdSense > Ads > By site > Edit). A bottom-anchored banner sits right under a phone player's thumb while they tap the game, which leads to accidental clicks and policy strikes.
+7. **EU/UK/CH visitors**: Google requires a certified consent platform. The easiest option is AdSense's built-in *Privacy & messaging* → GDPR message, which needs no code changes.
+8. Units are only initialised when visible, so the desktop sidebar never requests an ad on phones.
 
 ## Share image
 
@@ -59,6 +62,14 @@ The URL is content-hashed, but social platforms cache previews aggressively, so 
 
 ## Before launch
 
-- Replace the "Get it on the App Store" button with Apple's official badge from [Apple's marketing tools](https://tools.applemarketingtools.com) if you want the badge look.
+- App Store links use Apple's official black "Download on the App Store" badge (`web/static/img/app-store-badge.svg`). Per [Apple's guidelines](https://developer.apple.com/app-store/marketing/guidelines/), don't alter it or show it smaller than 40px tall.
 - Put the service behind TLS (Cloud Run, Fly.io, Render and similar all handle this). HSTS is sent when `APP_ENV=production`.
 - Review `/privacy` against your actual analytics and ad setup.
+
+### SEO checklist (once the domain is live)
+
+1. Set `APP_ENV=production` and `BASE_URL=https://<your-domain>`. Startup fails if it's still localhost or http. Canonical tags, `robots.txt`, `sitemap.xml` and share images all follow it, and any other host (`www.`, the platform's default domain) is 301-redirected to it.
+2. Turn on the host's "HTTPS only" / HTTP→HTTPS redirect.
+3. Verify the site in [Google Search Console](https://search.google.com/search-console) and [Bing Webmaster Tools](https://www.bing.com/webmasters). Either use DNS verification, or set `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION`.
+4. Submit `https://<your-domain>/sitemap.xml` in both, then use URL Inspection to request indexing of `/`.
+5. Check the structured data with Google's [Rich Results Test](https://search.google.com/test/rich-results) and share previews with each platform's debugger.
