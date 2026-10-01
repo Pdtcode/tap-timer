@@ -1,0 +1,33 @@
+{{define "content"}}
+<div class="container narrow prose">
+  <header class="page-hero">
+    <h1>Privacy policy</h1>
+    <p class="muted">Applies to this website. The Tap Timer iOS app has its own privacy details on the App Store.</p>
+  </header>
+
+  <h2>What we store on your device</h2>
+  <p>Your game stats, chosen theme and Party mode player names are saved in your browser's local storage. They are never sent to our servers. Clearing your browser data removes them.</p>
+
+  <h2>Advertising</h2>
+  <p>This website shows ads through Google AdSense. Third-party vendors, including Google, use cookies to serve ads based on your previous visits to this and other websites. Google's advertising cookies let Google and its partners serve ads based on your visits to this site and other sites on the Internet.</p>
+  <p>You can opt out of personalised advertising in <a href="https://adssettings.google.com" rel="noopener">Google Ads Settings</a>, or opt out of some third-party vendors' cookies at <a href="https://www.aboutads.info/choices/" rel="noopener">aboutads.info</a>. Learn more about <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">how Google uses information from sites that use its services</a>.</p>
+
+  <h2>Analytics</h2>
+  <p>We may use Google Analytics to see how many people visit and which pages they use. It collects information such as pages viewed, device type and approximate location. It does not collect your name or contact details.</p>
+
+  <h2>Server logs</h2>
+  <p>Like most websites, our servers record basic request information: the page requested, browser type, referring page and time. We use these logs to keep the site running and to count how many visitors go to the App Store.</p>
+
+  <h2>Children</h2>
+  <p>This site is for a general audience and does not knowingly collect personal information from children.</p>
+
+  <h2>Contact</h2>
+  {{if .Site.ContactEmail}}
+  <p>Questions? Email <a href="mailto:{{.Site.ContactEmail}}">{{.Site.ContactEmail}}</a>.</p>
+  {{else}}
+  <p>Questions? Contact us through the App Store listing for Tap Timer.</p>
+  {{end}}
+
+  <p class="muted small">Last updated: September 2026.</p>
+</div>
+{{end}}

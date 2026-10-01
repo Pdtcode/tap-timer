@@ -1,0 +1,21 @@
+{{/*
+  Ad unit. Usage: {{template "ad" (ad "incontent")}}
+  Units are initialised by app.js only when visible, so a unit hidden by a
+  media query never requests an ad. Keep units well away from tap targets:
+  AdSense prohibits placements that invite accidental clicks.
+*/}}
+{{define "ad"}}
+{{if .Enabled}}
+<aside class="ad ad--{{.Name}}" aria-label="Advertisement">
+  <span class="ad__label">Advertisement</span>
+  <ins class="adsbygoogle" style="display:block"
+       data-ad-client="{{.Client}}"
+       data-ad-slot="{{.Slot}}"
+       {{if eq .Name "sidebar"}}data-ad-format="vertical"{{else}}data-ad-format="auto" data-full-width-responsive="true"{{end}}></ins>
+</aside>
+{{else if .Placeholder}}
+<aside class="ad ad--{{.Name}} ad--placeholder" aria-hidden="true">
+  <span>Ad slot: {{.Name}}<br><small>set ADSENSE_CLIENT + ADSENSE_SLOT_{{.Name}}</small></span>
+</aside>
+{{end}}
+{{end}}

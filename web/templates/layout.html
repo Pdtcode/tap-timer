@@ -1,0 +1,97 @@
+{{define "layout"}}<!doctype html>
+<html lang="en" data-theme="green">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{.Title}}</title>
+  {{if .Description}}<meta name="description" content="{{.Description}}">{{end}}
+  {{if ne .Page "404"}}<link rel="canonical" href="{{.Canonical}}">{{end}}
+  <meta name="theme-color" content="#040e08">
+  <!-- Safari on iOS shows a native "Open / Get" banner for the app -->
+  <meta name="apple-itunes-app" content="app-id={{.Site.AppStoreID}}">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Tap Timer">
+  <meta property="og:title" content="{{.Title}}">
+  {{if .Description}}<meta property="og:description" content="{{.Description}}">{{end}}
+  <meta property="og:url" content="{{.Canonical}}">
+  <meta property="og:image" content="{{.Site.BaseURL}}{{asset "img/og.png"}}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Tap Timer: a glowing seven-segment display reading 5.00 with the headline 'Think you know what 5 seconds feels like?'">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="{{.Site.BaseURL}}{{asset "img/og.png"}}">
+
+  <link rel="icon" href="{{asset "img/favicon-32.png"}}" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="{{asset "img/apple-touch-icon.png"}}">
+  <link rel="stylesheet" href="{{asset "css/app.css"}}">
+  <script>try{var t=JSON.parse(localStorage.getItem("tt.theme"));t={led:"red",lcd:"green"}[t]||t;if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+
+  {{if .Site.AdSenseClient}}
+  <meta name="google-adsense-account" content="{{.Site.AdSenseClient}}">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{.Site.AdSenseClient}}" crossorigin="anonymous"></script>
+  {{end}}
+  {{if .Site.GAID}}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{.Site.GAID}}"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config",{{.Site.GAID}});</script>
+  {{end}}
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MobileApplication",
+    "name": "Tap Timer: Beat the Clock",
+    "operatingSystem": "iOS 17.0 or later",
+    "applicationCategory": "GameApplication",
+    "url": {{.Site.BaseURL}},
+    "installUrl": "https://apps.apple.com/app/id{{.Site.AppStoreID}}",
+    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}
+  }
+  </script>
+</head>
+<body class="page-{{.Page}}">
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a class="logo" href="/" aria-label="Tap Timer home">
+        <img src="{{asset "img/icon-128.png"}}" width="32" height="32" alt="">
+        <span class="wordmark">TAP TIMER</span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="/" {{if eq .Page "home"}}aria-current="page"{{end}}>Solo</a>
+        <a href="/party" {{if eq .Page "party"}}aria-current="page"{{end}}>Party</a>
+        <a href="/how-to-play" {{if eq .Page "how-to-play"}}aria-current="page"{{end}}>How to play</a>
+      </nav>
+      <a class="btn btn--app btn--sm" href="/get?src=header" data-cta="header">Get the app</a>
+    </div>
+  </header>
+
+  <main id="main">
+    {{template "content" .}}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <div>
+        <a class="logo logo--sm" href="/" aria-label="Tap Timer home">
+          <img src="{{asset "img/icon-128.png"}}" width="26" height="26" alt="">
+          <span class="wordmark">TAP TIMER</span>
+        </a>
+        <p class="muted">The pass-the-phone timer game. On iPhone, iPad, Mac, Apple Watch, Apple TV &amp; Apple Vision.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Footer">
+        <a href="/">Play solo</a>
+        <a href="/party">Party mode</a>
+        <a href="/how-to-play">How to play</a>
+        <a href="/get?src=footer" data-cta="footer">Download the app</a>
+        <a href="/privacy">Privacy</a>
+      </nav>
+    </div>
+    <p class="container muted small">&copy; {{.Year}} Tap Timer</p>
+  </footer>
+
+  <script src="{{asset "js/app.js"}}" defer></script>
+</body>
+</html>{{end}}

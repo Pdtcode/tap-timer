@@ -1,0 +1,45 @@
+<!doctype html>
+<!-- Source for web/static/img/og.png. Render at a 1200×630 viewport (see README). -->
+<html><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0}
+body{width:1200px;height:630px;overflow:hidden;background:#040e08;color:#ebf3ee;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;position:relative}
+.glow{position:absolute;inset:0;background:radial-gradient(640px 420px at 80% 50%,rgba(48,252,96,.16),transparent 70%),radial-gradient(600px 300px at 0% 0%,rgba(48,252,96,.07),transparent 70%)}
+.wrap{position:relative;display:grid;grid-template-columns:600px 1fr;align-items:center;height:100%;padding:0 64px 0 72px;gap:40px}
+.brand{display:flex;align-items:center;gap:18px;margin-bottom:40px}
+.brand img{width:72px;height:72px;border-radius:17px;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 0 30px rgba(48,252,96,.25)}
+.wordmark{font-weight:800;font-size:26px;letter-spacing:.28em;color:#eef1f7}
+h1{font-size:62px;line-height:1.04;font-weight:800;letter-spacing:-.03em;margin-bottom:26px}
+h1 span{color:#30fc60;text-shadow:0 0 30px rgba(48,252,96,.5)}
+p{font-size:26px;color:#93a89b;line-height:1.4}
+.cta{display:flex;gap:14px;margin-top:38px}
+.pill{font-weight:600;font-size:21px;padding:14px 22px;border-radius:14px;border:2px solid #1c3326;background:#0a1610}
+.pill.app{background:#fff;color:#000;border-color:#fff}
+.screen{position:relative;height:430px;border-radius:40px;border:3px solid rgba(48,252,96,.75);background:radial-gradient(60% 45% at 50% 55%,rgba(48,252,96,.08),transparent 75%),linear-gradient(180deg,#0b1a10,#020805);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;overflow:hidden;box-shadow:0 0 70px rgba(48,252,96,.3)}
+canvas{position:absolute;inset:0}
+.label{position:relative;font-size:17px;font-weight:600;letter-spacing:.16em;color:#22a946}
+.display{position:relative;display:flex;align-items:flex-end;gap:12px;height:130px;filter:drop-shadow(0 0 10px rgba(48,252,96,.55))}
+.display svg{height:100%;width:auto}
+.display .dot{margin:0 -9px}
+.seg{fill:rgba(48,252,96,.09)}.seg.on{fill:#30fc60}
+.perfect{position:relative;font-size:30px;font-weight:800;letter-spacing:.08em;color:#ffe45c;text-shadow:0 0 18px #ffe45c}
+</style></head><body><div class="glow"></div>
+<div class="wrap">
+  <div>
+    <div class="brand"><img src="../../web/static/img/icon-128.png" alt=""><span class="wordmark">TAP TIMER</span></div>
+    <h1>Think you know what <span>5 seconds</span> feels like?</h1>
+    <p>The clock is hidden. Tap when it feels right.</p>
+    <div class="cta"><span class="pill">Play free online</span><span class="pill app">Get the iPhone app</span></div>
+  </div>
+  <div class="screen"><canvas id="c"></canvas><span class="label">GOAL 5.00s</span><div class="display" id="d"></div><span class="perfect">PERFECT!</span></div>
+</div>
+<script>
+const S={a:[16,2,32,12],g:[16,48,32,12],d:[16,94,32,12],f:[2,15,12,32],b:[50,15,12,32],e:[2,61,12,32],c:[50,61,12,32]};
+const G={0:'abcdef',5:'acdfg'};
+const digit=ch=>{let s='<svg viewBox="0 0 64 108">';for(const k in S){const[x,y,w,h]=S[k];s+=`<rect class="seg${G[ch].includes(k)?' on':''}" x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/>`}return s+'</svg>'};
+d.innerHTML=digit('5')+'<svg class="dot" viewBox="0 0 22 108"><circle class="seg on" cx="11" cy="100" r="7"/></svg>'+digit('0')+digit('0');
+// Deterministic particles so re-renders are stable.
+const cv=document.getElementById('c'),r=cv.parentElement.getBoundingClientRect();cv.width=r.width*2;cv.height=r.height*2;
+const x=cv.getContext('2d');x.scale(2,2);x.fillStyle='#30fc60';let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+for(let i=0;i<46;i++){const soft=rnd()<.35;x.globalAlpha=soft?.08+rnd()*.12:.2+rnd()*.4;x.beginPath();x.arc(rnd()*r.width,rnd()*r.height,soft?2.5+rnd()*3.5:.8+rnd()*2,0,7);x.fill()}
+</script></body></html>

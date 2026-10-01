@@ -1,0 +1,100 @@
+{{define "content"}}
+<div class="container home-grid">
+  <div class="home-main">
+    <header class="page-hero">
+      <p class="eyebrow">Beat the clock</p>
+      <h1>Think you know what <span class="accent">5&nbsp;seconds</span> feels like?</h1>
+      <p class="lede">The clock is hidden. Tap to start, then tap again when it feels right. See how close you got.</p>
+    </header>
+
+    <section class="card game" data-solo aria-label="Tap Timer game">
+      <div class="targets" role="radiogroup" aria-label="Goal time">
+        <button type="button" class="chip" role="radio" aria-checked="false" data-target="3">3s</button>
+        <button type="button" class="chip" role="radio" aria-checked="true" data-target="5">5s</button>
+        <button type="button" class="chip" role="radio" aria-checked="false" data-target="10">10s</button>
+        <button type="button" class="chip" role="radio" aria-checked="false" data-target="15">15s</button>
+        <button type="button" class="chip" role="radio" aria-checked="false" data-target="30">30s</button>
+      </div>
+
+      <button type="button" class="tapzone" data-tapzone data-state="idle" aria-describedby="solo-hint">
+        <span class="tapzone__goal">GOAL <span data-goal>5.00</span>s</span>
+        <span class="display" data-display aria-hidden="true"></span>
+        <span class="tapzone__hint" id="solo-hint" data-hint>Tap to start</span>
+      </button>
+      <p class="keyhint muted small">Tip: on a keyboard, press <kbd>Space</kbd>.</p>
+
+      <div class="result" data-result aria-live="polite" hidden>
+        <p class="result__rating" data-rating></p>
+        <p class="result__delta" data-delta></p>
+        <div class="result__actions">
+          <button type="button" class="btn" data-share>
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0L7.5 7.5M12 3l4.5 4.5M5 12v8h14v-8"/></svg>
+            <span>Challenge a friend</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="nudge" data-nudge hidden>
+        <p><strong>Playing with friends?</strong> The app adds Tournament brackets and Teams mode.</p>
+        <a class="btn btn--app btn--sm" href="/get?src=solo_nudge" data-cta="solo_nudge">Get the app</a>
+      </div>
+
+      <dl class="stats" data-stats>
+        <div><dt>Best</dt><dd data-stat="best">–</dd></div>
+        <div><dt>Average</dt><dd data-stat="avg">–</dd></div>
+        <div><dt>Rounds</dt><dd data-stat="rounds">0</dd></div>
+      </dl>
+
+      <div class="themes">
+        <span class="themes__label">Theme</span>
+        <div class="themes__swatches">
+          <button type="button" class="swatch" style="--swatch:#30fc60" data-theme-option="green" aria-label="Classic green theme" aria-pressed="false"></button>
+          <button type="button" class="swatch" style="--swatch:#ff4136" data-theme-option="red" aria-label="Red LED theme" aria-pressed="false"></button>
+          <button type="button" class="swatch" style="--swatch:#ffb627" data-theme-option="amber" aria-label="Amber theme" aria-pressed="false"></button>
+          <button type="button" class="swatch" style="--swatch:#56ccff" data-theme-option="ice" aria-label="Ice blue theme" aria-pressed="false"></button>
+        </div>
+        <a class="themes__more" href="/get?src=themes" data-cta="themes">More in the app</a>
+      </div>
+      <noscript><p class="muted">Tap Timer needs JavaScript to run the clock.</p></noscript>
+    </section>
+
+    {{template "promo" "home"}}
+
+    <section class="steps" aria-labelledby="how-title">
+      <h2 id="how-title">How it works</h2>
+      <ol class="steps__list">
+        <li><span class="steps__num">1</span><h3>Pick a goal</h3><p>3, 5, 10, 15 or 30 seconds. Five is the classic.</p></li>
+        <li><span class="steps__num">2</span><h3>Play blind</h3><p>Tap to start. The clock disappears, so you have to count in your head.</p></li>
+        <li><span class="steps__num">3</span><h3>Stop it</h3><p>Tap when it feels right. We'll show your time to the hundredth of a second.</p></li>
+      </ol>
+      <p><a class="link-arrow" href="/party">Playing with friends? Try Party mode</a></p>
+    </section>
+
+    {{template "ad" (ad "incontent")}}
+
+    <section class="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">FAQ</h2>
+      <details>
+        <summary>Is Tap Timer free?</summary>
+        <p>Yes. The web version is free and supported by ads. The iPhone app is a free download with an optional one-time Pro upgrade. It has no subscriptions and no ads.</p>
+      </details>
+      <details>
+        <summary>How accurate is the timer?</summary>
+        <p>We time your taps with your browser's high-resolution clock and measure from the moment your finger touches the screen. The result is shown to the hundredth of a second.</p>
+      </details>
+      <details>
+        <summary>What's the difference between the website and the app?</summary>
+        <p>On the web you can play Solo and Party (Goal Challenge). The app adds Tournament brackets, Teams mode, more themes, landscape play, sound, and Apple Watch and Apple TV support.</p>
+      </details>
+      <details>
+        <summary>Can I play with a group?</summary>
+        <p>Yes. <a href="/party">Party mode</a> lets up to 8 players pass one phone around. Everyone's time stays hidden until the final reveal.</p>
+      </details>
+    </section>
+  </div>
+
+  <aside class="home-side">
+    {{template "ad" (ad "sidebar")}}
+  </aside>
+</div>
+{{end}}

@@ -1,0 +1,57 @@
+{{define "content"}}
+<div class="container narrow prose">
+  <header class="page-hero">
+    <p class="eyebrow">Rules &amp; tips</p>
+    <h1>How to play Tap Timer</h1>
+    <p class="lede">One rule: stop the hidden clock as close to the goal time as you can.</p>
+  </header>
+
+  <h2>The basics</h2>
+  <ol>
+    <li>Choose a goal time. <strong>5.00 seconds</strong> is the classic.</li>
+    <li>Tap once to start. The clock keeps running, but you can't see it.</li>
+    <li>Tap again when you think the goal time has passed.</li>
+    <li>Your real time is revealed. The smaller the gap, the better.</li>
+  </ol>
+
+  <h2>Game modes</h2>
+  <h3>Goal Challenge <span class="tag">Web + App</span></h3>
+  <p>Set a goal and pass the phone around. Each player takes a blind turn, and the game ranks everyone by how close they got. <a href="/party">Play it free in your browser</a>.</p>
+
+  <h3>Tournament <span class="tag tag--app">App</span></h3>
+  <p>Head-to-head brackets with shuffled seeding and automatic byes for odd numbers. Good for game nights, classrooms and office parties.</p>
+
+  <h3>Teams <span class="tag tag--app">App</span></h3>
+  <p>Split the group into teams. Each team's score is the average of its players, so everyone's tap counts.</p>
+
+  <p><a class="btn btn--app" href="/get?src=howto" data-cta="howto">Get Tournament &amp; Teams on the App Store</a></p>
+
+  {{template "ad" (ad "incontent")}}
+
+  <h2>Tips for getting closer</h2>
+  <ul>
+    <li><strong>Count in half-seconds.</strong> "One-and-two-and…" gives you twice as many checkpoints as "one, two…".</li>
+    <li><strong>Use a beat.</strong> Songs around 120 BPM have two beats per second. Tap along in your head.</li>
+    <li><strong>Relax your finger.</strong> Your reaction time is part of the result. Keep your thumb resting just above the screen.</li>
+    <li><strong>Don't rush the start.</strong> Most people start counting late, then stop early to make up for it.</li>
+  </ul>
+
+  <h2>What counts as a good score?</h2>
+  <table class="table">
+    <thead><tr><th>Off by</th><th>Rating</th></tr></thead>
+    <tbody>
+      <tr><td>0.00s</td><td>Perfect</td></tr>
+      <tr><td>≤ 0.05s</td><td>Incredible</td></tr>
+      <tr><td>≤ 0.10s</td><td>Sharp</td></tr>
+      <tr><td>≤ 0.25s</td><td>Close</td></tr>
+      <tr><td>≤ 0.50s</td><td>Not bad</td></tr>
+      <tr><td>≤ 1.00s</td><td>Warm</td></tr>
+      <tr><td>&gt; 1.00s</td><td>Way off</td></tr>
+    </tbody>
+  </table>
+
+  <p><a class="btn btn--primary" href="/">Play now</a></p>
+
+  {{template "ad" (ad "footer")}}
+</div>
+{{end}}

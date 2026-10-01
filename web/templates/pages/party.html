@@ -1,0 +1,67 @@
+{{define "content"}}
+<div class="container narrow">
+  <header class="page-hero">
+    <p class="eyebrow">Goal Challenge</p>
+    <h1>Party mode</h1>
+    <p class="lede">Pass one phone around. Everyone tries to hit the same goal time with the clock hidden. Nobody sees a score until the reveal. Closest wins.</p>
+  </header>
+
+  <section class="card party" data-party aria-label="Party game">
+    <!-- 1. Setup -->
+    <div class="screen" data-screen="setup">
+      <div class="field">
+        <label class="label" for="party-target">Goal time</label>
+        <select id="party-target" class="select" data-party-target>
+          <option value="3">3 seconds</option>
+          <option value="5" selected>5 seconds</option>
+          <option value="10">10 seconds</option>
+          <option value="15">15 seconds</option>
+          <option value="30">30 seconds</option>
+        </select>
+      </div>
+
+      <p class="label" id="players-label">Players <span class="muted" data-player-count></span></p>
+      <ol class="players" data-players aria-labelledby="players-label"></ol>
+      <button type="button" class="btn btn--ghost btn--block" data-add-player>+ Add player</button>
+
+      <button type="button" class="btn btn--primary btn--block btn--lg" data-start>Start game</button>
+      <noscript><p class="muted">Party mode needs JavaScript.</p></noscript>
+    </div>
+
+    <!-- 2. Hand the phone over -->
+    <div class="screen screen--center" data-screen="pass" hidden>
+      <p class="eyebrow">Pass the phone to</p>
+      <p class="pass-name" data-pass-name></p>
+      <p class="muted">Goal: <strong data-pass-goal></strong>. Keep your time secret.</p>
+      <button type="button" class="btn btn--primary btn--lg" data-ready>I'm ready</button>
+      <p class="muted small" data-pass-progress></p>
+    </div>
+
+    <!-- 3. Take a turn -->
+    <div class="screen" data-screen="turn" hidden>
+      <p class="turn-name"><span class="player-dot" aria-hidden="true"></span><span data-turn-name></span></p>
+      <button type="button" class="tapzone" data-tapzone data-state="idle" aria-describedby="party-hint">
+        <span class="tapzone__goal">GOAL <span data-turn-goal></span>s</span>
+        <span class="display" data-display aria-hidden="true"></span>
+        <span class="tapzone__hint" id="party-hint" data-hint aria-live="polite">Tap to start</span>
+      </button>
+      <button type="button" class="btn btn--primary btn--block btn--lg" data-next hidden></button>
+    </div>
+
+    <!-- 4. Reveal -->
+    <div class="screen" data-screen="results" hidden>
+      <p class="eyebrow center">Results · goal <span data-results-goal></span>s</p>
+      <p class="winner" data-winner></p>
+      <ol class="leaderboard" data-leaderboard></ol>
+      <div class="result__actions">
+        <button type="button" class="btn btn--primary" data-rematch>Rematch</button>
+        <button type="button" class="btn" data-edit>Change players</button>
+      </div>
+    </div>
+  </section>
+
+  {{template "promo" "party"}}
+
+  {{template "ad" (ad "incontent")}}
+</div>
+{{end}}

@@ -1,0 +1,32 @@
+{{/* App upsell card. Usage: {{template "promo" "placement-name"}} — the string becomes the /get?src= value. */}}
+{{define "promo"}}
+<section class="promo card" aria-labelledby="promo-title-{{.}}">
+  <div class="promo__body">
+    <div class="promo__brand">
+      <img src="{{asset "img/icon-128.png"}}" width="52" height="52" alt="Tap Timer app icon" loading="lazy">
+      <p class="eyebrow">Tap Timer for iPhone</p>
+    </div>
+    <h2 id="promo-title-{{.}}">Take it to the party</h2>
+    <ul class="promo__list">
+      <li><strong>Tournament mode</strong>: brackets with shuffled seeding and automatic byes</li>
+      <li><strong>Teams mode</strong>: split the room and average your scores</li>
+      <li><strong>Themes</strong>: seven-segment and pixel-art looks, landscape mode and sound</li>
+      <li>On iPhone, iPad, Mac, Apple Watch and Apple TV</li>
+    </ul>
+    <a class="btn btn--app" href="/get?src={{.}}" data-cta="{{.}}">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4.5-4.5M12 14 7.5 9.5M5 17v3h14v-3"/></svg>
+      Get it on the App Store
+    </a>
+    <p class="promo__fine">Free download · No account · No ads in the app</p>
+  </div>
+  <div class="promo__art" aria-hidden="true">
+    <div class="phone">
+      <div class="phone__screen">
+        <span class="phone__label">GOAL 5.00s</span>
+        <div class="display display--mini" data-mini-display="0.00"></div>
+        <span class="phone__label">TAP TO START</span>
+      </div>
+    </div>
+  </div>
+</section>
+{{end}}
