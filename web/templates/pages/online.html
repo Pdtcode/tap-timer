@@ -31,6 +31,17 @@
       <noscript><p class="muted">Online multiplayer needs JavaScript.</p></noscript>
     </div>
 
+    <!-- Rooms are at capacity: wait, and join automatically when a spot opens -->
+    <div class="screen screen--center pixel online__full" data-screen="full" hidden>
+      <p class="eyebrow center">Online rooms are busy</p>
+      <p class="online__full-title">All spots are full</p>
+      <p class="online__full-text">We'll get you in automatically as soon as one opens. Keep this page open.</p>
+      <div class="online__full-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+      <p class="online__full-countdown" data-full-countdown role="status"></p>
+      <button type="button" class="btn" data-full-cancel>Cancel</button>
+      <p class="online__full-alt">Can't wait? <a href="/party">Party mode</a> works offline on one phone.</p>
+    </div>
+
     <!-- 2. Lobby -->
     <div class="screen pixel" data-screen="lobby" hidden>
       <div class="online__invite">

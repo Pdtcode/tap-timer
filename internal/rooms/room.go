@@ -175,6 +175,14 @@ func (r *Room) Join(name, token string, now time.Time) (id string, err error) {
 	return p.id, nil
 }
 
+// Seated reports whether token already holds a seat here, i.e. whether
+// joining with it would be a return rather than a new player.
+func (r *Room) Seated(token string) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.byToken(token) != nil
+}
+
 // Disconnect marks a player's connection as lost. They keep their seat for
 // SeatHold, and can come back with Join and the same token.
 func (r *Room) Disconnect(id string, now time.Time) {

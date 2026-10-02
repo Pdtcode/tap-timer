@@ -103,7 +103,7 @@ primary_region = "dfw"
   memory = "256mb"
 ```
 
-**`[http_service.concurrency]`:** count `connections`, not `requests`: a WebSocket is one connection for as long as a player is in a room. **Not yet in the repo's `fly.toml`;** until it's added, Fly's low default applies (see [Scaling](#9-scaling)).
+**`[http_service.concurrency]`:** count `connections`, not `requests`: a WebSocket is one connection for as long as a player is in a room. In the repo's `fly.toml` since 2026-10-02.
 
 **`min_machines_running`:**
 - `1` keeps the site instantly responsive. Recommended, since first impressions drive app downloads.
@@ -247,7 +247,7 @@ Every player in a room holds one WebSocket connection open the whole time, so th
 | With the concurrency block in the `fly.toml` above | 800 soft / 1,000 hard | Players plus visitors. |
 | Memory (256 MB) | roughly 2,000–3,000 idle sockets | Estimate, not load-tested: about 20–50 KB per socket (two goroutines plus buffers). |
 | CPU | not a constraint | A full 8-player round is a few dozen small JSON messages; pings every 25s. |
-| Built into the app | 1,000 open rooms, 8 players per room | Plus per-IP limits: 10 room creations and 30 connections a minute. |
+| Built into the app | **900 players online** (`ONLINE_MAX_PLAYERS`), 1,000 open rooms, 8 per room | Below Fly's hard limit on purpose: pages still load, and anyone past 900 gets a "All spots are full" waiting screen that joins automatically when a spot opens (returning players always get their seat back). Raise `ONLINE_MAX_PLAYERS` and `hard_limit` together. Plus per-IP limits: 10 room creations and 30 connections a minute. |
 
 **Growing past that:**
 1. Raise the concurrency limits and memory together: `fly scale memory 512`, then roughly double `soft_limit` / `hard_limit`.

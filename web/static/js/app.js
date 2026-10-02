@@ -1059,7 +1059,7 @@
     let retryTimer = 0;
     let gone = false; // the room can't be rejoined; stop reconnecting
     let pending = null; // a result waiting for the connection to come back
-    let playedRound = 0;
+    let lockedRound = 0; // the round this page submitted a time for (0: none yet this match)
 
     function show(name) {
       for (const key in screens) screens[key].hidden = key !== name;
@@ -1089,6 +1089,7 @@
       try {
         const res = await fetch('/api/rooms', { method: 'POST' });
         const body = await res.json();
+        if (body.error === 'server_full') return waitForSpot('create');
         if (!res.ok) return entryFail(ERRORS[body.error] || 'Could not create a room. Try again.');
         track('room_create', {});
         enter(body.code);
@@ -1133,6 +1134,7 @@
         try { m = JSON.parse(e.data); } catch { return; }
         if (m.t === 'welcome') {
           me = m.you;
+          waitTries = 0;
           setBanner('');
           if (pending) send(pending);
           pending = null;
@@ -1162,7 +1164,55 @@
       return false;
     }
 
+    // --- rooms full: wait for a spot ---------------------------------------
+    // The server caps how many players can be online at once. Rather than an
+    // error, show a waiting screen and keep trying; join as soon as there's room.
+    const fullCountdown = $('[data-full-countdown]');
+    let waitTimer = 0;
+    let tickTimer = 0;
+    let waitTries = 0;
+
+    function waitForSpot(mode) {
+      gone = true; // stop the normal reconnect loop while we wait
+      if (ws) {
+        ws.onclose = null;
+        ws.close();
+        ws = null;
+      }
+      setBanner('');
+      show('full');
+      if (waitTries++ === 0) track('online_full', { mode });
+      // 8-14s, so a crowd of waiting pages doesn't retry in lockstep.
+      let left = 8 + Math.floor(Math.random() * 7);
+      const tick = () => {
+        fullCountdown.textContent = `Trying again in ${left}s`;
+        if (left-- > 0) tickTimer = setTimeout(tick, 1000);
+      };
+      clearTimeout(tickTimer);
+      tick();
+      clearTimeout(waitTimer);
+      waitTimer = setTimeout(() => {
+        fullCountdown.textContent = 'Checking for a spot…';
+        if (mode === 'create') {
+          create();
+        } else {
+          gone = false;
+          retries = 0;
+          connect();
+        }
+      }, (left + 1) * 1000);
+    }
+
+    $('[data-full-cancel]').addEventListener('click', () => {
+      clearTimeout(waitTimer);
+      clearTimeout(tickTimer);
+      waitTries = 0;
+      gone = true;
+      show('entry');
+    });
+
     function onError(c) {
+      if (c === 'server_full') return waitForSpot('join');
       if (['room_not_found', 'room_full', 'match_in_progress', 'room_closed', 'server_restarting'].includes(c)) {
         gone = true;
         state = null;
@@ -1215,6 +1265,7 @@
       onStop(elapsed) {
         zone.dataset.state = 'locked';
         hint.textContent = 'Locked in ✓';
+        lockedRound = state.round;
         const msg = { t: 'result', round: state.round, elapsed: Number(elapsed.toFixed(2)) };
         if (!send(msg)) pending = msg;
         track('round_complete', { mode: 'online', target: state.goal });
@@ -1235,23 +1286,30 @@
         show('lobby');
       } else if (s.phase === 'round') {
         const mine = byId[me];
-        if (playedRound !== s.round) {
-          // A new round: fresh tap zone.
-          playedRound = s.round;
+        const done = Boolean(mine && mine.done);
+        // A fresh tap zone whenever a round starts. Round numbers restart at 1
+        // every match, so "a different number" alone isn't enough: anything
+        // coming from another screen (lobby, reveal, a reconnect) is new too.
+        const fresh = !prev || prev.phase !== 'round' || prev.round !== s.round;
+        // Safety net: never leave the zone locked for a round this page didn't
+        // submit, when the server agrees we haven't played it.
+        const stale = zone.dataset.state === 'locked' && lockedRound !== s.round && !done;
+        if (fresh || stale) {
           timer.reset();
-          zone.dataset.state = mine && mine.done ? 'locked' : 'idle';
+          lockedRound = done ? s.round : 0;
+          zone.dataset.state = done ? 'locked' : 'idle';
           display.set('0.00');
-          hint.textContent = mine && mine.done ? 'Locked in ✓' : 'Tap to start';
-          if (prev && prev.phase !== 'round') track('online_round', { round: s.round });
+          hint.textContent = done ? 'Locked in ✓' : 'Tap to start';
+          if (fresh && prev && prev.phase !== 'round') track('online_round', { round: s.round });
         }
         $('[data-round-label]').textContent = `Round ${s.round} of ${s.settings.rounds}`;
         $('[data-round-goal]').textContent = fmt(s.goal);
         $('[data-turn-goal]').textContent = fmt(s.goal);
-        const done = s.players.filter((p) => p.done).length;
+        const doneCount = s.players.filter((p) => p.done).length;
         const waiting = s.players.filter((p) => p.connected && !p.done).length;
-        $('[data-progress]').textContent = mine && mine.done
+        $('[data-progress]').textContent = done
           ? (waiting ? `Waiting for ${waiting} more…` : 'Revealing…')
-          : `${done} of ${s.players.length} locked in`;
+          : `${doneCount} of ${s.players.length} locked in`;
         show('round');
       } else {
         renderResults(s, byId, isHost);

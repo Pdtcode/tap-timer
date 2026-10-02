@@ -335,3 +335,45 @@ func TestOnlinePages(t *testing.T) {
 		t.Error("/online missing from sitemap")
 	}
 }
+
+func TestOnlineCapacity(t *testing.T) {
+	ts, app, _ := startOnline(t, nil)
+	app.online.maxPlayers = 2
+	code := createRoom(t, ts)
+
+	a, b := dial(t, ts, code), dial(t, ts, code)
+	a.join("Pat", tokA)
+	b.join("Sam", tokB)
+
+	// Full: no new rooms...
+	res, err := http.Post(ts.URL+"/api/rooms", "application/json", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var body struct{ Error string }
+	json.NewDecoder(res.Body).Decode(&body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusServiceUnavailable || body.Error != "server_full" {
+		t.Errorf("create when full: %d %q", res.StatusCode, body.Error)
+	}
+
+	// ...and no new players: told so, then disconnected to free the slot.
+	c := dial(t, ts, code)
+	c.send(map[string]any{"t": "join", "name": "Alex", "token": "token-cccccccccccccccc"})
+	if e := c.next("error"); e["code"] != "server_full" {
+		t.Fatalf("join when full: %v", e)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if _, _, err := c.ws.Read(ctx); err == nil {
+		t.Error("connection still open after server_full")
+	}
+
+	// A player returning to a seat they hold always gets back in.
+	b.ws.Close(websocket.StatusNormalClosure, "reload")
+	a2 := dial(t, ts, code)
+	a2.send(map[string]any{"t": "join", "name": "", "token": tokB})
+	if a2.next("welcome")["you"] == "" {
+		t.Error("returning player refused")
+	}
+}

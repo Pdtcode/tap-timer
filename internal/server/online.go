@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -37,7 +38,15 @@ const (
 
 	createsPerMinute = 10 // room creations per IP
 	joinsPerMinute   = 30 // WebSocket connections per IP
+
+	// maxPlayers is how many players can be connected at once. Kept below
+	// fly.toml's hard_limit (1000 connections) so pages still load when rooms
+	// are full, and the page can show a waiting screen instead of Fly's error.
+	// ONLINE_MAX_PLAYERS overrides it; raise both together.
+	maxPlayers = 900
 )
+
+var errServerFull = rooms.Error("server_full")
 
 var (
 	roomCodeRe = regexp.MustCompile(`^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}$`)
@@ -50,10 +59,12 @@ type online struct {
 	now     func() time.Time
 	tick    time.Duration
 
-	mu       sync.Mutex
-	clients  map[*rooms.Room]map[*client]struct{}
-	sweeping bool
-	closed   bool
+	mu         sync.Mutex
+	clients    map[*rooms.Room]map[*client]struct{}
+	sockets    int // connected clients, guarded by mu
+	maxPlayers int
+	sweeping   bool
+	closed     bool
 
 	creates, joins *ipLimiter
 }
@@ -75,6 +86,8 @@ func newOnline(baseURL string) *online {
 		baseURL: baseURL,
 		now:     time.Now,
 		tick:    time.Second,
+
+		maxPlayers: envInt("ONLINE_MAX_PLAYERS", maxPlayers),
 		clients: make(map[*rooms.Room]map[*client]struct{}),
 		creates: newIPLimiter(createsPerMinute, time.Minute),
 		joins:   newIPLimiter(joinsPerMinute, time.Minute),
@@ -87,6 +100,10 @@ func (o *online) createRoom(c *gin.Context) {
 	c.Header("Cache-Control", "no-store")
 	if !o.creates.allow(c.ClientIP(), o.now()) {
 		c.JSON(http.StatusTooManyRequests, gin.H{"error": "rate_limited"})
+		return
+	}
+	if o.full(0) {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": errorCode(errServerFull)})
 		return
 	}
 	r, err := o.hub.Create(o.now())
@@ -173,6 +190,9 @@ func (o *online) readLoop(ctx context.Context, cl *client) {
 		}
 		if err := o.handle(cl, m, now); err != nil {
 			o.enqueue(cl, errorMsg(err))
+			if errors.Is(err, errServerFull) {
+				return // free the slot; the page waits and tries again
+			}
 			continue
 		}
 		o.broadcast(cl.room)
@@ -187,6 +207,11 @@ func (o *online) handle(cl *client, m message, now time.Time) error {
 		}
 		if !tokenRe.MatchString(m.Token) {
 			return rooms.Error("bad_token")
+		}
+		// At capacity, only players returning to a seat they hold get in.
+		// This connection is already counted, hence 1.
+		if o.full(1) && !r.Seated(m.Token) {
+			return errServerFull
 		}
 		id, err := r.Join(m.Name, m.Token, now)
 		if err != nil {
@@ -235,7 +260,16 @@ func (o *online) register(cl *client) bool {
 		o.clients[cl.room] = make(map[*client]struct{})
 	}
 	o.clients[cl.room][cl] = struct{}{}
+	o.sockets++
 	return true
+}
+
+// full reports whether players are at capacity, not counting `self`
+// connections the caller already holds.
+func (o *online) full(self int) bool {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	return o.sockets-self >= o.maxPlayers
 }
 
 // leave runs when a client's connection ends. Their seat is held for
@@ -243,6 +277,7 @@ func (o *online) register(cl *client) bool {
 func (o *online) leave(cl *client) {
 	o.mu.Lock()
 	delete(o.clients[cl.room], cl)
+	o.sockets--
 	if len(o.clients[cl.room]) == 0 {
 		delete(o.clients, cl.room)
 	}
@@ -425,6 +460,13 @@ func mustJSON(v any) []byte {
 		panic(err) // only fixed, marshalable types are passed in
 	}
 	return b
+}
+
+func envInt(name string, fallback int) int {
+	if n, err := strconv.Atoi(os.Getenv(name)); err == nil && n > 0 {
+		return n
+	}
+	return fallback
 }
 
 // ipLimiter allows `limit` events per IP per window (fixed windows).

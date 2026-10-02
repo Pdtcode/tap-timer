@@ -70,7 +70,8 @@ Rooms live in the server's memory (`internal/rooms`); browsers talk to them over
 
 - **Hosting:** run **one** machine (`fly scale count 1`), or players can land on a machine that doesn't have their room. Deploys end open rooms.
 - **Capacity:** every player holds one connection. Without an `[http_service.concurrency]` block Fly caps a machine at about 25 connections; with `type = "connections"`, `soft_limit = 800`, `hard_limit = 1000`, one 256 MB machine handles about 1,000 (estimate). Details and how to grow: `flyio-setup.md` → Scaling.
-- **Limits built in:** 8 players per room, 1,000 open rooms, rooms close after 30 idle minutes, per-IP limits on creating rooms and connecting.
+- **Limits built in:** 900 players online at once (`ONLINE_MAX_PLAYERS`; kept below Fly's `hard_limit` so pages still load), 8 players per room, 1,000 open rooms, rooms close after 30 idle minutes, per-IP limits on creating rooms and connecting.
+- **When full:** new players get an "All spots are full" waiting screen that retries every 8–14s and joins automatically when a spot opens. Players returning to a seat they hold always get back in.
 
 ## Before launch
 
