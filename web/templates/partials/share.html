@@ -6,9 +6,9 @@
 <section class="share pixel" data-share-panel data-mode="{{.}}" data-icon="{{asset "img/icon-128.png"}}" data-badge="{{asset "img/app-store-badge.svg"}}" data-app-store="{{appStoreURL (print "share_" .)}}" aria-labelledby="share-title-{{.}}" hidden>
   <p class="share__title" id="share-title-{{.}}">Share your result</p>
   <div class="share__body">
-    <a class="share__preview" data-share-preview download="tap-timer-result.png" aria-label="Save result image">
+    <button type="button" class="share__preview" data-share-preview aria-label="View result card larger">
       <img data-share-img alt="" width="1080" height="1080">
-    </a>
+    </button>
     <div class="share__actions">
       <button type="button" class="btn btn--primary" data-share-native hidden>Share</button>
       <a class="btn" data-share-to="x" target="_blank" rel="noopener">Post on X</a>
@@ -19,5 +19,10 @@
     </div>
   </div>
   <p class="share__app">Friends on iPhone or iPad? <a href="/get?src=share_{{.}}" data-cta="share_{{.}}">Get Tap Timer on the App Store</a> for Tournament and Teams.</p>
+  <!-- Larger view of the card. Click anywhere or press Esc to close. -->
+  <dialog class="lightbox" data-share-lightbox aria-label="Result card">
+    <img data-lightbox-img alt="" width="1080" height="1080">
+    <p class="lightbox__hint">Tap anywhere to close</p>
+  </dialog>
 </section>
 {{end}}

@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 
 	"taptimer/internal/config"
@@ -80,6 +81,11 @@ func NewApp(cfg config.Config) (*App, error) {
 		r.TrustedPlatform = "Fly-Client-IP"
 	}
 	r.Use(gin.Recovery(), gin.LoggerWithConfig(gin.LoggerConfig{SkipPaths: []string{"/healthz"}}), s.securityHeaders())
+	// Compress text responses (app.js and app.css shrink to roughly a quarter).
+	// Not WebSockets, which need the raw connection, nor already-compressed files.
+	r.Use(gzip.Gzip(gzip.DefaultCompression,
+		gzip.WithExcludedPaths([]string{"/ws/"}),
+		gzip.WithExcludedExtensions([]string{".png", ".woff2"})))
 	if cfg.IsProduction() {
 		r.Use(s.canonicalHost())
 	}

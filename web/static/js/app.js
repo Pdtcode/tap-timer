@@ -547,6 +547,8 @@
     const mode = el.dataset.mode;
     const img = el.querySelector('[data-share-img]');
     const preview = el.querySelector('[data-share-preview]');
+    const lightbox = el.querySelector('[data-share-lightbox]');
+    const lightboxImg = el.querySelector('[data-lightbox-img]');
     const saveBtn = el.querySelector('[data-share-save]');
     const nativeBtn = el.querySelector('[data-share-native]');
     const copyBtn = el.querySelector('[data-share-copy]');
@@ -563,11 +565,11 @@
     /** @param {{headline:string, time:number, target:number, line:string, text:string, url:string}} r */
     async function show(r) {
       const appUrl = el.dataset.appStore; // straight to the App Store, with campaign tags
-      const message = `${r.text}\n${r.url}\n\n📱 Tap Timer for iPhone & iPad: ${appUrl}`;
+      const message = `${r.text}\n${r.url}\n\nTap Timer for iPhone & iPad: ${appUrl}`;
       current = { ...r, message };
       file = null;
       const hrefs = {
-        x: `https://twitter.com/intent/tweet?text=${enc(`${r.text}\n\n📱 iPhone & iPad app: ${appUrl}`)}&url=${enc(r.url)}`,
+        x: `https://twitter.com/intent/tweet?text=${enc(`${r.text}\n\niPhone & iPad app: ${appUrl}`)}&url=${enc(r.url)}`,
         facebook: `https://www.facebook.com/sharer/sharer.php?u=${enc(r.url)}`,
         whatsapp: `https://wa.me/?text=${enc(message)}`,
       };
@@ -587,7 +589,7 @@
       if (blobUrl) URL.revokeObjectURL(blobUrl);
       blobUrl = URL.createObjectURL(blob);
       file = new File([blob], 'tap-timer-result.png', { type: 'image/png' });
-      img.src = preview.href = saveBtn.href = blobUrl;
+      img.src = saveBtn.href = blobUrl;
       img.alt = `Result card: ${r.headline}, ${fmt(r.time)}s with a goal of ${fmt(r.target)}s`;
     }
 
@@ -606,10 +608,20 @@
       } catch { /* cancelled or unsupported */ }
     });
     links.forEach((a) => a.addEventListener('click', () => track('share', { mode, method: a.dataset.shareTo })));
-    [saveBtn, preview].forEach((a) => a.addEventListener('click', (e) => {
+    saveBtn.addEventListener('click', (e) => {
       if (!file) return e.preventDefault(); // card still rendering
       track('share', { mode, method: 'image' });
-    }));
+    });
+    // Clicking the preview shows the card larger on the page (Save image downloads it).
+    preview.addEventListener('click', () => {
+      if (!blobUrl) return; // card still rendering
+      lightboxImg.src = blobUrl;
+      lightboxImg.alt = img.alt;
+      if (typeof lightbox.showModal === 'function') lightbox.showModal();
+      else window.open(blobUrl, '_blank'); // very old browsers without <dialog>
+      track('share_preview', { mode });
+    });
+    lightbox.addEventListener('click', () => lightbox.close()); // anywhere, including the image
     copyBtn.addEventListener('click', async () => {
       if (!current) return;
       try {
@@ -710,8 +722,8 @@
           stats: statText(r.target),
           line: isExact(r.diff) ? 'DEAD ON!' : `${fmtDiff(r.diff)} ${r.diff > 0 ? 'OVER' : 'UNDER'}`,
           text: isExact(r.diff)
-            ? `⏱️ I stopped the hidden clock at exactly ${fmt(r.target)}s on Tap Timer. Can you?`
-            : `⏱️ I stopped the hidden clock at ${fmt(r.elapsed)}s (goal ${fmt(r.target)}s) on Tap Timer, off by ${Math.abs(r.diff).toFixed(2)}s. Can you beat me?`,
+            ? `I stopped the hidden clock at exactly ${fmt(r.target)}s on Tap Timer. Can you?`
+            : `I stopped the hidden clock at ${fmt(r.elapsed)}s (goal ${fmt(r.target)}s) on Tap Timer, off by ${Math.abs(r.diff).toFixed(2)}s. Can you beat me?`,
           url: `${location.origin}/?t=${r.target}`,
         });
       }
@@ -995,8 +1007,8 @@
         target: game.target,
         line: `${game.players.length} PLAYERS · ${isExact(best.diff) ? 'DEAD ON!' : `${off}s OFF`}`,
         text: winners.length > 1
-          ? `🏆 Tie on Tap Timer party mode! ${winners.map((w) => w.name).join(' & ')} stopped the hidden clock ${off}s from ${fmt(game.target)}s. Think your group can do better?`
-          : `🏆 ${best.name} won Tap Timer party mode with ${fmt(best.elapsed)}s on a hidden ${fmt(game.target)}s clock, ${off}s off. Think your group can do better?`,
+          ? `Tie on Tap Timer party mode! ${winners.map((w) => w.name).join(' & ')} stopped the hidden clock ${off}s from ${fmt(game.target)}s. Think your group can do better?`
+          : `${best.name} won Tap Timer party mode with ${fmt(best.elapsed)}s on a hidden ${fmt(game.target)}s clock, ${off}s off. Think your group can do better?`,
         url: `${location.origin}/party`,
       });
       track('party_complete', { target: game.target, players: game.players.length });
@@ -1244,7 +1256,7 @@
     $('[data-copy]').addEventListener('click', async (e) => {
       try {
         await navigator.clipboard.writeText(inviteURL());
-        e.target.textContent = 'Copied ✓';
+        e.target.textContent = 'Copied!';
         setTimeout(() => { e.target.textContent = 'Copy link'; }, 1600);
       } catch { prompt('Copy this link:', inviteURL()); }
     });

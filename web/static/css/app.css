@@ -686,6 +686,12 @@ kbd {
 
 .pixel .input, .pixel .select { --fill: var(--bg); --hi: rgba(0, 0, 0, 0.5); --lo: transparent; font: 16px var(--pixel); }
 .pixel .input:focus, .pixel .select:focus { --edge: var(--seg-on); outline: none; }
+/* Dropdowns light up on hover like the goal chips: green frame, faint green fill. */
+.pixel .select { cursor: pointer; }
+.pixel .select:hover:not(:focus) {
+  --edge: color-mix(in srgb, var(--seg-on) 70%, var(--border));
+  --fill: color-mix(in srgb, var(--seg-on) 7%, var(--bg));
+}
 .pixel .select {
   appearance: none;
   -webkit-appearance: none;
@@ -793,7 +799,27 @@ kbd {
 .share { margin-top: 28px; }
 .share__title { font: 8px/1.8 var(--pixel); letter-spacing: 0.06em; text-transform: uppercase; color: var(--seg-on); text-align: center; margin-bottom: 16px; }
 .share__body { display: grid; gap: 20px; justify-items: center; }
-.share__preview { display: block; width: min(240px, 70vw); line-height: 0; box-shadow: 0 0 24px color-mix(in srgb, var(--seg-on) 18%, transparent); }
+.share__preview {
+  display: block; width: min(240px, 70vw); padding: 0; border: 0; background: none; line-height: 0;
+  cursor: zoom-in; box-shadow: 0 0 24px color-mix(in srgb, var(--seg-on) 18%, transparent);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.share__preview:hover { transform: scale(1.02); box-shadow: 0 0 32px color-mix(in srgb, var(--seg-on) 32%, transparent); }
+
+/* Result card, larger, over a dimmed page. */
+.lightbox {
+  border: 0; padding: 0; background: none; max-width: none; max-height: none;
+  overflow: visible; cursor: zoom-out;
+}
+.lightbox::backdrop { background: rgba(2, 8, 5, 0.86); backdrop-filter: blur(4px); }
+.lightbox img {
+  display: block; width: min(92vw, 80vh, 720px); height: auto; aspect-ratio: 1;
+  box-shadow: 0 0 48px color-mix(in srgb, var(--seg-on) 30%, transparent);
+}
+.lightbox__hint { margin: 14px 0 0; text-align: center; font: 8px/1.6 var(--pixel); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.lightbox[open] { animation: lightbox-in 0.18s ease-out; }
+@keyframes lightbox-in { from { opacity: 0; transform: scale(0.96); } }
+@media (prefers-reduced-motion: reduce) { .lightbox[open] { animation: none; } .share__preview:hover { transform: none; } }
 .share__preview img { width: 100%; height: auto; aspect-ratio: 1; background: var(--screen); }
 .share__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; width: 100%; max-width: 420px; padding: 0 var(--px); }
 .share__actions [data-share-native], .share__actions [data-share-save] { grid-column: 1 / -1; }
