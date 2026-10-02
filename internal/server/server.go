@@ -112,8 +112,8 @@ func NewApp(cfg config.Config) (*App, error) {
 		"How to Play Tap Timer — Rules, Modes & Tips",
 		"Rules for Tap Timer's Goal Challenge, Tournament and Teams modes, plus tips for getting better at judging time."))
 	getHead("/privacy", s.page("privacy",
-		"Privacy Policy | Tap Timer",
-		"How the Tap Timer website uses cookies, advertising and analytics."))
+		"Website Privacy Policy | Tap Timer",
+		"How the Tap Timer website handles your information: browser storage, online rooms, server logs and Google ads."))
 	getHead("/online", s.page("online",
 		"Play Tap Timer Online with Friends: Multiplayer Timer Game",
 		"Play the hidden-clock timer game online with friends, each on your own phone. Share a room code; closest to the goal over the match wins."))

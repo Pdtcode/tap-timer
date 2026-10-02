@@ -1,33 +1,75 @@
 {{define "content"}}
 <div class="container narrow prose">
   <header class="page-hero">
+    <p class="eyebrow">Website</p>
     <h1>Privacy policy</h1>
-    <p class="muted">Applies to this website. The Tap Timer iOS app has its own <a href="https://nativetranslator.github.io/taptimer/privacy.html" rel="noopener">app privacy policy</a>.</p>
+    <p class="lede">This policy covers the Tap Timer website, <strong>{{.Site.BaseURL}}</strong>, only. The Tap Timer app for iPhone and iPad is a separate product with its own <a href="https://nativetranslator.github.io/taptimer/privacy.html" rel="noopener">app privacy policy</a>.</p>
   </header>
 
-  <h2>What we store on your device</h2>
-  <p>Your settings and Party mode player names are saved in your browser's local storage. Clearing your browser data removes them. Your game stats are kept only while the page is open. None of this is sent to our servers.</p>
+  <h2>In short</h2>
+  <ul>
+    <li>There are no accounts and no sign-up. You can play without giving us anything.</li>
+    <li>Your settings and Party names stay in your browser.</li>
+    <li>In online rooms, the name you type and your times are shared with the other players in that room, and kept only while the room is open.</li>
+    <li>The site shows Google ads, which use cookies. Visitors in the EEA, the UK and Switzerland are asked for consent first.</li>
+    <li>We don't sell your information.</li>
+  </ul>
+
+  <h2>Stored in your browser</h2>
+  <p>The site saves a few things on your device so it remembers you. They never leave your device unless noted, and clearing this site's data in your browser removes them.</p>
+  <ul>
+    <li><strong>Until you clear them (local storage):</strong> your chosen goal time, Party mode player names and goal, and the name you last used in online rooms.</li>
+    <li><strong>Until you close the tab (session storage):</strong> a random ID that lets you get your seat back if you reload during an online room, the code of the room you're in, and whether you've already seen the app suggestion.</li>
+    <li><strong>Only while the page is open:</strong> your Best, Average and Rounds stats. They reset when you refresh or leave.</li>
+  </ul>
+
+  <h2>Online rooms</h2>
+  <p>When you create or join a room at <a href="/online">/online</a>, your browser sends our server:</p>
+  <ul>
+    <li>the name you type, which every player in the room sees (so don't use your full name);</li>
+    <li>your time for each round, which other players see only when the round is revealed;</li>
+    <li>the random seat ID described above.</li>
+  </ul>
+  <p>This is kept in the server's memory only, never written to disk or logs, and is gone when the room closes: after 30 minutes without activity, or when the server restarts. Room links and QR codes contain only the room code. There's no chat.</p>
+
+  <h2>Server logs and security</h2>
+  <p>Like most websites, our server records each request: your IP address, the page requested, the time, and the response. When you follow a link to the App Store we also record your browser type and the page you came from, so we can count which links people use. We use logs to keep the site running and to stop abuse.</p>
+  <p>To prevent abuse of online rooms, the server briefly keeps a count of requests per IP address in memory, for about a minute.</p>
+  <p>The site is hosted by <a href="https://fly.io/legal/privacy-policy" rel="noopener">Fly.io</a> on servers in the United States, which process these logs on our behalf and keep them for a limited time.</p>
 
   <h2>Advertising</h2>
   <p>This website shows ads through Google AdSense. Third-party vendors, including Google, use cookies to serve ads based on your previous visits to this and other websites. Google's advertising cookies let Google and its partners serve ads based on your visits to this site and other sites on the Internet.</p>
-  <p>You can opt out of personalised advertising in <a href="https://adssettings.google.com" rel="noopener">Google Ads Settings</a>, or opt out of some third-party vendors' cookies at <a href="https://www.aboutads.info/choices/" rel="noopener">aboutads.info</a>. Learn more about <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">how Google uses information from sites that use its services</a>.</p>
+  <p>If you visit from the European Economic Area, the UK or Switzerland, Google's consent message asks for your choice before personalised ads are shown. You can consent, decline, or manage the options; if you decline, you may still see non-personalised ads.</p>
+  <p>Anywhere, you can opt out of personalised advertising in <a href="https://adssettings.google.com" rel="noopener">Google Ads Settings</a>, or opt out of some third-party vendors' cookies at <a href="https://www.aboutads.info/choices/" rel="noopener">aboutads.info</a>. Learn more about <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">how Google uses information from sites that use its services</a>.</p>
 
+  {{if .Site.GAID}}
   <h2>Analytics</h2>
-  <p>We may use Google Analytics to see how many people visit and which pages they use. It collects information such as pages viewed, device type and approximate location. It does not collect your name or contact details.</p>
+  <p>We use Google Analytics to see how many people visit and which pages and features they use. It collects information such as pages viewed, device type and approximate location, using cookies. It does not collect your name or contact details. See <a href="https://policies.google.com/privacy" rel="noopener">Google's privacy policy</a>.</p>
+  {{end}}
 
-  <h2>Server logs</h2>
-  <p>Like most websites, our servers record basic request information: the page requested, browser type, referring page and time. We use these logs to keep the site running and to count how many visitors go to the App Store.</p>
+  <h2>Sharing and links to other sites</h2>
+  <p>Result cards are drawn in your browser and aren't uploaded to us. If you use a share button (X, Facebook, WhatsApp, or your device's share sheet), you're sending the result through that service, and its privacy policy applies. The same goes for the App Store once you follow a link there.</p>
 
   <h2>Children</h2>
-  <p>This site is for a general audience and does not knowingly collect personal information from children.</p>
+  <p>This site is for a general audience and isn't directed at children under 13. We don't knowingly collect personal information from children. The only thing anyone types is a name for a game, which we don't store.</p>
+
+  <h2>Your choices and rights</h2>
+  <ul>
+    <li>Clear this site's data in your browser to remove everything stored on your device.</li>
+    <li>Change your ad choices with the consent message (EEA, UK, Switzerland) or Google Ads Settings.</li>
+    <li>Depending on where you live, you may have rights to access or delete personal information about you. Because there are no accounts, we usually can't link logs to you, but we'll help where we can: contact us below.</li>
+  </ul>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, we'll update it here and change the date below.</p>
 
   <h2>Contact</h2>
   {{if .Site.ContactEmail}}
   <p>Questions? Email <a href="mailto:{{.Site.ContactEmail}}">{{.Site.ContactEmail}}</a>.</p>
   {{else}}
-  <p>Questions? Contact us through the App Store listing for Tap Timer.</p>
+  <p>Questions? Contact us through the Tap Timer App Store listing.</p>
   {{end}}
 
-  <p class="muted small">Last updated: September 2026.</p>
+  <p class="muted small">Last updated: 2 October 2026.</p>
 </div>
 {{end}}
