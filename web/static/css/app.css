@@ -31,6 +31,7 @@
   --tier-bad: #ff6b6b;
 
   --radius: 16px;
+  --header-h: 65px; /* sticky header: 64px row + 1px border */
   --pixel: "Press Start 2P", ui-monospace, monospace;
   --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
@@ -41,7 +42,7 @@
    Base
    ========================================================================== */
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--header-h) + 16px); }
 body {
   margin: 0;
   min-height: 100vh;
@@ -276,7 +277,8 @@ kbd {
 @media (min-width: 1100px) {
   .home-grid { grid-template-columns: minmax(0, 1fr) 300px; }
   .home-side { display: block; padding-top: 40px; }
-  .home-side .ad { position: sticky; top: 24px; margin-top: 0; }
+  /* Sticks just below the sticky header instead of sliding under it. */
+  .home-side .ad { position: sticky; top: calc(var(--header-h) + 24px); margin-top: 0; }
 }
 .home-main { max-width: 760px; width: 100%; margin: 0 auto; }
 
@@ -493,7 +495,42 @@ kbd {
    ========================================================================== */
 .party { padding: 0; }
 .party-playing .page-hero { display: none; }
-.party-playing .party { margin-top: 16px; }
+.party-playing .party, .party-playing .online { margin-top: 16px; }
+
+/* ==========================================================================
+   Online rooms
+   ========================================================================== */
+.online__banner {
+  margin: 0 0 16px; padding: 10px 14px; text-align: center;
+  border: 1px solid color-mix(in srgb, var(--tier-ok) 50%, transparent);
+  color: var(--tier-ok); font-size: 14px;
+}
+.online__error { color: var(--tier-bad); font-size: 14px; margin: 16px 0 0; }
+.online__or { text-align: center; margin: 24px 0 12px; font: 8px/1.6 var(--pixel); color: var(--muted); text-transform: uppercase; }
+.online__code-row { display: grid; grid-template-columns: 1fr auto; gap: 16px; }
+.online__code-input { text-transform: uppercase; letter-spacing: 0.3em; text-align: center; }
+
+.online__invite { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+.online__code { font: 32px/1 var(--pixel); color: var(--seg-on); text-shadow: 0 0 16px var(--seg-glow); letter-spacing: 0.12em; margin: 0 0 16px; }
+@media (min-width: 560px) { .online__code { font-size: 48px; } }
+.online__invite-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+/* Light background with a quiet zone: dark-on-light QR codes scan most reliably. */
+.online__qr { flex: none; width: 132px; height: 132px; image-rendering: pixelated; box-shadow: 0 0 24px var(--seg-glow); }
+
+.online__players { list-style: none; padding: 0; margin: 0 0 24px; display: grid; gap: 10px; }
+.online__player { display: grid; grid-template-columns: 14px 1fr auto; align-items: center; gap: 12px; font: var(--pixel-size)/1.4 var(--pixel); }
+.online__player-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.online__player--away { opacity: 0.45; }
+.online__tags { font-size: 8px; color: var(--muted); text-transform: uppercase; }
+.online__wait { text-align: center; color: var(--muted); font: 15px/1.5 var(--sans); margin: 16px 0 0; }
+
+.online__round-head { text-align: center; margin: 0; font: 8px/1.6 var(--pixel); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+@media (min-width: 560px) { .online__round-head { font-size: 10px; } }
+.online__progress { text-align: center; color: var(--muted); margin: 16px 0 0; font-size: 15px; }
+.online .tapzone { margin-top: 16px; }
+
+.winner--round { font-size: clamp(20px, 5vw, 26px); color: var(--seg-on); text-shadow: 0 0 16px var(--seg-glow); }
+.leaderboard--standings .leader__time { font-weight: 600; color: var(--muted); }
 .screen--center { text-align: center; padding: 24px 0; }
 .players { list-style: none; padding: 0; margin: 0 0 10px; display: grid; gap: 8px; }
 .player-row { display: grid; grid-template-columns: 14px 1fr 44px; align-items: center; gap: 10px; }
@@ -550,13 +587,18 @@ kbd {
 /* ==========================================================================
    Ads
    ========================================================================== */
-.ad { margin: 40px auto; text-align: center; min-height: 100px; }
-.ad__label { display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.ad { margin: 48px auto; text-align: center; min-height: 100px; }
+.ad__label { display: block; font: 8px/1.6 var(--pixel); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+/* AdSense marks a slot it couldn't fill; collapse it rather than leave a hole. */
+.ad:has(ins.adsbygoogle[data-ad-status="unfilled"]) { display: none; }
+/* Development only: shows where a unit goes, at its real size, without a
+   heavy box. Production renders nothing for unconfigured slots. */
 .ad--placeholder {
   display: grid; place-items: center; min-height: 250px;
-  border: 1px dashed var(--border); border-radius: var(--radius);
-  color: var(--muted); font-size: 13px;
+  border: 1px dashed color-mix(in srgb, var(--border) 70%, transparent);
+  color: var(--muted); font: 8px/1.8 var(--pixel); text-transform: uppercase; letter-spacing: 0.06em;
 }
+.ad--placeholder small { font-size: 8px; opacity: 0.7; text-transform: none; }
 .ad--sidebar { min-height: 600px; }
 @media (max-width: 559px) { .ad { margin: 32px auto; } }
 /* With the sidebar showing, the home page's bottom unit would be a third ad;

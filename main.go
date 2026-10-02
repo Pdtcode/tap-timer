@@ -23,7 +23,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	router, err := server.New(cfg)
+	app, err := server.NewApp(cfg)
 	if err != nil {
 		slog.Error("server init failed", "err", err)
 		os.Exit(1)
@@ -31,12 +31,14 @@ func main() {
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           router,
+		Handler:           app.Handler,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      15 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
+	// Shutdown doesn't wait for WebSockets: tell Online rooms players first.
+	srv.RegisterOnShutdown(app.Close)
 
 	go func() {
 		slog.Info("listening", "addr", srv.Addr, "env", cfg.Env, "base_url", cfg.BaseURL)

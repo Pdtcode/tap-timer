@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{{.Title}}</title>
   {{if .Description}}<meta name="description" content="{{.Description}}">{{end}}
-  {{if eq .Page "404"}}<meta name="robots" content="noindex">{{else}}<link rel="canonical" href="{{.Canonical}}">{{end}}
+  {{if or (eq .Page "404") .NoIndex}}<meta name="robots" content="noindex">{{else}}<link rel="canonical" href="{{.Canonical}}">{{end}}
   {{with .Site.GoogleSiteVerification}}<meta name="google-site-verification" content="{{.}}">{{end}}
   {{with .Site.BingSiteVerification}}<meta name="msvalidate.01" content="{{.}}">{{end}}
   <meta name="theme-color" content="#040e08">
@@ -86,6 +86,7 @@
       <nav class="site-nav" aria-label="Main">
         <a href="/" {{if eq .Page "home"}}aria-current="page"{{end}}>Solo</a>
         <a href="/party" {{if eq .Page "party"}}aria-current="page"{{end}}>Party</a>
+        <a href="/online" {{if eq .Page "online"}}aria-current="page"{{end}}>Online</a>
       </nav>
       <a class="get-app" href="/get?src=header" data-cta="header">Get the app</a>
     </div>
@@ -107,6 +108,7 @@
       <nav class="footer-nav" aria-label="Footer">
         <a href="/">Play solo</a>
         <a href="/party">Party mode</a>
+        <a href="/online">Play online</a>
         <a href="/how-to-play">How to play</a>
         <a href="/get?src=footer" data-cta="footer">Download the app</a>
         <a href="/privacy">Privacy</a>

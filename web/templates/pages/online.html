@@ -1,0 +1,106 @@
+{{define "content"}}
+<div class="container narrow">
+  <header class="page-hero">
+    <p class="eyebrow">Online multiplayer</p>
+    <h1>{{if .RoomCode}}You're invited to room <span class="accent">{{.RoomCode}}</span>{{else}}Play online with <span class="accent">friends</span>{{end}}</h1>
+    <p class="lede">Create a room and share the code. Everyone plays the same goal at the same time with the clock hidden. Times stay secret until the reveal, and the lowest total over the match wins.</p>
+  </header>
+
+  <section class="card online" data-online data-room="{{.RoomCode}}" aria-label="Online room">
+    <p class="online__banner" data-banner role="status" hidden></p>
+
+    <!-- 1. Create or join -->
+    <div class="screen pixel" data-screen="entry">
+      <div class="field">
+        <label class="label" for="online-name">Your name</label>
+        <input id="online-name" class="input" data-name maxlength="16" autocomplete="nickname" spellcheck="false" placeholder="Player">
+      </div>
+      <div data-join-only{{if not .RoomCode}} hidden{{end}}>
+        <button type="button" class="btn btn--primary btn--block btn--lg" data-join>Join room {{.RoomCode}}</button>
+      </div>
+      <div data-create-only{{if .RoomCode}} hidden{{end}}>
+        <button type="button" class="btn btn--primary btn--block btn--lg" data-create>Create a room</button>
+        <p class="online__or">or join one</p>
+        <div class="online__code-row">
+          <label class="sr-only" for="online-code">Room code</label>
+          <input id="online-code" class="input online__code-input" data-code maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE">
+          <button type="button" class="btn" data-join-code>Join</button>
+        </div>
+      </div>
+      <p class="online__error" data-entry-error role="alert" hidden></p>
+      <noscript><p class="muted">Online multiplayer needs JavaScript.</p></noscript>
+    </div>
+
+    <!-- 2. Lobby -->
+    <div class="screen pixel" data-screen="lobby" hidden>
+      <div class="online__invite">
+        <div>
+          <p class="label">Room code</p>
+          <p class="online__code" data-room-code></p>
+          <div class="online__invite-actions">
+            <button type="button" class="btn btn--sm" data-share>Share invite</button>
+            <button type="button" class="btn btn--sm" data-copy>Copy link</button>
+          </div>
+        </div>
+        <img class="online__qr" data-qr width="132" height="132" alt="QR code to join this room">
+      </div>
+
+      <p class="label" id="online-players-label">Players <span class="muted" data-player-count></span></p>
+      <ol class="online__players" data-players aria-labelledby="online-players-label"></ol>
+
+      <div class="online__settings" data-host-only>
+        <div class="field">
+          <label class="label" for="online-goal">Goal time</label>
+          <select id="online-goal" class="select" data-goal>
+            <option value="3">3 seconds</option>
+            <option value="5">5 seconds</option>
+            <option value="10">10 seconds</option>
+            <option value="15">15 seconds</option>
+            <option value="30">30 seconds</option>
+            <option value="0">Mixed (random each round)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label" for="online-rounds">Rounds</label>
+          <select id="online-rounds" class="select" data-rounds>
+            <option value="1">1 round</option>
+            <option value="3">3 rounds</option>
+            <option value="5">5 rounds</option>
+            <option value="10">10 rounds</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn--primary btn--block btn--lg" data-start>Start match</button>
+      </div>
+      <p class="online__wait" data-guest-only data-settings-text></p>
+    </div>
+
+    <!-- 3. Round -->
+    <div class="screen" data-screen="round" hidden>
+      <p class="online__round-head pixel"><span data-round-label></span> · Goal <span data-round-goal></span>s</p>
+      <button type="button" class="tapzone" data-tapzone data-state="idle" aria-describedby="online-hint">
+        <span class="tapzone__goal">GOAL <span data-turn-goal></span>s</span>
+        <span class="display" data-display aria-hidden="true"></span>
+        <span class="tapzone__hint" id="online-hint" data-hint aria-live="polite">Tap to start</span>
+      </button>
+      <p class="online__progress" data-progress aria-live="polite"></p>
+    </div>
+
+    <!-- 4. Round results, and 5. final standings -->
+    <div class="screen pixel" data-screen="results" hidden>
+      <p class="eyebrow center" data-results-title></p>
+      <p class="winner" data-winner></p>
+      <ol class="leaderboard" data-reveal></ol>
+      <p class="label center" data-standings-label>Standings</p>
+      <ol class="leaderboard leaderboard--standings" data-standings></ol>
+      <div class="result__actions" data-host-only>
+        <button type="button" class="btn btn--primary" data-next></button>
+      </div>
+      <p class="online__wait" data-guest-only>Waiting for the host…</p>
+    </div>
+  </section>
+
+  {{template "promo" "online"}}
+
+  {{template "ad" (ad "incontent")}}
+</div>
+{{end}}

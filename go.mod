@@ -2,7 +2,11 @@ module taptimer
 
 go 1.27.1
 
-require github.com/gin-gonic/gin v1.12.0
+require (
+	github.com/coder/websocket v1.8.15
+	github.com/gin-gonic/gin v1.12.0
+	rsc.io/qr v0.2.0
+)
 
 require (
 	github.com/bytedance/gopkg v0.1.3 // indirect

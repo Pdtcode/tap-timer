@@ -551,7 +551,7 @@
 
     /** @param {{headline:string, time:number, target:number, line:string, text:string, url:string}} r */
     async function show(r) {
-      const appUrl = `${location.origin}/get?src=share_${mode}`;
+      const appUrl = el.dataset.appStore; // straight to the App Store, with campaign tags
       const message = `${r.text}\n${r.url}\n\n📱 Tap Timer for iPhone & iPad: ${appUrl}`;
       current = { ...r, message };
       file = null;
@@ -629,6 +629,7 @@
     const nudge = root.querySelector('[data-nudge]');
     const targetBtns = [...root.querySelectorAll('[data-target]')];
     const stealthBtn = root.querySelector('[data-stealth]');
+    const keyhint = root.querySelector('.keyhint');
     const resetBtn = root.querySelector('[data-reset-stats]');
     const statEls = Object.fromEntries([...root.querySelectorAll('[data-stat]')].map((el) => [el.dataset.stat, el]));
 
@@ -650,6 +651,7 @@
     const timer = new HiddenTimer(zone, {
       repeat: true,
       onStart() {
+        if (keyhint) keyhint.hidden = true; // the tip has done its job once someone plays
         resultEl.hidden = true;
         share.hide();
         zone.dataset.state = 'running';
@@ -998,6 +1000,370 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Online rooms: everyone on their own phone, same goal, hidden times.
+  // The server keeps the room; this page shows whatever state it sends and
+  // times the player's own taps locally (so network lag never affects a score).
+  // ---------------------------------------------------------------------------
+  function initOnline(root) {
+    const $ = (sel) => root.querySelector(sel);
+    const screens = Object.fromEntries([...root.querySelectorAll('[data-screen]')].map((s) => [s.dataset.screen, s]));
+    const banner = $('[data-banner]');
+    const nameInput = $('[data-name]');
+    const codeInput = $('[data-code]');
+    const entryError = $('[data-entry-error]');
+    const goalSel = $('[data-goal]');
+    const roundsSel = $('[data-rounds]');
+    const startBtn = $('[data-start]');
+    const nextBtn = $('[data-next]');
+    const zone = $('[data-tapzone]');
+    const display = createDisplay($('[data-display]'), '##.##');
+    const hint = $('[data-hint]');
+
+    const ERRORS = {
+      room_not_found: "That room doesn't exist or has closed. Check the code, or create a new room.",
+      room_full: 'That room is full (8 players).',
+      match_in_progress: "That room's match has already started. Ask the host to let you in at the rematch.",
+      busy: 'Too many rooms are open right now. Try again in a minute.',
+      rate_limited: 'Slow down a little and try again.',
+      room_closed: 'This room closed after being idle.',
+      server_restarting: 'The server restarted for an update, which ends open rooms. Create a new room to keep playing.',
+      not_enough_players: 'You need at least 2 players to start.',
+    };
+
+    // A per-tab token lets a reload (or a dropped connection) take back the
+    // same seat. sessionStorage, so two tabs on one device are two players.
+    let token = session.get('tt.online.token');
+    if (!token || !/^[A-Za-z0-9_-]{16,64}$/.test(token)) {
+      const bytes = crypto.getRandomValues(new Uint8Array(18));
+      token = btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      session.set('tt.online.token', token);
+    }
+    nameInput.value = store.get('tt.online.name', '') || '';
+
+    let code = root.dataset.room || '';
+    let ws = null;
+    let me = '';
+    let state = null;
+    let retries = 0;
+    let retryTimer = 0;
+    let gone = false; // the room can't be rejoined; stop reconnecting
+    let pending = null; // a result waiting for the connection to come back
+    let playedRound = 0;
+
+    function show(name) {
+      for (const key in screens) screens[key].hidden = key !== name;
+      document.body.classList.toggle('party-playing', name !== 'entry');
+    }
+
+    function setBanner(text) {
+      banner.textContent = text || '';
+      banner.hidden = !text;
+    }
+
+    function entryFail(msg) {
+      entryError.textContent = msg;
+      entryError.hidden = !msg;
+      show('entry');
+    }
+
+    function playerName() {
+      const n = nameInput.value.trim();
+      store.set('tt.online.name', n);
+      return n;
+    }
+
+    // --- create / join ------------------------------------------------------
+    async function create() {
+      entryFail('');
+      try {
+        const res = await fetch('/api/rooms', { method: 'POST' });
+        const body = await res.json();
+        if (!res.ok) return entryFail(ERRORS[body.error] || 'Could not create a room. Try again.');
+        track('room_create', {});
+        enter(body.code);
+      } catch {
+        entryFail('Could not reach the server. Check your connection and try again.');
+      }
+    }
+
+    function enter(c) {
+      code = c.toUpperCase();
+      history.replaceState(null, '', `/r/${code}`);
+      session.set('tt.online.room', code); // so a reload of this tab rejoins straight away
+      gone = false;
+      retries = 0;
+      connect();
+    }
+
+    $('[data-create]').addEventListener('click', create);
+    $('[data-join]').addEventListener('click', () => enter(code));
+    $('[data-join-code]').addEventListener('click', () => {
+      const c = codeInput.value.trim().toUpperCase();
+      if (!/^[23456789A-HJ-NP-Z]{4}$/.test(c)) return entryFail('Room codes are 4 letters and numbers, like K7QX.');
+      enter(c);
+    });
+    codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') $('[data-join-code]').click(); });
+    codeInput.addEventListener('input', () => { codeInput.value = codeInput.value.toUpperCase(); });
+
+    // --- connection ---------------------------------------------------------
+    function connect() {
+      clearTimeout(retryTimer);
+      if (ws) {
+        ws.onclose = null;
+        ws.close();
+      }
+      ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/${code}`);
+      ws.onopen = () => {
+        retries = 0;
+        send({ t: 'join', name: playerName(), token });
+      };
+      ws.onmessage = (e) => {
+        let m;
+        try { m = JSON.parse(e.data); } catch { return; }
+        if (m.t === 'welcome') {
+          me = m.you;
+          setBanner('');
+          if (pending) send(pending);
+          pending = null;
+        } else if (m.t === 'state') {
+          render(m.state);
+        } else if (m.t === 'error') {
+          onError(m.code);
+        }
+      };
+      ws.onclose = () => {
+        ws = null;
+        if (gone) return;
+        if (retries >= 8) {
+          setBanner('Lost connection to the room.');
+          return entryFail('Lost connection to the room. Check your connection and join again.');
+        }
+        setBanner('Reconnecting…');
+        retryTimer = setTimeout(connect, Math.min(8000, 500 * 2 ** retries++));
+      };
+    }
+
+    function send(msg) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(msg));
+        return true;
+      }
+      return false;
+    }
+
+    function onError(c) {
+      if (['room_not_found', 'room_full', 'match_in_progress', 'room_closed', 'server_restarting'].includes(c)) {
+        gone = true;
+        state = null;
+        me = '';
+        setBanner('');
+        // Back to "create or join", keeping the code box handy.
+        $('[data-join-only]').hidden = true;
+        $('[data-create-only]').hidden = false;
+        history.replaceState(null, '', '/online');
+        session.set('tt.online.room', '');
+        return entryFail(ERRORS[c]);
+      }
+      if (ERRORS[c]) setBanner(ERRORS[c]);
+    }
+
+    // --- host controls ------------------------------------------------------
+    function sendSettings() {
+      send({ t: 'settings', goal: Number(goalSel.value), rounds: Number(roundsSel.value) });
+    }
+    goalSel.addEventListener('change', sendSettings);
+    roundsSel.addEventListener('change', sendSettings);
+    startBtn.addEventListener('click', () => send({ t: 'start' }));
+    nextBtn.addEventListener('click', () => {
+      if (!state) return;
+      send({ t: state.phase === 'match_end' ? 'rematch' : 'start' });
+    });
+
+    const inviteURL = () => `${location.origin}/r/${code}`;
+    $('[data-copy]').addEventListener('click', async (e) => {
+      try {
+        await navigator.clipboard.writeText(inviteURL());
+        e.target.textContent = 'Copied ✓';
+        setTimeout(() => { e.target.textContent = 'Copy link'; }, 1600);
+      } catch { prompt('Copy this link:', inviteURL()); }
+    });
+    const shareBtn = $('[data-share]');
+    if (!navigator.share) shareBtn.hidden = true;
+    shareBtn.addEventListener('click', () => {
+      navigator.share({ title: 'Tap Timer room', text: `Join my Tap Timer room ${code}: stop the hidden clock closest to the goal.`, url: inviteURL() }).catch(() => {});
+    });
+
+    // --- round --------------------------------------------------------------
+    const timer = new HiddenTimer(zone, {
+      repeat: false,
+      onStart() {
+        zone.dataset.state = 'running';
+        display.set('-.--');
+        hint.textContent = 'Tap to stop';
+      },
+      onStop(elapsed) {
+        zone.dataset.state = 'locked';
+        hint.textContent = 'Locked in ✓';
+        const msg = { t: 'result', round: state.round, elapsed: Number(elapsed.toFixed(2)) };
+        if (!send(msg)) pending = msg;
+        track('round_complete', { mode: 'online', target: state.goal });
+      },
+    });
+
+    // --- rendering ----------------------------------------------------------
+    function render(s) {
+      const prev = state;
+      state = s;
+      const isHost = s.host === me;
+      root.querySelectorAll('[data-host-only]').forEach((el) => { el.hidden = !isHost; });
+      root.querySelectorAll('[data-guest-only]').forEach((el) => { el.hidden = isHost; });
+      const byId = Object.fromEntries(s.players.map((p) => [p.id, p]));
+
+      if (s.phase === 'lobby') {
+        renderLobby(s, isHost);
+        show('lobby');
+      } else if (s.phase === 'round') {
+        const mine = byId[me];
+        if (playedRound !== s.round) {
+          // A new round: fresh tap zone.
+          playedRound = s.round;
+          timer.reset();
+          zone.dataset.state = mine && mine.done ? 'locked' : 'idle';
+          display.set('0.00');
+          hint.textContent = mine && mine.done ? 'Locked in ✓' : 'Tap to start';
+          if (prev && prev.phase !== 'round') track('online_round', { round: s.round });
+        }
+        $('[data-round-label]').textContent = `Round ${s.round} of ${s.settings.rounds}`;
+        $('[data-round-goal]').textContent = fmt(s.goal);
+        $('[data-turn-goal]').textContent = fmt(s.goal);
+        const done = s.players.filter((p) => p.done).length;
+        const waiting = s.players.filter((p) => p.connected && !p.done).length;
+        $('[data-progress]').textContent = mine && mine.done
+          ? (waiting ? `Waiting for ${waiting} more…` : 'Revealing…')
+          : `${done} of ${s.players.length} locked in`;
+        show('round');
+      } else {
+        renderResults(s, byId, isHost);
+        show('results');
+        if (s.phase === 'match_end' && (!prev || prev.phase !== 'match_end')) {
+          track('match_complete', { players: s.players.length, rounds: s.settings.rounds });
+        }
+      }
+    }
+
+    function goalText(g) { return g === 0 ? 'Mixed goals' : `${fmt(g)}s goal`; }
+
+    function renderLobby(s, isHost) {
+      $('[data-room-code]').textContent = s.code;
+      const qr = $('[data-qr]');
+      if (qr.dataset.code !== s.code) {
+        qr.src = `/r/${s.code}/qr.svg`;
+        qr.dataset.code = s.code;
+      }
+      $('[data-player-count]').textContent = `(${s.players.length}/8)`;
+      const list = $('[data-players]');
+      list.textContent = '';
+      for (const p of s.players) {
+        const li = document.createElement('li');
+        li.className = 'online__player' + (p.connected ? '' : ' online__player--away');
+        li.style.setProperty('--player', p.color);
+        const dot = document.createElement('span');
+        dot.className = 'player-dot';
+        dot.setAttribute('aria-hidden', 'true');
+        const name = document.createElement('span');
+        name.className = 'online__player-name';
+        name.textContent = p.name;
+        const tags = document.createElement('span');
+        tags.className = 'online__tags';
+        tags.textContent = [p.id === me && 'you', p.id === s.host && 'host', !p.connected && 'away'].filter(Boolean).join(' · ');
+        li.append(dot, name, tags);
+        list.appendChild(li);
+      }
+      const connected = s.players.filter((p) => p.connected).length;
+      if (isHost) {
+        // Don't fight the host's own select while they're using it.
+        if (document.activeElement !== goalSel) goalSel.value = String(s.settings.goal);
+        if (document.activeElement !== roundsSel) roundsSel.value = String(s.settings.rounds);
+        startBtn.disabled = connected < 2;
+        startBtn.textContent = connected < 2 ? 'Waiting for players…' : 'Start match';
+      } else {
+        $('[data-settings-text]').textContent =
+          `${s.settings.rounds} round${s.settings.rounds === 1 ? '' : 's'} · ${goalText(s.settings.goal)}. Waiting for the host to start…`;
+      }
+    }
+
+    function leaderRow(p, rank, timeText, diffText, first, delay) {
+      const li = document.createElement('li');
+      li.className = 'leader' + (first ? ' leader--first' : '');
+      li.style.setProperty('--player', p.color);
+      li.style.setProperty('--delay', `${delay}ms`);
+      const cells = [['leader__rank', String(rank)], ['leader__name', p.name + (p.id === me ? ' (you)' : '')], ['leader__time', timeText], ['leader__diff', diffText]];
+      for (const [cls, text] of cells) {
+        const span = document.createElement('span');
+        span.className = cls;
+        span.textContent = text;
+        li.appendChild(span);
+      }
+      return li;
+    }
+
+    function renderResults(s, byId, isHost) {
+      const final = s.phase === 'match_end';
+      $('[data-results-title]').textContent = final
+        ? `Final · ${s.settings.rounds} round${s.settings.rounds === 1 ? '' : 's'}`
+        : `Round ${s.round} of ${s.settings.rounds} · goal ${fmt(s.goal)}s`;
+
+      // This round, closest first, revealed from last place up.
+      const reveal = $('[data-reveal]');
+      reveal.textContent = '';
+      let rank = 0;
+      s.reveal.forEach((r, i) => {
+        if (i === 0 || Math.abs(r.diff).toFixed(2) !== Math.abs(s.reveal[i - 1].diff).toFixed(2)) rank = i + 1;
+        const p = byId[r.player];
+        if (!p) return;
+        reveal.appendChild(leaderRow(p, rank,
+          r.missed ? 'missed' : `${fmt(r.elapsed)}s`,
+          fmtDiff(r.diff),
+          r.won, (s.reveal.length - 1 - i) * 220));
+      });
+
+      // Match standings: lowest total error first.
+      const standings = $('[data-standings]');
+      standings.textContent = '';
+      const order = [...s.players].sort((a, b) => a.rank - b.rank);
+      order.forEach((p, i) => {
+        standings.appendChild(leaderRow(p, p.rank, `${p.total.toFixed(2)}s off`,
+          `${p.wins} win${p.wins === 1 ? '' : 's'}`, final && p.rank === 1, s.reveal.length * 220 + i * 120));
+      });
+      $('[data-standings-label]').hidden = s.settings.rounds === 1;
+      standings.hidden = s.settings.rounds === 1;
+
+      const leaders = order.filter((p) => p.rank === 1);
+      const roundWinners = s.reveal.filter((r) => r.won).map((r) => byId[r.player]?.name).filter(Boolean);
+      $('[data-winner]').textContent = final
+        ? (leaders.length > 1 ? `It's a tie: ${leaders.map((p) => p.name).join(' & ')}!` : `${leaders[0].name} wins the match!`)
+        : (roundWinners.length ? `${roundWinners.join(' & ')} ${roundWinners.length > 1 ? 'take' : 'takes'} the round` : 'Nobody locked in a time');
+      $('[data-winner]').classList.toggle('winner--round', !final);
+
+      if (isHost) nextBtn.textContent = final ? 'Rematch' : `Start round ${s.round + 1}`;
+      // Mine, rated like solo, so the reveal still says how I did.
+      const mine = s.reveal.find((r) => r.player === me);
+      if (mine && !mine.missed && !final) {
+        $('[data-results-title]').textContent += ` · you: ${rate(mine.diff)[1]}`;
+      }
+    }
+
+    if (code) {
+      // Arrived on /r/CODE: join straight away if we already have a name
+      // (e.g. after a reload); otherwise ask for one first.
+      if (session.get('tt.online.room') === code && nameInput.value.trim()) enter(code);
+      else show('entry');
+    } else {
+      show('entry');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Ads: only initialise units that are actually visible at this viewport.
   // Hidden units (e.g. the desktop sidebar on a phone) are removed so AdSense
   // never tries to fill a zero-width slot.
@@ -1028,6 +1394,7 @@
   });
   document.querySelectorAll('[data-solo]').forEach(initSolo);
   document.querySelectorAll('[data-party]').forEach(initParty);
+  document.querySelectorAll('[data-online]').forEach(initOnline);
   initAds();
 
   document.addEventListener('click', (e) => {

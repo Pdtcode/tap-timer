@@ -23,6 +23,18 @@ type Server struct {
 	cfg          config.Config
 	pages        map[string]*template.Template
 	assetVersion string
+	online       *online
+}
+
+// App is the HTTP handler plus what main needs at shutdown.
+type App struct {
+	Handler *gin.Engine
+	// Close tells players in Online rooms that the server is restarting.
+	// Register it with http.Server.RegisterOnShutdown: Shutdown doesn't wait
+	// for WebSockets.
+	Close func()
+
+	online *online // for tests
 }
 
 // AdUnit is the data passed to the "ad" partial.
@@ -35,12 +47,21 @@ type AdUnit struct {
 
 func (a AdUnit) Enabled() bool { return a.Client != "" && a.Slot != "" }
 
+// New returns just the handler (tests use this).
 func New(cfg config.Config) (*gin.Engine, error) {
+	app, err := NewApp(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return app.Handler, nil
+}
+
+func NewApp(cfg config.Config) (*App, error) {
 	if cfg.IsProduction() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	s := &Server{cfg: cfg}
+	s := &Server{cfg: cfg, online: newOnline(cfg.BaseURL)}
 	var err error
 	if s.assetVersion, err = hashAssets(); err != nil {
 		return nil, err
@@ -52,6 +73,11 @@ func New(cfg config.Config) (*gin.Engine, error) {
 	r := gin.New()
 	if err = r.SetTrustedProxies(nil); err != nil {
 		return nil, err
+	}
+	if cfg.IsProduction() {
+		// Behind Fly's proxy every request comes from the proxy; Fly puts the
+		// visitor's address in this header. Used for per-IP rate limits.
+		r.TrustedPlatform = "Fly-Client-IP"
 	}
 	r.Use(gin.Recovery(), gin.LoggerWithConfig(gin.LoggerConfig{SkipPaths: []string{"/healthz"}}), s.securityHeaders())
 	if cfg.IsProduction() {
@@ -88,6 +114,13 @@ func New(cfg config.Config) (*gin.Engine, error) {
 	getHead("/privacy", s.page("privacy",
 		"Privacy Policy | Tap Timer",
 		"How the Tap Timer website uses cookies, advertising and analytics."))
+	getHead("/online", s.page("online",
+		"Play Tap Timer Online with Friends: Multiplayer Timer Game",
+		"Play the hidden-clock timer game online with friends, each on your own phone. Create a room, share the code, and whoever stops closest to the goal over the match wins."))
+	getHead("/r/:code", s.roomPage)
+	r.GET("/r/:code/qr.svg", s.online.qrSVG)
+	r.POST("/api/rooms", s.online.createRoom)
+	r.GET("/ws/:code", s.online.socket)
 
 	r.GET("/get", s.getApp)
 	getHead("/ads.txt", s.adsTxt)
@@ -102,12 +135,13 @@ func New(cfg config.Config) (*gin.Engine, error) {
 	r.NoRoute(func(c *gin.Context) {
 		s.render(c, http.StatusNotFound, "404", s.pageData(c, "404", "Page not found | Tap Timer", ""))
 	})
-	return r, nil
+	return &App{Handler: r, Close: s.online.Close, online: s.online}, nil
 }
 
 func (s *Server) loadTemplates() error {
 	funcs := template.FuncMap{
 		"asset": func(p string) string { return "/static/" + p + "?v=" + s.assetVersion },
+		"appStoreURL": s.appStoreURL,
 		"ad": func(name string) AdUnit {
 			return AdUnit{
 				Name:        name,

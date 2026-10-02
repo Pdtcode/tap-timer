@@ -1,7 +1,9 @@
-{{/* Share-your-result panel. Usage: {{template "share" "solo"}} — the string tags analytics and /get?src=share_<mode>.
+{{/* Share-your-result panel. Usage: {{template "share" "solo"}} — the string tags analytics and the App Store
+     campaign (share_<mode>). Shared messages link straight to the App Store; the link below, clicked on this site,
+     still goes through /get so the click is logged.
      app.js fills it after a round: a generated result card (with the App Store badge) plus share targets. */}}
 {{define "share"}}
-<section class="share pixel" data-share-panel data-mode="{{.}}" data-icon="{{asset "img/icon-128.png"}}" data-badge="{{asset "img/app-store-badge.svg"}}" aria-labelledby="share-title-{{.}}" hidden>
+<section class="share pixel" data-share-panel data-mode="{{.}}" data-icon="{{asset "img/icon-128.png"}}" data-badge="{{asset "img/app-store-badge.svg"}}" data-app-store="{{appStoreURL (print "share_" .)}}" aria-labelledby="share-title-{{.}}" hidden>
   <p class="share__title" id="share-title-{{.}}">Share your result</p>
   <div class="share__body">
     <a class="share__preview" data-share-preview download="tap-timer-result.png" aria-label="Save result image">

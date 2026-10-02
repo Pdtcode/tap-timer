@@ -20,6 +20,8 @@ type PageData struct {
 	Canonical   string
 	Year        int
 	Site        SiteData
+	NoIndex     bool   // keep out of search results (e.g. room links)
+	RoomCode    string // the room a /r/:code link opens
 }
 
 type SiteData struct {
@@ -34,7 +36,7 @@ type SiteData struct {
 }
 
 // Pages listed in the sitemap.
-var sitemapPaths = []string{"/", "/party", "/how-to-play", "/privacy"}
+var sitemapPaths = []string{"/", "/party", "/online", "/how-to-play", "/privacy"}
 
 var srcRe = regexp.MustCompile(`^[a-z0-9_-]{1,32}$`)
 
@@ -64,6 +66,23 @@ func (s *Server) page(name, title, desc string) gin.HandlerFunc {
 	}
 }
 
+// roomPage serves /r/:code, the link players share: the online multiplayer page
+// with that room's code filled in. Room links aren't indexed.
+func (s *Server) roomPage(c *gin.Context) {
+	code := strings.ToUpper(c.Param("code"))
+	if !roomCodeRe.MatchString(code) {
+		s.render(c, http.StatusNotFound, "404", s.pageData(c, "404", "Page not found | Tap Timer", ""))
+		return
+	}
+	d := s.pageData(c, "online",
+		"Join room "+code+" | Play Tap Timer Online",
+		"You've been invited to a Tap Timer room. Stop the hidden clock closest to the goal to win.")
+	d.NoIndex = true
+	d.RoomCode = code
+	c.Header("X-Robots-Tag", "noindex")
+	s.render(c, http.StatusOK, "online", d)
+}
+
 // getApp is the single exit point to the App Store. Every CTA links here with
 // ?src=<placement> so clicks are logged and, when a provider token is set,
 // installs are attributed per placement in App Store Connect.
@@ -72,24 +91,30 @@ func (s *Server) getApp(c *gin.Context) {
 	if !srcRe.MatchString(src) {
 		src = "unknown"
 	}
+	slog.Info("app_store_click", "src", src, "ua", c.Request.UserAgent(), "referer", c.Request.Referer())
+	c.Header("Cache-Control", "no-store")
+	c.Header("X-Robots-Tag", "noindex")
+	c.Redirect(http.StatusFound, s.appStoreURL(src))
+}
 
+// appStoreURL is the App Store page with campaign tags for src, so installs
+// are attributed per placement in App Store Connect when a provider token is
+// set. Shared messages use it directly (no hop through /get), since they're
+// opened on other people's phones.
+func (s *Server) appStoreURL(src string) string {
 	q := url.Values{}
 	if s.cfg.AppStoreProviderToken != "" {
 		q.Set("pt", s.cfg.AppStoreProviderToken)
 		q.Set("ct", "web-"+src)
 	}
 	q.Set("mt", "8")
-	target := url.URL{
+	u := url.URL{
 		Scheme:   "https",
 		Host:     "apps.apple.com",
 		Path:     "/app/apple-store/id" + s.cfg.AppStoreID,
 		RawQuery: q.Encode(),
 	}
-
-	slog.Info("app_store_click", "src", src, "ua", c.Request.UserAgent(), "referer", c.Request.Referer())
-	c.Header("Cache-Control", "no-store")
-	c.Header("X-Robots-Tag", "noindex")
-	c.Redirect(http.StatusFound, target.String())
+	return u.String()
 }
 
 func (s *Server) adsTxt(c *gin.Context) {
