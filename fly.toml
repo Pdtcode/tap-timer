@@ -13,6 +13,9 @@ primary_region = 'dfw'
   PORT = '8080'
   BASE_URL = 'https://tap-timer.com'
   APP_STORE_ID = '6802904982'
+  # Public publisher ID: adds the AdSense script and meta tag to every page and serves /ads.txt.
+  # Ad units stay empty until ADSENSE_SLOT_SIDEBAR / _INCONTENT / _FOOTER are set (after approval).
+  ADSENSE_CLIENT = 'ca-pub-6274927128191860'
 
 [http_service]
   internal_port = 8080
