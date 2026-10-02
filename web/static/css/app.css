@@ -42,7 +42,9 @@
    Base
    ========================================================================== */
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--header-h) + 16px); }
+/* The root background shows past the end of the page (iOS overscroll), so it
+   matches the site instead of the browser's default black. */
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--header-h) + 16px); background: var(--bg); }
 body {
   margin: 0;
   min-height: 100vh;
@@ -57,7 +59,13 @@ body {
 }
 main { flex: 1; }
 /* Full-page ambient particles sit behind everything. */
-.ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.ambient {
+  position: fixed; top: 0; left: 0; width: 100%; z-index: 0; pointer-events: none;
+  /* Phone browsers grow the visible area as their toolbars hide on scroll.
+     Size to the largest it gets (lvh) so particles always reach the bottom. */
+  height: 100vh;
+  height: 100lvh;
+}
 main, .site-footer { position: relative; z-index: 1; }
 a { color: inherit; text-underline-offset: 3px; }
 a:hover { color: var(--seg-on); }
@@ -385,6 +393,10 @@ kbd {
 .tapzone__goal, .tapzone__hint { font-size: 13px; line-height: 1.4; color: color-mix(in srgb, var(--seg-on) 68%, var(--bg)); }
 .tapzone__hint { min-height: 1.4em; }
 .tapzone[data-state="idle"] .tapzone__hint { animation: breathe 2.4s ease-in-out infinite; }
+/* Loading (first moments after the page opens): taps are ignored. */
+.tapzone[data-loading] { cursor: progress; }
+.tapzone[data-loading] .display { opacity: 0.4; }
+.tapzone[data-loading] .tapzone__hint { animation-duration: 0.9s; }
 .tapzone[data-state="locked"] .tapzone__hint { color: var(--seg-on); }
 .keyhint { text-align: center; margin: 10px 0 0; }
 @media (hover: none) { .keyhint { display: none; } }

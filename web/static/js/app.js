@@ -133,7 +133,11 @@
       const layer = { host, canvas, ctx: canvas.getContext('2d'), w: 0, h: 0 };
       this.readColor(layer);
       this.layers.push(layer);
-      new ResizeObserver(() => { this.sizeLayer(layer); this.draw(); }).observe(host);
+      new ResizeObserver(() => {
+        this.sizeLayer(layer);
+        if (layer === this.base) this.resize(); // the field follows the page layer's size
+        else this.draw();
+      }).observe(host);
       return layer;
     }
 
@@ -152,8 +156,21 @@
     }
 
     resize() {
-      this.w = window.innerWidth;
-      this.h = window.innerHeight;
+      // The page layer's own size (it covers the largest viewport, see .ambient).
+      const box = this.base.host.getBoundingClientRect();
+      const w = box.width || window.innerWidth;
+      const h = Math.max(box.height, window.innerHeight);
+      // Stretch existing motes over the new area, so a taller or wider screen
+      // (a phone toolbar hiding, a rotation) has no empty strip.
+      if (this.w && this.h && (w !== this.w || h !== this.h)) {
+        for (const p of this.ambient) {
+          p.bx *= w / this.w;
+          p.x *= w / this.w;
+          p.y *= h / this.h;
+        }
+      }
+      this.w = w;
+      this.h = h;
       const target = Math.round(Math.min(this.max, (this.w * this.h) / this.density));
       while (this.ambient.length < target) this.ambient.push(this.mote(true));
       this.ambient.length = target;
@@ -334,6 +351,7 @@
     }
 
     tap(now) {
+      if (this.zone.dataset.loading) return; // still warming up (see warmUp)
       if (now < this.lockUntil) return;
       if (this.state === 'running') return this.stop(now);
       if (this.state === 'idle' || (this.state === 'done' && this.opts.repeat)) this.start(now);
@@ -388,6 +406,22 @@
   const CARD = 1080;
   const GREEN = '#30fc60';
   const PIXEL_FONT = '"Press Start 2P", monospace';
+
+  // Resolves when the browser has a quiet moment (or after `ms` at the latest).
+  const idle = (ms = 400) => new Promise((resolve) => {
+    if ('requestIdleCallback' in window) requestIdleCallback(resolve, { timeout: ms });
+    else setTimeout(resolve, 120);
+  });
+
+  // Ready to play: the pixel font is in and the page has painted and settled.
+  // Capped, so a slow font can never keep the game from starting.
+  const warmUp = Promise.race([
+    Promise.all([
+      document.fonts ? document.fonts.load(`32px "Press Start 2P"`).catch(() => {}) : null,
+      new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    ]).then(() => idle(500)),
+    new Promise((resolve) => setTimeout(resolve, 1500)),
+  ]);
 
   const loadImage = (src) => new Promise((resolve) => {
     const img = new Image();
@@ -562,6 +596,14 @@
 
     nativeBtn.hidden = typeof navigator.share !== 'function';
 
+    // Load the card's font and images now, not on the first stop tap.
+    const loadAssets = () => (assets = assets || Promise.all([
+      loadImage(el.dataset.icon),
+      loadImage(el.dataset.badge),
+      document.fonts ? document.fonts.load(`32px ${PIXEL_FONT}`).catch(() => {}) : null,
+    ]));
+    loadAssets();
+
     /** @param {{headline:string, time:number, target:number, line:string, text:string, url:string}} r */
     async function show(r) {
       const appUrl = el.dataset.appStore; // straight to the App Store, with campaign tags
@@ -577,12 +619,10 @@
       el.hidden = false;
 
       const my = ++seq;
-      assets = assets || Promise.all([
-        loadImage(el.dataset.icon),
-        loadImage(el.dataset.badge),
-        document.fonts ? document.fonts.load(`32px ${PIXEL_FONT}`).catch(() => {}) : null,
-      ]);
-      const [icon, badge] = await assets;
+      const [icon, badge] = await loadAssets();
+      // Drawing and encoding the 1080px card takes a moment; do it after the
+      // stop has shown on screen so the result never stutters.
+      await idle();
       if (my !== seq) return;
       const blob = await new Promise((resolve) => renderCard(r, icon, badge).toBlob(resolve, 'image/png'));
       if (my !== seq || !blob) return;
@@ -798,6 +838,14 @@
     });
 
     setTarget(target);
+
+    // A quick loading state so the first tap can't land mid-setup.
+    zone.dataset.loading = 'true';
+    hint.textContent = 'Loading…';
+    warmUp.then(() => {
+      delete zone.dataset.loading;
+      if (zone.dataset.state === 'idle') hint.textContent = 'Tap to start';
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -1084,10 +1132,28 @@
     }
 
     function entryFail(msg) {
+      settle();
       entryError.textContent = msg;
       entryError.hidden = !msg;
       show('entry');
     }
+
+    // --- connecting -----------------------------------------------------------
+    // Creating or joining is usually instant. If it isn't (the server waking up
+    // after being idle, or a slow network), show a "Connecting…" screen rather
+    // than a button that seems to do nothing. A short delay avoids a flash.
+    let connectingTimer = 0;
+    function connecting() {
+      clearTimeout(connectingTimer);
+      connectingTimer = setTimeout(() => show('connecting'), 300);
+    }
+    function settle() { clearTimeout(connectingTimer); }
+
+    // Keep the server awake while this page is open, so Create and Join don't
+    // have to wait for it to start. (In a room, the connection itself does this.)
+    setInterval(() => {
+      if (!document.hidden && !ws) fetch('/healthz', { cache: 'no-store' }).catch(() => {});
+    }, 120000);
 
     function playerName() {
       const n = nameInput.value.trim();
@@ -1098,6 +1164,7 @@
     // --- create / join ------------------------------------------------------
     async function create() {
       entryFail('');
+      connecting();
       try {
         const res = await fetch('/api/rooms', { method: 'POST' });
         const body = await res.json();
@@ -1132,6 +1199,7 @@
     // --- connection ---------------------------------------------------------
     function connect() {
       clearTimeout(retryTimer);
+      if (!state) connecting(); // first connection to this room (reconnects show a banner instead)
       if (ws) {
         ws.onclose = null;
         ws.close();
@@ -1145,6 +1213,7 @@
         let m;
         try { m = JSON.parse(e.data); } catch { return; }
         if (m.t === 'welcome') {
+          settle();
           me = m.you;
           waitTries = 0;
           setBanner('');
@@ -1185,6 +1254,7 @@
     let waitTries = 0;
 
     function waitForSpot(mode) {
+      settle();
       gone = true; // stop the normal reconnect loop while we wait
       if (ws) {
         ws.onclose = null;

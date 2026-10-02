@@ -31,6 +31,14 @@
       <noscript><p class="muted">Online multiplayer needs JavaScript.</p></noscript>
     </div>
 
+    <!-- Getting into a room is taking a moment (e.g. the server is waking up) -->
+    <div class="screen screen--center pixel online__full" data-screen="connecting" hidden>
+      <p class="eyebrow center">One moment</p>
+      <p class="online__full-title">Connecting…</p>
+      <div class="online__full-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+      <p class="online__full-text" role="status">Getting your room ready. This only takes a second or two.</p>
+    </div>
+
     <!-- Rooms are at capacity: wait, and join automatically when a spot opens -->
     <div class="screen screen--center pixel online__full" data-screen="full" hidden>
       <p class="eyebrow center">Online rooms are busy</p>
