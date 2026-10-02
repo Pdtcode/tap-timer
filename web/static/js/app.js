@@ -99,9 +99,11 @@
   // (cards, tap zones) at the same screen positions, so a mote drifting out of
   // the tap zone carries on across the page instead of vanishing at the edge.
   // ---------------------------------------------------------------------------
+  const MOTE_SPEED = 2.25; // drift speed of the ambient motes (1 = the original slow drift)
+
   class Particles {
     /** @param {{density?:number, max?:number}} opts  one mote per `density` px², capped at `max` */
-    constructor(host, { density = 14000, max = 80 } = {}) {
+    constructor(host, { density = 11000, max = 100 } = {}) {
       this.density = density;
       this.max = max;
       this.layers = [];
@@ -161,14 +163,21 @@
 
     mote(anywhere) {
       const soft = Math.random() < 0.35; // out-of-focus bokeh dots
+      const x = Math.random() * this.w;
       return {
-        x: Math.random() * this.w,
+        x,
+        bx: x, // centre line the mote sways around
         y: anywhere ? Math.random() * this.h : this.h + 8,
         r: soft ? 2.5 + Math.random() * 3 : 0.8 + Math.random() * 1.8,
-        vx: (Math.random() - 0.5) * 6,
-        vy: -(2 + Math.random() * 8),
+        vx: (Math.random() - 0.5) * 6 * MOTE_SPEED,
+        vy: -(2 + Math.random() * 8) * MOTE_SPEED,
         a: soft ? 0.08 + Math.random() * 0.12 : 0.18 + Math.random() * 0.4,
         tw: Math.random() * Math.PI * 2,
+        // Gentle side-to-side wave as it rises: each mote has its own width,
+        // pace and starting point, so they don't sway in step.
+        sway: 18 + Math.random() * 22, // px either side
+        swaySpeed: 0.3 + Math.random() * 0.4, // radians/s: one full wave every ~9-21s, independent of MOTE_SPEED
+        phase: Math.random() * Math.PI * 2,
         soft,
       };
     }
@@ -208,12 +217,14 @@
       const dt = Math.min(0.05, (t - this.last) / 1000);
       this.last = t;
       for (const p of this.ambient) {
-        p.x += p.vx * dt;
+        p.bx += p.vx * dt;
         p.y += p.vy * dt;
         p.tw += dt * 1.3;
+        p.phase += p.swaySpeed * dt;
         if (p.y < -8) Object.assign(p, this.mote(false));
-        if (p.x < -8) p.x = this.w + 8;
-        else if (p.x > this.w + 8) p.x = -8;
+        if (p.bx < -8) p.bx = this.w + 8;
+        else if (p.bx > this.w + 8) p.bx = -8;
+        p.x = p.bx + Math.sin(p.phase) * p.sway;
       }
       const drag = Math.exp(-2.6 * dt);
       this.sparks = this.sparks.filter((s) => {

@@ -116,7 +116,7 @@ func NewApp(cfg config.Config) (*App, error) {
 		"How the Tap Timer website uses cookies, advertising and analytics."))
 	getHead("/online", s.page("online",
 		"Play Tap Timer Online with Friends: Multiplayer Timer Game",
-		"Play the hidden-clock timer game online with friends, each on your own phone. Create a room, share the code, and whoever stops closest to the goal over the match wins."))
+		"Play the hidden-clock timer game online with friends, each on your own phone. Share a room code; closest to the goal over the match wins."))
 	getHead("/r/:code", s.roomPage)
 	r.GET("/r/:code/qr.svg", s.online.qrSVG)
 	r.POST("/api/rooms", s.online.createRoom)

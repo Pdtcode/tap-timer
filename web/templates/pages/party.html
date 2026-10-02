@@ -3,7 +3,7 @@
   <header class="page-hero">
     <p class="eyebrow">Goal Challenge</p>
     <h1>Party mode</h1>
-    <p class="lede">Pass one phone around. Everyone tries to hit the same goal time with the clock hidden. Nobody sees a score until the reveal. Closest wins.</p>
+    <p class="lede">Pass one phone around. Same goal, hidden clock, closest wins.</p>
   </header>
 
   <section class="card party" data-party aria-label="Party game">
@@ -33,7 +33,7 @@
       <p class="eyebrow">Pass the phone to</p>
       <p class="pass-name" data-pass-name></p>
       <p class="muted">Goal: <strong data-pass-goal></strong>. Keep your time secret.</p>
-      <button type="button" class="btn btn--primary btn--lg" data-ready>I'm ready</button>
+      <div class="pixel"><button type="button" class="btn btn--primary btn--lg" data-ready>I'm ready</button></div>
       <p class="muted small" data-pass-progress></p>
     </div>
 
@@ -45,7 +45,7 @@
         <span class="display" data-display aria-hidden="true"></span>
         <span class="tapzone__hint" id="party-hint" data-hint aria-live="polite">Tap to start</span>
       </button>
-      <button type="button" class="btn btn--primary btn--block btn--lg" data-next hidden></button>
+      <div class="pixel"><button type="button" class="btn btn--primary btn--block btn--lg" data-next hidden></button></div>
     </div>
 
     <!-- 4. Reveal -->

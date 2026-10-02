@@ -1,11 +1,9 @@
 {{define "content"}}
 <div class="container home-grid">
   <div class="home-main">
-    <header class="page-hero">
-      <p class="eyebrow">Beat the clock</p>
-      <h1>Think you know what <span class="accent">5&nbsp;seconds</span> feels like?</h1>
-      <p class="tagline">How close can you get?</p>
-    </header>
+    <!-- No visible intro: the game is the first thing on the page. The heading
+         stays for search engines and screen readers. -->
+    <h1 class="sr-only">Tap Timer: can you stop the hidden clock at exactly 5 seconds?</h1>
 
     <section class="card game" data-solo aria-label="Tap Timer game">
       <div class="targets pixel">

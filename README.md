@@ -18,6 +18,9 @@ All configuration is via environment variables. See [`.env.example`](.env.exampl
 |---|---|
 | `/` | Solo game: pick a goal (3–30s), the clock hides, tap to stop. Shows best/average per goal for the current visit (resets on refresh) and has a "Challenge a friend" share. |
 | `/party` | Goal Challenge pass-the-phone mode for 2–8 players, with a hidden-until-reveal leaderboard. |
+| `/online` | Online multiplayer: create a room, share the code, link or QR, and 2–8 players play Goal Challenge on their own phones over 1–10 rounds. Lowest total error wins. |
+| `/r/<code>` | Invite link for a room (not indexed). `/r/<code>/qr.svg` is its QR code. |
+| `/api/rooms`, `/ws/<code>` | Room creation (POST) and the room WebSocket. |
 | `/how-to-play` | Rules, modes and tips. This is SEO content, and AdSense needs substantive content like this. |
 | `/privacy` | Privacy policy covering AdSense cookies (required by AdSense). |
 | `/get?src=<placement>` | The **only** outbound link to the App Store. Logs `app_store_click` and adds `pt`/`ct` campaign params. |
@@ -26,7 +29,8 @@ All configuration is via environment variables. See [`.env.example`](.env.exampl
 ```
 main.go                  server bootstrap + graceful shutdown
 internal/config          env config + validation
-internal/server          router, handlers, template rendering, tests
+internal/server          router, handlers, template rendering, online.go (room HTTP/WebSocket), tests
+internal/rooms           Online multiplayer game logic: rooms, rounds, scoring, hub (in memory)
 web/templates            layout, partials (ad, promo), pages
 web/static               app.css, app.js (game engine + particles), app icons, og.png
 ```
@@ -35,7 +39,7 @@ web/static               app.css, app.js (game engine + particles), app icons, o
 
 - **Smart App Banner**: `<meta name="apple-itunes-app">` makes iOS Safari show a native Get/Open banner.
 - **Placements**: header, the promo card on Home and Party, a nudge after the 3rd solo round, How to play, the footer, and the share panel (`share_solo` / `share_party`). Each has its own `src`.
-- **Sharing**: after a solo round (stealth on) or a party reveal, players get a 1080×1080 result card drawn in the browser, with the App Store badge on it. They can share it natively or post to X, Facebook or WhatsApp, copy the text, or save the image. Every shared message includes the site link and the `/get?src=share_<mode>` App Store link.
+- **Sharing**: after a solo round (stealth on) or a party reveal, players get a 1080×1080 result card drawn in the browser, with the App Store badge on it. They can share it natively or post to X, Facebook or WhatsApp, copy the text, or save the image. Every shared message includes the site link and a direct App Store link (with the `ct=web-share_<mode>` campaign tag), since it's opened on other people's phones. Links clicked on this site still go through `/get`.
 - **Web-exclusive gap**: Tournament, Teams and extra themes are app-only (iPhone and iPad), and the site says so wherever it's relevant.
 - **Attribution**: set `APP_STORE_PROVIDER_TOKEN` to see installs per `ct=web-<src>` campaign in App Store Connect > App Analytics. Server logs record every click, and GA4 (optional) gets an `app_store_click` event.
 
@@ -59,6 +63,14 @@ npx playwright screenshot --viewport-size=1200,630 --wait-for-timeout=500 tools/
 ```
 
 The URL is content-hashed, but social platforms cache previews aggressively, so use each platform's debugger (e.g. Facebook Sharing Debugger) to refresh after a change.
+
+## Online multiplayer
+
+Rooms live in the server's memory (`internal/rooms`); browsers talk to them over a WebSocket (`internal/server/online.go`). Each phone times its own taps, so network lag never affects a score; the server only opens rounds, collects results and reveals them together.
+
+- **Hosting:** run **one** machine (`fly scale count 1`), or players can land on a machine that doesn't have their room. Deploys end open rooms.
+- **Capacity:** every player holds one connection. Without an `[http_service.concurrency]` block Fly caps a machine at about 25 connections; with `type = "connections"`, `soft_limit = 800`, `hard_limit = 1000`, one 256 MB machine handles about 1,000 (estimate). Details and how to grow: `flyio-setup.md` → Scaling.
+- **Limits built in:** 8 players per room, 1,000 open rooms, rooms close after 30 idle minutes, per-IP limits on creating rooms and connecting.
 
 ## Before launch
 

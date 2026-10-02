@@ -281,6 +281,8 @@ kbd {
   .home-side .ad { position: sticky; top: calc(var(--header-h) + 24px); margin-top: 0; }
 }
 .home-main { max-width: 760px; width: 100%; margin: 0 auto; }
+.home-main > .game { padding-top: 40px; }
+@media (max-width: 559px) { .home-main > .game { padding-top: 24px; } }
 
 /* ==========================================================================
    Seven-segment display & tap zone
@@ -418,7 +420,8 @@ kbd {
 /* ==========================================================================
    Promo
    ========================================================================== */
-.promo { display: grid; gap: 24px; margin-top: 56px; overflow: hidden; }
+/* No overflow clipping: the phone mockup's glow and shadow fade out naturally past the edges. */
+.promo { display: grid; gap: 24px; margin-top: 56px; }
 .promo__brand { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
 .promo__brand img { width: 52px; height: 52px; border-radius: 12px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 6px 24px rgba(0, 0, 0, 0.5); }
 .promo__brand .eyebrow { margin: 0; }
@@ -431,7 +434,7 @@ kbd {
 .promo__art { display: none; }
 @media (min-width: 720px) {
   .promo { grid-template-columns: 1fr 200px; align-items: center; }
-  .promo__art { display: block; }
+  .promo__art { display: block; padding: 24px 0; } /* room for the tilted phone's glow */
 }
 .phone {
   width: 180px; aspect-ratio: 9 / 18.5; margin: 0 auto; padding: 8px;
@@ -756,8 +759,22 @@ kbd {
 .pixel .leader__diff { font: 8px/1.4 var(--pixel); }
 .pixel .result__actions { gap: 16px; margin-top: 12px; }
 .pixel .result__actions .btn { padding: 0 20px; }
+
+/* Spacing for the game screens (Party, Online). Pixel frames are drawn 3px
+   outside each box (--px), so gaps here allow for that on both sides. */
+.pixel .field { margin-bottom: 32px; }
+.pixel .players { gap: 18px; margin: 16px var(--px) 24px; }
+.pixel .player-row { gap: 14px; }
+.pixel .btn--block + .btn--block { margin-top: 20px; } /* "+ Add player" / "Start game" */
+.pixel .leaderboard { gap: 18px; margin-bottom: 32px; }
+.pixel .winner { margin: 16px 0 32px; }
+.screen--center { padding: 48px 0; }
+.pass-name { margin: 12px 0 24px; }
+.screen--center .btn { margin: 12px 0 20px; }
+.turn-name { margin-bottom: 4px; }
+[data-screen="turn"] [data-next] { margin-top: 28px; }
 @media (max-width: 559px) {
-  .pixel .result__actions { flex-direction: column; gap: 12px; }
+  .pixel .result__actions { flex-direction: column; gap: 18px; }
   .pixel .result__actions .btn { width: 100%; }
 }
 

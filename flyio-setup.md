@@ -1,11 +1,11 @@
 # Deploying Tap Timer on Fly.io
 
-Setup guide for running the Go server on [Fly.io](https://fly.io) using the existing `Dockerfile`. Last updated 2026-10-01. Written from general knowledge of Fly.io, so check anything marked **(verify)** against `fly help` and Fly's docs, since commands and pricing change.
+Setup guide for running the Go server on [Fly.io](https://fly.io) using the existing `Dockerfile`. Last updated 2026-10-02. Written from general knowledge of Fly.io, so check anything marked **(verify)** against `fly help` and Fly's docs, since commands and pricing change.
 
 ## Why Fly.io for this app
 
 - **No code changes:** it runs the existing Docker image and the real Go server. The canonical-host redirect, App Store click logging (`/get`), HEAD support and security headers all work as written.
-- **WebSockets:** long-lived connections are supported, so it's ready for future remote play (friend rooms and streamer mode).
+- **WebSockets:** long-lived connections are supported. Online multiplayer (`/online`) depends on them; see [Scaling](#9-scaling) for its one-machine requirement and capacity.
 - **Scaling:** scale up a machine, scale out to more machines or regions, and later route each room to the machine that owns it with `fly-replay`.
 - **Cost:** pay-as-you-go. A Go server this size fits the smallest machine (256MB). There's no free tier for new accounts, so expect a few dollars a month for one always-on machine. **(verify current pricing)**
 
@@ -71,8 +71,9 @@ primary_region = "dfw"
 [env]
   APP_ENV = "production"
   PORT = "8080"
-  BASE_URL = "https://tap-timer.fly.dev"   # change to https://tap-timer.com later
+  BASE_URL = "https://tap-timer.com"   # was https://tap-timer.fly.dev until the domain was set up
   APP_STORE_ID = "6802904982"
+  ADSENSE_CLIENT = "ca-pub-6274927128191860"   # public publisher ID; adds the AdSense tags and /ads.txt
   # Optional public settings (can also go in secrets):
   # GA_MEASUREMENT_ID = "G-XXXXXXX"
   # CONTACT_EMAIL = "you@example.com"
@@ -82,11 +83,13 @@ primary_region = "dfw"
   force_https = true              # http:// -> https://
   auto_stop_machines = "stop"     # stop idle machines...
   auto_start_machines = true      # ...and start them on the next request
-  min_machines_running = 1        # keep one warm: no cold start for visitors
+  min_machines_running = 0        # 0: cheapest, ~1s wake-up for the first visitor; 1: always warm
+  # Without this block Fly caps each machine at about 20-25 connections (verify).
+  # Every Online multiplayer player holds a WebSocket open, so raise it.
   [http_service.concurrency]
-    type = "requests"
-    soft_limit = 200
-    hard_limit = 250
+    type = "connections"
+    soft_limit = 800
+    hard_limit = 1000
 
   [[http_service.checks]]
     method = "GET"
@@ -99,6 +102,8 @@ primary_region = "dfw"
   size = "shared-cpu-1x"
   memory = "256mb"
 ```
+
+**`[http_service.concurrency]`:** count `connections`, not `requests`: a WebSocket is one connection for as long as a player is in a room. **Not yet in the repo's `fly.toml`;** until it's added, Fly's low default applies (see [Scaling](#9-scaling)).
 
 **`min_machines_running`:**
 - `1` keeps the site instantly responsive. Recommended, since first impressions drive app downloads.
@@ -224,16 +229,34 @@ fly scale count 2              # two machines; Fly's proxy load-balances
 fly scale count 3 --region dfw,lhr,syd
 ```
 
-Because pages are identical for everyone and the game runs in the browser, the website itself needs very little. Two machines, for redundancy, can serve a lot of traffic. Putting Cloudflare in front offloads most static requests.
+Because pages are identical for everyone and the game runs in the browser, the website itself needs very little. Putting Cloudflare in front offloads most static requests. **But don't add machines while Online multiplayer is on one machine** (below).
 
-**When remote play arrives:**
-- **Problem:** rooms keep state in memory, so all players in a room must reach the same machine. Fly's proxy load-balances across machines, so a second request could land on a machine that doesn't have the room.
-- **Fix:** the server that receives a request for a room it doesn't own replies with a `fly-replay: instance=<machine-id>` header, and Fly's proxy transparently re-sends the request to that machine.
-  - Encode the owning machine in the room code, or keep a tiny lookup table.
-  - Each machine knows its own ID from the `FLY_MACHINE_ID` environment variable.
-  - This keeps the simple in-memory design while scaling out. **(verify header syntax)**
-- **Scale-to-zero:** with live rooms, set `min_machines_running` to at least the number of room machines and keep `auto_stop_machines` from stopping machines that still hold open connections. Machines with active connections count as busy for the proxy. **(verify)**
-- **Shared state:** if rooms ever need to span machines, add Redis (Upstash via `fly redis create`) for pub/sub.
+**Online multiplayer: one machine, and its capacity**
+
+Online rooms (`/online`) keep each room in the memory of the machine that created it.
+
+- **Run exactly one machine:** `fly scale count 1 -a tap-timer`. With two, Fly's proxy can send a friend's phone to the machine that doesn't have the room, and they get "That room doesn't exist". It fails only sometimes, which makes it look like a random bug.
+- **Deploys and Fly maintenance end live rooms.** Players see "The server restarted for an update" and create a new room. Deploy when traffic is low.
+- **Idle machines are fine:** `auto_stop_machines` doesn't stop a machine while it has open WebSocket connections. **(verify)**
+
+Every player in a room holds one WebSocket connection open the whole time, so the limit that matters is **simultaneous connections on that one machine**:
+
+| Limit | Value | Notes |
+|---|---|---|
+| Fly's default per-machine cap, with no `[http_service.concurrency]` block | about 20 soft / 25 hard **(verify)** | Roughly 20–25 people playing online at once (three full rooms), with page visitors sharing the same cap. Past the soft limit Fly tries to start another machine (there isn't one); past the hard limit new connections queue or fail. |
+| With the concurrency block in the `fly.toml` above | 800 soft / 1,000 hard | Players plus visitors. |
+| Memory (256 MB) | roughly 2,000–3,000 idle sockets | Estimate, not load-tested: about 20–50 KB per socket (two goroutines plus buffers). |
+| CPU | not a constraint | A full 8-player round is a few dozen small JSON messages; pings every 25s. |
+| Built into the app | 1,000 open rooms, 8 players per room | Plus per-IP limits: 10 room creations and 30 connections a minute. |
+
+**Growing past that:**
+1. Raise the concurrency limits and memory together: `fly scale memory 512`, then roughly double `soft_limit` / `hard_limit`.
+2. More than one machine: route each room to the machine that owns it.
+   - The machine that receives a request for a room it doesn't own replies with a `fly-replay: instance=<machine-id>` header, and Fly's proxy re-sends the request to that machine. **(verify header syntax)**
+   - Encode the owning machine in the room code, or keep a tiny lookup table. Each machine knows its own ID from `FLY_MACHINE_ID`.
+   - Set `min_machines_running` to the number of room machines.
+3. Rooms spanning machines: add Redis (Upstash via `fly redis create`) for pub/sub.
+4. Before any of that, measure: a small script that opens a few hundred fake players against `/online` shows the real numbers.
 
 ## Checklist
 
@@ -241,6 +264,7 @@ Because pages are identical for everyone and the game runs in the browser, the w
 - [ ] Replace `fly.toml` (port 8080, `/healthz` check, `BASE_URL=https://<app>.fly.dev`, `force_https`)
 - [ ] Add `doc` to `.dockerignore`
 - [ ] `fly secrets set` for AdSense, provider token and verification tokens as needed
-- [ ] `fly deploy`, then check `/`, `/healthz`, `/robots.txt`, `/get?src=header`, logs
+- [ ] `fly scale count 1` (Online multiplayer needs one machine) and add the `[http_service.concurrency]` block
+- [ ] `fly deploy`, then check `/`, `/healthz`, `/robots.txt`, `/get?src=header`, `/online`, logs
 - [ ] Optional: GitHub Actions deploy with `FLY_API_TOKEN`
 - [ ] Later: `fly certs add` for the apex and `www`, DNS records, `BASE_URL` → domain, redeploy, SEO checklist
