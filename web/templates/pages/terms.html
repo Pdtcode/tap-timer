@@ -1,0 +1,59 @@
+{{define "content"}}
+<div class="container narrow prose">
+  <header class="page-hero">
+    <p class="eyebrow">Website</p>
+    <h1>Terms of service</h1>
+    <p class="lede">These terms cover the Tap Timer website, <strong>{{.Site.BaseURL}}</strong>. By using the site you agree to them. The Tap Timer app for iPhone and iPad is a separate product, covered by Apple's <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" rel="noopener">standard licence agreement</a> for App Store apps.</p>
+  </header>
+
+  <h2>In short</h2>
+  <ul>
+    <li>The game on this website is free to play. It's paid for by ads.</li>
+    <li>Be decent in online rooms: no offensive names, no cheating tools, no attacks on the site.</li>
+    <li>The site is provided as it is. We work to keep it running, but rooms can end and things can break.</li>
+    <li>How we handle your information is in the <a href="{{link "/privacy"}}">privacy policy</a>.</li>
+  </ul>
+
+  <h2>Using the site</h2>
+  <p>You can play Solo, Party and Online modes without an account or payment. You may use the site for your own personal, non-commercial fun, including at parties, in classrooms and on streams or videos.</p>
+  <p>Please don't:</p>
+  <ul>
+    <li>use names in online rooms that are offensive, hateful, sexual, or that impersonate someone else;</li>
+    <li>use bots, scripts or other automated tools to play, create rooms or join them;</li>
+    <li>try to break, overload, probe or get around the site's limits or security;</li>
+    <li>copy, frame or resell the site or its game as your own;</li>
+    <li>use the site in a way that breaks the law.</li>
+  </ul>
+  <p>We may close a room, block access, or remove a name if we believe these terms are being broken.</p>
+
+  <h2>Online rooms</h2>
+  <p>Anyone with a room's code, link or QR code can join it while it has space, so share it only with people you want to play with. The name you choose and your round times are shown to everyone in the room. Rooms are temporary: they close after 30 minutes without activity and when the server restarts, and results aren't saved.</p>
+
+  <h2>The iPhone and iPad app</h2>
+  <p>Links marked "Get the app" or "Download" take you to the App Store. The app is free to try, with an optional one-time purchase to unlock it. Downloads, purchases and refunds are handled by Apple under its terms, not by this website. Features described as app-only (such as Tournament, Teams and extra themes) aren't available on the website.</p>
+
+  <h2>Ads and other sites</h2>
+  <p>The site shows ads from Google and links to other services, such as the App Store and the sites you share results to. We don't control those services and aren't responsible for their content or how they work; their own terms and policies apply.</p>
+
+  <h2>Our content</h2>
+  <p>The Tap Timer name, logo, design, text and code of this website belong to us. You may share screenshots, result cards and videos of you playing. The pixel font is Press Start 2P, used under the SIL Open Font License. The App Store badge is Apple's trademark.</p>
+
+  <h2>No warranty</h2>
+  <p>The site is provided "as is" and "as available", without warranties of any kind, to the extent the law allows. We don't promise that it will always be available, error-free, or that timings will be exact on every device: browsers and devices differ.</p>
+
+  <h2>Limitation of liability</h2>
+  <p>To the extent the law allows, we aren't liable for any indirect or consequential loss, or any loss of data, arising from your use of the website. It's a free game; please play it for fun. Nothing in these terms limits rights you have under consumer law that can't be limited.</p>
+
+  <h2>Changes</h2>
+  <p>We may update these terms as the site changes. We'll post the new version here and change the date below. If you keep using the site after that, the new terms apply.</p>
+
+  <h2>Contact</h2>
+  {{if .Site.ContactEmail}}
+  <p>Questions? Email <a href="mailto:{{.Site.ContactEmail}}">{{.Site.ContactEmail}}</a>.</p>
+  {{else}}
+  <p>Questions? Contact us through the Tap Timer App Store listing.</p>
+  {{end}}
+
+  <p class="muted small">Last updated: 14 October 2026.</p>
+</div>
+{{end}}

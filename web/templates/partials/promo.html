@@ -3,25 +3,25 @@
 <section class="promo card" aria-labelledby="promo-title-{{.}}">
   <div class="promo__body">
     <div class="promo__brand">
-      <img src="{{asset "img/icon-128.png"}}" width="52" height="52" alt="Tap Timer app icon" loading="lazy">
-      <p class="eyebrow">Tap Timer for iPhone &amp; iPad</p>
+      <img src="{{asset "img/icon-128.png"}}" width="52" height="52" alt="{{t "promo.icon_alt"}}" loading="lazy">
+      <p class="eyebrow">{{t "promo.eyebrow"}}</p>
     </div>
-    <h2 id="promo-title-{{.}}">Take it to the party</h2>
+    <h2 id="promo-title-{{.}}">{{t "promo.title"}}</h2>
     <ul class="promo__list">
-      <li><strong>Tournament mode</strong>: brackets with shuffled seeding and automatic byes</li>
-      <li><strong>Teams mode</strong>: split the room and average your scores</li>
-      <li><strong>Themes</strong>: seven-segment and pixel-art looks, landscape mode and sound</li>
-      <li>On iPhone and iPad</li>
+      <li>{{th "promo.tournament"}}</li>
+      <li>{{th "promo.teams"}}</li>
+      <li>{{th "promo.themes"}}</li>
+      <li>{{t "promo.devices"}}</li>
     </ul>
-    <a class="app-badge" href="/get?src={{.}}" data-cta="{{.}}"><img src="{{asset "img/app-store-badge.svg"}}" width="144" height="48" alt="Download on the App Store"></a>
-    <p class="promo__fine">Free to download and try · One-time unlock, no subscription · No ads</p>
+    <a class="app-badge" href="/get?src={{.}}" data-cta="{{.}}"><img src="{{asset "img/app-store-badge.svg"}}" width="144" height="48" alt="{{t "promo.badge_alt"}}"></a>
+    <p class="promo__fine">{{t "promo.fine"}}{{if has "layout.app_english"}} · {{t "layout.app_english"}}{{end}}</p>
   </div>
   <div class="promo__art" aria-hidden="true">
     <div class="phone">
       <div class="phone__screen">
-        <span class="phone__label">GOAL 5.00s</span>
+        <span class="phone__label">{{t "promo.phone_goal"}}</span>
         <div class="display display--mini" data-mini-display="0.00"></div>
-        <span class="phone__label">TAP TO START</span>
+        <span class="phone__label">{{t "promo.phone_hint"}}</span>
       </div>
     </div>
   </div>

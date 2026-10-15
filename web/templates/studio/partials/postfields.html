@@ -1,0 +1,22 @@
+{{/* The post form's fields, shared by New post and Record. Needs .Platforms and .Captions. */}}
+{{define "postfields"}}
+  <label>Title
+    <input type="text" name="title" maxlength="100" required placeholder="Can you stop it at exactly 10.00?">
+  </label>
+
+  {{$captions := .Captions}}
+  {{range .Platforms}}
+  <fieldset class="st-target" data-platform="{{.Name}}" {{if not .Connected}}disabled{{end}}>
+    <legend>
+      <label class="st-check"><input type="checkbox" name="platform" value="{{.Name}}" {{if .Connected}}checked{{end}}> {{.Label}}</label>
+      {{if not .Connected}}<a class="st-pill is-warn" href="/studio/connections">Connect</a>{{end}}
+    </legend>
+    <textarea name="caption-{{.Name}}" rows="4" data-template="{{index $captions .Name}}">{{index $captions .Name}}</textarea>
+  </fieldset>
+  {{end}}
+
+  <button class="st-btn" type="submit">Upload and post now</button>
+  <progress class="st-progress" max="1" value="0" hidden></progress>
+  <ul class="st-results" hidden></ul>
+  <p class="st-status" role="status" aria-live="polite"></p>
+{{end}}

@@ -2,3 +2,5 @@
 .env
 taptimer
 bin
+secrets
+client_secret_*.json

@@ -3,11 +3,11 @@
   <div class="home-main">
     <!-- No visible intro: the game is the first thing on the page. The heading
          stays for search engines and screen readers. -->
-    <h1 class="sr-only">Tap Timer: can you stop the hidden clock at exactly 5 seconds?</h1>
+    <h1 class="sr-only">{{t "home.h1"}}</h1>
 
-    <section class="card game" data-solo aria-label="Tap Timer game">
+    <section class="card game" data-solo aria-label="{{t "home.game_label"}}">
       <div class="targets pixel">
-        <div class="targets__goals" role="radiogroup" aria-label="Goal time">
+        <div class="targets__goals" role="radiogroup" aria-label="{{t "home.goal_label"}}">
           <button type="button" class="chip" role="radio" aria-checked="false" data-target="3">3s</button>
           <button type="button" class="chip" role="radio" aria-checked="true" data-target="5">5s</button>
           <button type="button" class="chip" role="radio" aria-checked="false" data-target="10">10s</button>
@@ -15,22 +15,22 @@
           <button type="button" class="chip" role="radio" aria-checked="false" data-target="30">30s</button>
         </div>
         <div class="targets__tools">
-          <button type="button" class="chip eye-toggle" data-stealth aria-pressed="true" aria-label="Stealth mode" title="Stealth on: the clock hides while it runs">
+          <button type="button" class="chip eye-toggle" data-stealth aria-pressed="true" aria-label="{{t "home.stealth_label"}}" title="{{t "home.stealth_title"}}">
             <svg class="eye eye--shut" viewBox="0 0 13 9" width="26" height="18" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="M1 0h2v1h-2zM2 1h2v1h-2zM5 1h4v1h-4zM3 2h2v1h-2zM9 2h2v1h-2zM1 3h1v1h-1zM4 3h2v1h-2zM7 3h1v1h-1zM11 3h1v1h-1zM0 4h1v1h-1zM5 4h2v1h-2zM12 4h1v1h-1zM1 5h1v1h-1zM6 5h2v1h-2zM11 5h1v1h-1zM2 6h2v1h-2zM7 6h2v1h-2zM10 6h1v1h-1zM4 7h3v1h-3zM8 7h2v1h-2zM9 8h2v1h-2z"/></svg>
             <svg class="eye eye--open" viewBox="0 0 13 9" width="26" height="18" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="M4 1h5v1h-5zM2 2h2v1h-2zM9 2h2v1h-2zM1 3h1v1h-1zM5 3h3v1h-3zM11 3h1v1h-1zM0 4h1v1h-1zM5 4h3v1h-3zM12 4h1v1h-1zM1 5h1v1h-1zM5 5h3v1h-3zM11 5h1v1h-1zM2 6h2v1h-2zM9 6h2v1h-2zM4 7h5v1h-5z"/></svg>
           </button>
-          <button type="button" class="chip stats-reset" data-reset-stats aria-label="Reset stats" title="Reset best, average and rounds">
+          <button type="button" class="chip stats-reset" data-reset-stats aria-label="{{t "home.reset_label"}}" title="{{t "home.reset_title"}}">
             <svg class="reset-icon" viewBox="0 0 9 8" width="20" height="18" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="M2 0h4v1h-4zM7 0h1v1h-1zM1 1h1v1h-1zM6 1h2v1h-2zM0 2h1v1h-1zM5 2h3v1h-3zM0 3h1v3h-1zM8 4h1v2h-1zM1 6h1v1h-1zM7 6h1v1h-1zM2 7h5v1h-5z"/></svg>
           </button>
         </div>
       </div>
 
       <button type="button" class="tapzone" data-tapzone data-state="idle" aria-describedby="solo-hint">
-        <span class="tapzone__goal">GOAL <span data-goal>5.00</span>s</span>
+        <span class="tapzone__goal">{{t "game.goal"}} <span data-goal>5.00</span>s</span>
         <span class="display" data-display aria-hidden="true"></span>
-        <span class="tapzone__hint" id="solo-hint" data-hint>Tap to start</span>
+        <span class="tapzone__hint" id="solo-hint" data-hint>{{t "game.tap_to_start"}}</span>
       </button>
-      <p class="keyhint muted small">Tip: on a keyboard, press <kbd>Space</kbd>.</p>
+      <p class="keyhint muted small">{{th "home.keyhint"}}</p>
 
       <div class="result pixel" data-result aria-live="polite" hidden>
         <p class="result__rating" data-rating></p>
@@ -38,19 +38,19 @@
       </div>
 
       <div class="nudge" data-nudge hidden>
-        <p><strong>Playing with friends?</strong> The app adds Tournament brackets and Teams mode.</p>
-        <a class="get-app" href="/get?src=solo_nudge" data-cta="solo_nudge">Try it free</a>
+        <p>{{th "home.nudge"}}</p>
+        <a class="get-app" href="/get?src=solo_nudge" data-cta="solo_nudge">{{t "home.nudge_cta"}}</a>
       </div>
 
       <dl class="stats pixel" data-stats>
-        <div><dt>Best</dt><dd data-stat="best">–</dd></div>
-        <div><dt>Average</dt><dd data-stat="avg">–</dd></div>
-        <div><dt>Rounds</dt><dd data-stat="rounds">0</dd></div>
+        <div><dt>{{t "home.stat_best"}}</dt><dd data-stat="best">–</dd></div>
+        <div><dt>{{t "home.stat_avg"}}</dt><dd data-stat="avg">–</dd></div>
+        <div><dt>{{t "home.stat_rounds"}}</dt><dd data-stat="rounds">0</dd></div>
       </dl>
 
       {{template "share" "solo"}}
 
-      <noscript><p class="muted">Tap Timer needs JavaScript to run the clock.</p></noscript>
+      <noscript><p class="muted">{{t "home.noscript"}}</p></noscript>
     </section>
 
     {{template "promo" "home"}}
@@ -58,36 +58,36 @@
     {{template "ad" (ad "incontent")}}
 
     <section class="steps" aria-labelledby="how-title">
-      <h2 id="how-title">How it works</h2>
+      <h2 id="how-title">{{t "home.how_title"}}</h2>
       <ol class="steps__list">
-        <li><span class="steps__num">1</span><h3>Pick a goal</h3><p>3, 5, 10, 15 or 30 seconds. Five is the classic.</p></li>
-        <li><span class="steps__num">2</span><h3>Play blind</h3><p>Tap to start. The clock disappears, so you have to count in your head.</p></li>
-        <li><span class="steps__num">3</span><h3>Stop it</h3><p>Tap when it feels right. We'll show your time to the hundredth of a second.</p></li>
+        <li><span class="steps__num">1</span><h3>{{t "home.step1_title"}}</h3><p>{{t "home.step1"}}</p></li>
+        <li><span class="steps__num">2</span><h3>{{t "home.step2_title"}}</h3><p>{{t "home.step2"}}</p></li>
+        <li><span class="steps__num">3</span><h3>{{t "home.step3_title"}}</h3><p>{{t "home.step3"}}</p></li>
       </ol>
-      <p><a class="link-arrow" href="/party">Playing with friends? Try Party mode</a></p>
+      <p><a class="link-arrow" href="{{link "/party"}}">{{t "home.party_link"}}</a></p>
     </section>
 
     <section class="compare" aria-labelledby="compare-title">
-      <h2 id="compare-title">Even more on iPhone &amp; iPad</h2>
-      <p class="muted">The website is the quick version. The app is the full game.</p>
+      <h2 id="compare-title">{{t "home.compare_title"}}</h2>
+      <p class="muted">{{t "home.compare_lede"}}</p>
       <table class="compare__table">
         <thead>
-          <tr><th scope="col"><span class="sr-only">Feature</span></th><th scope="col">Web</th><th scope="col">App</th></tr>
+          <tr><th scope="col"><span class="sr-only">{{t "home.compare_feature"}}</span></th><th scope="col">{{t "home.compare_web"}}</th><th scope="col">{{t "home.compare_app"}}</th></tr>
         </thead>
         <tbody>
-          <tr><th scope="row">Solo play</th><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
-          <tr><th scope="row">Party mode (Goal Challenge)</th><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
-          <tr><th scope="row">Tournament brackets with shuffled seeding</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
-          <tr><th scope="row">Teams mode</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
-          <tr><th scope="row">Seven-segment and pixel-art themes</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
-          <tr><th scope="row">Custom player and team colours</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
-          <tr><th scope="row">Landscape mode</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
-          <tr><th scope="row">Sound</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
-          <tr><th scope="row">No ads</th><td><span class="compare__no" aria-label="No">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="Yes"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">{{t "home.row_solo"}}</th><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="{{t "home.compare_yes"}}"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="{{t "home.compare_yes"}}"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">{{t "home.row_party"}}</th><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="{{t "home.compare_yes"}}"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="{{t "home.compare_yes"}}"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">{{t "home.row_tournament"}}</th><td><span class="compare__no" aria-label="{{t "home.compare_no"}}">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="{{t "home.compare_yes"}}"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">{{t "home.row_teams"}}</th><td><span class="compare__no" aria-label="{{t "home.compare_no"}}">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="{{t "home.compare_yes"}}"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">{{t "home.row_themes"}}</th><td><span class="compare__no" aria-label="{{t "home.compare_no"}}">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="{{t "home.compare_yes"}}"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">{{t "home.row_colours"}}</th><td><span class="compare__no" aria-label="{{t "home.compare_no"}}">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="{{t "home.compare_yes"}}"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">{{t "home.row_landscape"}}</th><td><span class="compare__no" aria-label="{{t "home.compare_no"}}">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="{{t "home.compare_yes"}}"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">{{t "home.row_sound"}}</th><td><span class="compare__no" aria-label="{{t "home.compare_no"}}">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="{{t "home.compare_yes"}}"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
+          <tr><th scope="row">{{t "home.row_noads"}}</th><td><span class="compare__no" aria-label="{{t "home.compare_no"}}">–</span></td><td><svg class="check" viewBox="0 0 7 6" width="21" height="18" fill="currentColor" shape-rendering="crispEdges" role="img" aria-label="{{t "home.compare_yes"}}"><path d="M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h2v1h-2zM1 4h3v1h-3zM2 5h1v1h-1z"/></svg></td></tr>
         </tbody>
       </table>
-      <p class="compare__price">Free to download and try. Love it? Unlock everything with a one-time purchase. No subscription.</p>
-      <a class="get-app" href="/get?src=compare" data-cta="compare">Try it free on iPhone</a>
+      <p class="compare__price">{{t "home.compare_price"}}{{if has "layout.app_english"}} {{t "layout.app_english"}}{{end}}</p>
+      <a class="get-app" href="/get?src=compare" data-cta="compare">{{t "home.compare_cta"}}</a>
     </section>
 
     {{template "ad" (ad "footer")}}

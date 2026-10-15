@@ -1,0 +1,46 @@
+{{define "content"}}
+<section class="st-card st-record" id="record" data-icon="{{asset "img/icon-128.png"}}">
+  <h1>Record</h1>
+  <p class="st-muted">Opens full screen with your camera and the timer. Tap a goal, tap record, play, tap stop. Only you, the timer and your hook are in the video; the buttons aren't. Nothing is uploaded until you post.</p>
+  <button type="button" class="st-btn" data-open>Open camera</button>
+  <p class="st-status" data-rec-status role="status" aria-live="polite"></p>
+
+  <div class="st-stagewrap" data-stage hidden>
+    <canvas class="st-stage" aria-label="Timer: tap a goal to pick it, tap the timer card to start and stop the hidden clock"></canvas>
+    <p class="st-ov-msg" data-stage-msg role="status" aria-live="polite"></p>
+    <div class="st-ov" data-ov>
+      <form class="st-ov-hook" data-hook-panel hidden>
+        <input type="text" data-hook maxlength="70" enterkeyhint="done" placeholder="Hook, e.g. Can you hit 5.00?" aria-label="Hook text shown in the video">
+        <button type="submit" class="st-ov-icon" aria-label="Done"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></button>
+      </form>
+      <div class="st-ov-bar">
+        <div class="st-ov-side" data-collapsible>
+          <button type="button" class="st-ov-icon" data-hook-btn aria-label="Hook text" aria-expanded="false"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V5h16v2"/><path d="M12 5v14"/><path d="M9 19h6"/></svg></button>
+          <button type="button" class="st-ov-icon" data-camera aria-label="Turn camera off" aria-pressed="true">
+            <span class="st-ov-cam-on"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 10l5-3v10l-5-3z"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg></span><span class="st-ov-cam-off"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 10l5-3v10l-5-3"/><path d="M11 6h2a2 2 0 0 1 2 2v2m0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2"/><path d="M3 3l18 18"/></svg></span>
+          </button>
+        </div>
+        <div class="st-ov-center">
+          <span class="st-ov-time" data-rec-time aria-live="off"></span>
+          <button type="button" class="st-ov-rec" data-rec aria-label="Start recording"></button>
+        </div>
+        <div class="st-ov-side">
+          <button type="button" class="st-ov-icon" data-close aria-label="Close" data-collapsible><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          <button type="button" class="st-ov-icon st-ov-collapse" data-collapse aria-label="Hide controls" aria-expanded="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="st-card st-after" id="after-record" hidden>
+  <h2>Your video</h2>
+  <video class="st-preview" playsinline controls></video>
+  <p class="st-error" data-keep-error hidden>Couldn't keep this video for the Post page (private browsing?). Save it to your phone, then pick it on Post.</p>
+  <div class="st-row">
+    <a class="st-btn" href="/studio/new?recording=1" data-post>Post it →</a>
+    <a class="st-btn is-ghost" data-save>Save to phone</a>
+    <button type="button" class="st-btn is-ghost" data-again>Record again</button>
+  </div>
+</section>
+{{end}}

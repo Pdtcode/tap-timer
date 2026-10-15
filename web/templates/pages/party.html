@@ -1,39 +1,39 @@
 {{define "content"}}
 <div class="container narrow">
   <header class="page-hero">
-    <p class="eyebrow">Goal Challenge</p>
-    <h1>Party mode</h1>
-    <p class="lede">Pass one phone around. Same goal, hidden clock, closest wins.</p>
+    <p class="eyebrow">{{t "party.eyebrow"}}</p>
+    <h1>{{t "party.h1"}}</h1>
+    <p class="lede">{{t "party.lede"}}</p>
   </header>
 
-  <section class="card party" data-party aria-label="Party game">
+  <section class="card party" data-party aria-label="{{t "party.label"}}">
     <!-- 1. Setup -->
     <div class="screen pixel" data-screen="setup">
       <div class="field">
-        <label class="label" for="party-target">Goal time</label>
+        <label class="label" for="party-target">{{t "party.goal"}}</label>
         <select id="party-target" class="select" data-party-target>
-          <option value="3">3 seconds</option>
-          <option value="5" selected>5 seconds</option>
-          <option value="10">10 seconds</option>
-          <option value="15">15 seconds</option>
-          <option value="30">30 seconds</option>
+          <option value="3">{{t "party.seconds" "n" 3}}</option>
+          <option value="5" selected>{{t "party.seconds" "n" 5}}</option>
+          <option value="10">{{t "party.seconds" "n" 10}}</option>
+          <option value="15">{{t "party.seconds" "n" 15}}</option>
+          <option value="30">{{t "party.seconds" "n" 30}}</option>
         </select>
       </div>
 
-      <p class="label" id="players-label">Players <span class="muted" data-player-count></span></p>
+      <p class="label" id="players-label">{{t "party.players"}} <span class="muted" data-player-count></span></p>
       <ol class="players" data-players aria-labelledby="players-label"></ol>
-      <button type="button" class="btn btn--ghost btn--block" data-add-player>+ Add player</button>
+      <button type="button" class="btn btn--ghost btn--block" data-add-player>{{t "party.add"}}</button>
 
-      <button type="button" class="btn btn--primary btn--block btn--lg" data-start>Start game</button>
-      <noscript><p class="muted">Party mode needs JavaScript.</p></noscript>
+      <button type="button" class="btn btn--primary btn--block btn--lg" data-start>{{t "party.start"}}</button>
+      <noscript><p class="muted">{{t "party.noscript"}}</p></noscript>
     </div>
 
     <!-- 2. Hand the phone over -->
     <div class="screen screen--center" data-screen="pass" hidden>
-      <p class="eyebrow">Pass the phone to</p>
+      <p class="eyebrow">{{t "party.pass_to"}}</p>
       <p class="pass-name" data-pass-name></p>
-      <p class="muted">Goal: <strong data-pass-goal></strong>. Keep your time secret.</p>
-      <div class="pixel"><button type="button" class="btn btn--primary btn--lg" data-ready>I'm ready</button></div>
+      <p class="muted">{{th "party.pass_goal"}}</p>
+      <div class="pixel"><button type="button" class="btn btn--primary btn--lg" data-ready>{{t "party.ready"}}</button></div>
       <p class="muted small" data-pass-progress></p>
     </div>
 
@@ -41,21 +41,21 @@
     <div class="screen" data-screen="turn" hidden>
       <p class="turn-name"><span class="player-dot" aria-hidden="true"></span><span data-turn-name></span></p>
       <button type="button" class="tapzone" data-tapzone data-state="idle" aria-describedby="party-hint">
-        <span class="tapzone__goal">GOAL <span data-turn-goal></span>s</span>
+        <span class="tapzone__goal">{{t "game.goal"}} <span data-turn-goal></span>s</span>
         <span class="display" data-display aria-hidden="true"></span>
-        <span class="tapzone__hint" id="party-hint" data-hint aria-live="polite">Tap to start</span>
+        <span class="tapzone__hint" id="party-hint" data-hint aria-live="polite">{{t "game.tap_to_start"}}</span>
       </button>
       <div class="pixel"><button type="button" class="btn btn--primary btn--block btn--lg" data-next hidden></button></div>
     </div>
 
     <!-- 4. Reveal -->
     <div class="screen pixel" data-screen="results" hidden>
-      <p class="eyebrow center">Results · goal <span data-results-goal></span>s</p>
+      <p class="eyebrow center">{{th "party.results"}}</p>
       <p class="winner" data-winner></p>
       <ol class="leaderboard" data-leaderboard></ol>
       <div class="result__actions">
-        <button type="button" class="btn btn--primary" data-rematch>Rematch</button>
-        <button type="button" class="btn" data-edit>Change players</button>
+        <button type="button" class="btn btn--primary" data-rematch>{{t "party.rematch"}}</button>
+        <button type="button" class="btn" data-edit>{{t "party.change"}}</button>
       </div>
 
       {{template "share" "party"}}

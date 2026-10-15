@@ -1,0 +1,59 @@
+{{define "content"}}
+<div class="container narrow prose">
+  <header class="page-hero">
+    <p class="eyebrow">Situs web</p>
+    <h1>Ketentuan layanan</h1>
+    <p class="lede">Ketentuan ini berlaku untuk situs web Tap Timer, <strong>{{.Site.BaseURL}}</strong>. Dengan menggunakan situs ini, kamu menyetujuinya. Aplikasi Tap Timer untuk iPhone dan iPad adalah produk terpisah, yang diatur oleh <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" rel="noopener">perjanjian lisensi standar</a> Apple untuk aplikasi App Store. Halaman ini adalah terjemahan; jika ada perbedaan, yang berlaku adalah <a href="/terms">versi bahasa Inggris</a>.</p>
+  </header>
+
+  <h2>Singkatnya</h2>
+  <ul>
+    <li>Game di situs web ini gratis dimainkan. Biayanya ditanggung oleh iklan.</li>
+    <li>Bersikaplah sopan di room online: tanpa nama yang menyinggung, tanpa alat curang, tanpa serangan terhadap situs.</li>
+    <li>Situs ini disediakan apa adanya. Kami berusaha menjaganya tetap berjalan, tetapi room bisa berakhir dan ada hal yang bisa rusak.</li>
+    <li>Cara kami menangani informasimu ada di <a href="{{link "/privacy"}}">kebijakan privasi</a>.</li>
+  </ul>
+
+  <h2>Menggunakan situs ini</h2>
+  <p>Kamu bisa memainkan mode Solo, Party, dan Online tanpa akun atau pembayaran. Kamu boleh menggunakan situs ini untuk hiburan pribadi dan nonkomersial, termasuk di pesta, di kelas, dan di siaran langsung atau video.</p>
+  <p>Mohon jangan:</p>
+  <ul>
+    <li>menggunakan nama di room online yang menyinggung, bernada kebencian, bersifat seksual, atau meniru orang lain;</li>
+    <li>menggunakan bot, skrip, atau alat otomatis lainnya untuk bermain, membuat room, atau bergabung ke room;</li>
+    <li>mencoba merusak, membebani, menguji celah, atau mengakali batasan maupun keamanan situs;</li>
+    <li>menyalin, membingkai (frame), atau menjual kembali situs atau game-nya sebagai milikmu sendiri;</li>
+    <li>menggunakan situs dengan cara yang melanggar hukum.</li>
+  </ul>
+  <p>Kami dapat menutup room, memblokir akses, atau menghapus nama jika kami yakin ketentuan ini dilanggar.</p>
+
+  <h2>Room online</h2>
+  <p>Siapa pun yang memiliki kode, link, atau kode QR sebuah room bisa bergabung selama masih ada tempat, jadi bagikan hanya ke orang yang ingin kamu ajak main. Nama yang kamu pilih dan waktumu di setiap ronde ditampilkan ke semua orang di room. Room bersifat sementara: room ditutup setelah 30 menit tanpa aktivitas dan saat server dimulai ulang, dan hasilnya tidak disimpan.</p>
+
+  <h2>Aplikasi iPhone dan iPad</h2>
+  <p>Link bertanda "Dapatkan aplikasinya" atau "Unduh" akan membawamu ke App Store. Aplikasinya gratis untuk dicoba, dengan pembelian satu kali opsional untuk membuka semua fiturnya. Unduhan, pembelian, dan pengembalian dana ditangani oleh Apple sesuai ketentuannya, bukan oleh situs web ini. Fitur yang disebut khusus aplikasi (seperti Turnamen, Tim, dan tema tambahan) tidak tersedia di situs web.</p>
+
+  <h2>Iklan dan situs lain</h2>
+  <p>Situs ini menampilkan iklan dari Google dan link ke layanan lain, seperti App Store dan situs tempat kamu membagikan hasil. Kami tidak mengendalikan layanan tersebut dan tidak bertanggung jawab atas konten atau cara kerjanya; ketentuan dan kebijakan mereka sendiri yang berlaku.</p>
+
+  <h2>Konten kami</h2>
+  <p>Nama, logo, desain, teks, dan kode Tap Timer di situs web ini adalah milik kami. Kamu boleh membagikan tangkapan layar, kartu hasil, dan video saat kamu bermain. Font pixel yang digunakan adalah Press Start 2P, di bawah SIL Open Font License. Lencana App Store adalah merek dagang Apple.</p>
+
+  <h2>Tanpa jaminan</h2>
+  <p>Situs ini disediakan "apa adanya" dan "sebagaimana tersedia", tanpa jaminan apa pun, sejauh diizinkan oleh hukum. Kami tidak menjanjikan bahwa situs ini akan selalu tersedia, bebas dari kesalahan, atau bahwa pengukuran waktunya akan tepat di setiap perangkat: browser dan perangkat berbeda-beda.</p>
+
+  <h2>Batasan tanggung jawab</h2>
+  <p>Sejauh diizinkan oleh hukum, kami tidak bertanggung jawab atas kerugian tidak langsung atau konsekuensial apa pun, atau kehilangan data apa pun, yang timbul dari penggunaan situs web ini olehmu. Ini game gratis; mainkan untuk bersenang-senang. Tidak ada bagian dari ketentuan ini yang membatasi hak-hakmu berdasarkan hukum perlindungan konsumen yang tidak dapat dibatasi.</p>
+
+  <h2>Perubahan</h2>
+  <p>Kami dapat memperbarui ketentuan ini seiring perubahan situs. Kami akan memasang versi baru di sini dan mengganti tanggal di bawah. Jika kamu tetap menggunakan situs setelah itu, ketentuan baru yang berlaku.</p>
+
+  <h2>Kontak</h2>
+  {{if .Site.ContactEmail}}
+  <p>Ada pertanyaan? Kirim email ke <a href="mailto:{{.Site.ContactEmail}}">{{.Site.ContactEmail}}</a>.</p>
+  {{else}}
+  <p>Ada pertanyaan? Hubungi kami melalui halaman Tap Timer di App Store.</p>
+  {{end}}
+
+  <p class="muted small">Terakhir diperbarui: 14 Oktober 2026.</p>
+</div>
+{{end}}

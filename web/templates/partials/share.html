@@ -4,25 +4,25 @@
      app.js fills it after a round: a generated result card (with the App Store badge) plus share targets. */}}
 {{define "share"}}
 <section class="share pixel" data-share-panel data-mode="{{.}}" data-icon="{{asset "img/icon-128.png"}}" data-badge="{{asset "img/app-store-badge.svg"}}" data-app-store="{{appStoreURL (print "share_" .)}}" aria-labelledby="share-title-{{.}}" hidden>
-  <p class="share__title" id="share-title-{{.}}">Share your result</p>
+  <p class="share__title" id="share-title-{{.}}">{{t "share.title"}}</p>
   <div class="share__body">
-    <button type="button" class="share__preview" data-share-preview aria-label="View result card larger">
+    <button type="button" class="share__preview" data-share-preview aria-label="{{t "share.preview_label"}}">
       <img data-share-img alt="" width="1080" height="1080">
     </button>
     <div class="share__actions">
-      <button type="button" class="btn btn--primary" data-share-native hidden>Share</button>
-      <a class="btn" data-share-to="x" target="_blank" rel="noopener">Post on X</a>
+      <button type="button" class="btn btn--primary" data-share-native hidden>{{t "share.native"}}</button>
+      <a class="btn" data-share-to="x" target="_blank" rel="noopener">{{t "share.x"}}</a>
       <a class="btn" data-share-to="facebook" target="_blank" rel="noopener">Facebook</a>
       <a class="btn" data-share-to="whatsapp" target="_blank" rel="noopener">WhatsApp</a>
-      <button type="button" class="btn" data-share-copy>Copy link</button>
-      <a class="btn" data-share-save download="tap-timer-result.png">Save image</a>
+      <button type="button" class="btn" data-share-copy>{{t "share.copy"}}</button>
+      <a class="btn" data-share-save download="tap-timer-result.png">{{t "share.save"}}</a>
     </div>
   </div>
-  <p class="share__app">Friends on iPhone or iPad? <a href="/get?src=share_{{.}}" data-cta="share_{{.}}">Get Tap Timer on the App Store</a> for Tournament and Teams.</p>
+  <p class="share__app">{{th "share.app" "href" (print "/get?src=share_" .) "cta" (print "share_" .)}}</p>
   <!-- Larger view of the card. Click anywhere or press Esc to close. -->
-  <dialog class="lightbox" data-share-lightbox aria-label="Result card">
+  <dialog class="lightbox" data-share-lightbox aria-label="{{t "share.lightbox_label"}}">
     <img data-lightbox-img alt="" width="1080" height="1080">
-    <p class="lightbox__hint">Tap anywhere to close</p>
+    <p class="lightbox__hint">{{t "share.lightbox_hint"}}</p>
   </dialog>
 </section>
 {{end}}

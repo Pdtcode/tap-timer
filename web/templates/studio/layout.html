@@ -1,0 +1,64 @@
+{{define "layout"}}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#040e08">
+  <!-- Home-screen app: every /studio page opens inside it (the manifest's scope). -->
+  <link rel="manifest" href="/studio/manifest.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Studio">
+  <title>{{.Title}} | Tap Timer Studio</title>
+  <link rel="icon" href="{{asset "img/favicon-32.png"}}" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="{{asset "img/apple-touch-icon.png"}}">
+  <link rel="stylesheet" href="{{asset "css/studio.css"}}">
+</head>
+<body class="studio" data-page="{{.Page}}">
+  {{if ne .Page "login"}}
+  <header class="st-header">
+    <a class="st-brand" href="/studio">Studio</a>
+    <form method="post" action="/studio/logout"><button class="st-link" type="submit">Sign out</button></form>
+  </header>
+  {{end}}
+  <main class="st-main">
+    {{template "content" .}}
+  </main>
+  {{if ne .Page "login"}}
+  {{$tab := 0}}{{if eq .Page "record"}}{{$tab = 1}}{{else if eq .Page "new"}}{{$tab = 2}}{{else if or (eq .Page "connections") (eq .Page "connected")}}{{$tab = 3}}{{end}}
+  <nav class="st-tabs" aria-label="Studio" data-tab="{{$tab}}" style="--i: {{$tab}}">
+    <span class="st-tabs__pill" aria-hidden="true"></span>
+    <a href="/studio" {{if eq .Page "dashboard"}}aria-current="page"{{end}}>Home</a>
+    <a href="/studio/record" {{if eq .Page "record"}}aria-current="page"{{end}}>Record</a>
+    <a href="/studio/new" {{if eq .Page "new"}}aria-current="page"{{end}}>Post</a>
+    <a href="/studio/connections" {{if or (eq .Page "connections") (eq .Page "connected")}}aria-current="page"{{end}}>Accounts</a>
+  </nav>
+  <script>
+    // Slide the highlight from the tab you came from. Runs before first paint,
+    // so the pill starts at the old tab rather than jumping.
+    (() => {
+      const nav = document.currentScript.previousElementSibling;
+      const cur = Number(nav.dataset.tab);
+      let prev = cur;
+      try {
+        const saved = sessionStorage.getItem("st.tab");
+        if (saved !== null) prev = Number(saved);
+        sessionStorage.setItem("st.tab", String(cur));
+      } catch {}
+      if (prev === cur || Number.isNaN(prev)) return nav.classList.add("is-ready");
+      nav.style.setProperty("--i", String(prev));
+      nav.dataset.from = String(prev);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        nav.classList.add("is-ready");
+        nav.style.setProperty("--i", String(cur));
+        delete nav.dataset.from;
+      }));
+    })();
+  </script>
+  {{end}}
+  <script src="{{asset "js/studio.js"}}" defer></script>
+  {{if eq .Page "record"}}<script src="{{asset "js/studio-record.js"}}" defer></script>{{end}}
+</body>
+</html>{{end}}

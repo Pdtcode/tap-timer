@@ -1,105 +1,105 @@
 {{define "content"}}
 <div class="container narrow">
   <header class="page-hero">
-    <p class="eyebrow">Online multiplayer</p>
-    <h1>{{if .RoomCode}}You're invited to room <span class="accent">{{.RoomCode}}</span>{{else}}Play online with <span class="accent">friends</span>{{end}}</h1>
-    <p class="lede">Share a room code and play together, each on your own phone. Closest over the match wins.</p>
+    <p class="eyebrow">{{t "online.eyebrow"}}</p>
+    <h1>{{if .RoomCode}}{{th "online.h1_invited" "code" .RoomCode}}{{else}}{{th "online.h1"}}{{end}}</h1>
+    <p class="lede">{{t "online.lede"}}</p>
   </header>
 
-  <section class="card online" data-online data-room="{{.RoomCode}}" aria-label="Online room">
+  <section class="card online" data-online data-room="{{.RoomCode}}" aria-label="{{t "online.label"}}">
     <p class="online__banner" data-banner role="status" hidden></p>
 
     <!-- 1. Create or join -->
     <div class="screen pixel" data-screen="entry">
       <div class="field">
-        <label class="label" for="online-name">Your name</label>
-        <input id="online-name" class="input" data-name maxlength="16" autocomplete="nickname" spellcheck="false" placeholder="Player">
+        <label class="label" for="online-name">{{t "online.name"}}</label>
+        <input id="online-name" class="input" data-name maxlength="16" autocomplete="nickname" spellcheck="false" placeholder="{{t "online.name_placeholder"}}">
       </div>
       <div data-join-only{{if not .RoomCode}} hidden{{end}}>
-        <button type="button" class="btn btn--primary btn--block btn--lg" data-join>Join room {{.RoomCode}}</button>
+        <button type="button" class="btn btn--primary btn--block btn--lg" data-join>{{t "online.join_room" "code" .RoomCode}}</button>
       </div>
       <div data-create-only{{if .RoomCode}} hidden{{end}}>
-        <button type="button" class="btn btn--primary btn--block btn--lg" data-create>Create a room</button>
-        <p class="online__or">or join one</p>
+        <button type="button" class="btn btn--primary btn--block btn--lg" data-create>{{t "online.create"}}</button>
+        <p class="online__or">{{t "online.or"}}</p>
         <div class="online__code-row">
-          <label class="sr-only" for="online-code">Room code</label>
-          <input id="online-code" class="input online__code-input" data-code maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE">
-          <button type="button" class="btn" data-join-code>Join</button>
+          <label class="sr-only" for="online-code">{{t "online.code_label"}}</label>
+          <input id="online-code" class="input online__code-input" data-code maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="{{t "online.code_placeholder"}}">
+          <button type="button" class="btn" data-join-code>{{t "online.join"}}</button>
         </div>
       </div>
       <p class="online__error" data-entry-error role="alert" hidden></p>
-      <noscript><p class="muted">Online multiplayer needs JavaScript.</p></noscript>
+      <noscript><p class="muted">{{t "online.noscript"}}</p></noscript>
     </div>
 
     <!-- Getting into a room is taking a moment (e.g. the server is waking up) -->
     <div class="screen screen--center pixel online__full" data-screen="connecting" hidden>
-      <p class="eyebrow center">One moment</p>
-      <p class="online__full-title">Connecting…</p>
+      <p class="eyebrow center">{{t "online.moment"}}</p>
+      <p class="online__full-title">{{t "online.connecting"}}</p>
       <div class="online__full-dots" aria-hidden="true"><span></span><span></span><span></span></div>
-      <p class="online__full-text" role="status">Getting your room ready. This only takes a second or two.</p>
+      <p class="online__full-text" role="status">{{t "online.connecting_text"}}</p>
     </div>
 
     <!-- Rooms are at capacity: wait, and join automatically when a spot opens -->
     <div class="screen screen--center pixel online__full" data-screen="full" hidden>
-      <p class="eyebrow center">Online rooms are busy</p>
-      <p class="online__full-title">All spots are full</p>
-      <p class="online__full-text">We'll get you in automatically as soon as one opens. Keep this page open.</p>
+      <p class="eyebrow center">{{t "online.busy"}}</p>
+      <p class="online__full-title">{{t "online.full"}}</p>
+      <p class="online__full-text">{{t "online.full_text"}}</p>
       <div class="online__full-dots" aria-hidden="true"><span></span><span></span><span></span></div>
       <p class="online__full-countdown" data-full-countdown role="status"></p>
-      <button type="button" class="btn" data-full-cancel>Cancel</button>
-      <p class="online__full-alt">Can't wait? <a href="/party">Party mode</a> works offline on one phone.</p>
+      <button type="button" class="btn" data-full-cancel>{{t "online.cancel"}}</button>
+      <p class="online__full-alt">{{th "online.full_alt" "href" (link "/party")}}</p>
     </div>
 
     <!-- 2. Lobby -->
     <div class="screen pixel" data-screen="lobby" hidden>
       <div class="online__invite">
         <div>
-          <p class="label">Room code</p>
+          <p class="label">{{t "online.room_code"}}</p>
           <p class="online__code" data-room-code></p>
           <div class="online__invite-actions">
-            <button type="button" class="btn btn--sm" data-share>Share invite</button>
-            <button type="button" class="btn btn--sm" data-copy>Copy link</button>
+            <button type="button" class="btn btn--sm" data-share>{{t "online.share_invite"}}</button>
+            <button type="button" class="btn btn--sm" data-copy>{{t "online.copy_link"}}</button>
           </div>
         </div>
-        <img class="online__qr" data-qr width="132" height="132" alt="QR code to join this room">
+        <img class="online__qr" data-qr width="132" height="132" alt="{{t "online.qr_alt"}}">
       </div>
 
-      <p class="label" id="online-players-label">Players <span class="muted" data-player-count></span></p>
+      <p class="label" id="online-players-label">{{t "online.players"}} <span class="muted" data-player-count></span></p>
       <ol class="online__players" data-players aria-labelledby="online-players-label"></ol>
 
       <div class="online__settings" data-host-only>
         <div class="field">
-          <label class="label" for="online-goal">Goal time</label>
+          <label class="label" for="online-goal">{{t "online.goal"}}</label>
           <select id="online-goal" class="select" data-goal>
-            <option value="3">3 seconds</option>
-            <option value="5">5 seconds</option>
-            <option value="10">10 seconds</option>
-            <option value="15">15 seconds</option>
-            <option value="30">30 seconds</option>
-            <option value="0">Mixed (random each round)</option>
+            <option value="3">{{t "online.seconds" "n" 3}}</option>
+            <option value="5">{{t "online.seconds" "n" 5}}</option>
+            <option value="10">{{t "online.seconds" "n" 10}}</option>
+            <option value="15">{{t "online.seconds" "n" 15}}</option>
+            <option value="30">{{t "online.seconds" "n" 30}}</option>
+            <option value="0">{{t "online.mixed"}}</option>
           </select>
         </div>
         <div class="field">
-          <label class="label" for="online-rounds">Rounds</label>
+          <label class="label" for="online-rounds">{{t "online.rounds"}}</label>
           <select id="online-rounds" class="select" data-rounds>
-            <option value="1">1 round</option>
-            <option value="3">3 rounds</option>
-            <option value="5">5 rounds</option>
-            <option value="10">10 rounds</option>
+            <option value="1">{{t "online.rounds_one" "n" 1}}</option>
+            <option value="3">{{t "online.rounds_other" "n" 3}}</option>
+            <option value="5">{{t "online.rounds_other" "n" 5}}</option>
+            <option value="10">{{t "online.rounds_other" "n" 10}}</option>
           </select>
         </div>
-        <button type="button" class="btn btn--primary btn--block btn--lg" data-start>Start match</button>
+        <button type="button" class="btn btn--primary btn--block btn--lg" data-start>{{t "online.start"}}</button>
       </div>
       <p class="online__wait" data-guest-only data-settings-text></p>
     </div>
 
     <!-- 3. Round -->
     <div class="screen" data-screen="round" hidden>
-      <p class="online__round-head pixel"><span data-round-label></span> · Goal <span data-round-goal></span>s</p>
+      <p class="online__round-head pixel"><span data-round-label></span> · {{t "online.round_goal"}} <span data-round-goal></span>s</p>
       <button type="button" class="tapzone" data-tapzone data-state="idle" aria-describedby="online-hint">
-        <span class="tapzone__goal">GOAL <span data-turn-goal></span>s</span>
+        <span class="tapzone__goal">{{t "game.goal"}} <span data-turn-goal></span>s</span>
         <span class="display" data-display aria-hidden="true"></span>
-        <span class="tapzone__hint" id="online-hint" data-hint aria-live="polite">Tap to start</span>
+        <span class="tapzone__hint" id="online-hint" data-hint aria-live="polite">{{t "game.tap_to_start"}}</span>
       </button>
       <p class="online__progress" data-progress aria-live="polite"></p>
     </div>
@@ -109,12 +109,12 @@
       <p class="eyebrow center" data-results-title></p>
       <p class="winner" data-winner></p>
       <ol class="leaderboard" data-reveal></ol>
-      <p class="label center" data-standings-label>Standings</p>
+      <p class="label center" data-standings-label>{{t "online.standings"}}</p>
       <ol class="leaderboard leaderboard--standings" data-standings></ol>
       <div class="result__actions" data-host-only>
         <button type="button" class="btn btn--primary" data-next></button>
       </div>
-      <p class="online__wait" data-guest-only>Waiting for the host…</p>
+      <p class="online__wait" data-guest-only>{{t "online.waiting_host"}}</p>
     </div>
   </section>
 

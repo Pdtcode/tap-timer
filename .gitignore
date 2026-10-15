@@ -3,3 +3,8 @@
 .env
 .DS_Store
 /doc/
+
+# Local secrets (Google OAuth client JSON etc.); never committed or deployed
+/secrets/*
+!/secrets/README.md
+client_secret_*.json

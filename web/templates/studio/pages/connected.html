@@ -1,0 +1,16 @@
+{{define "content"}}
+<section class="st-card st-connected">
+  <h1>{{.Label}} connected{{with .Handle}} as {{.}}{{end}}</h1>
+  {{if .SavedTo}}
+    <p>Saved to <code>{{.SavedTo}}</code> on this computer, so it stays connected after restarts. That folder never goes to git or Fly.</p>
+  {{else}}
+    <p>It works now, but the server forgets it when it restarts (every deploy, and whenever the machine sleeps). <strong>Save it now</strong> by running this from the project folder on your computer:</p>
+    <div class="st-secret">
+      <input type="text" readonly value="fly secrets set {{.TokenEnv}}={{.Token}}" aria-label="Command to save the login" id="save-cmd">
+      <button class="st-btn" type="button" data-copy="save-cmd">Copy</button>
+    </div>
+    <p class="st-muted">This is a password for your {{.Label}} account: don't share it or save it anywhere else. It's shown only once; if you lose it, just connect again.</p>
+  {{end}}
+  <a class="st-btn is-ghost" href="/studio/connections">Done</a>
+</section>
+{{end}}

@@ -6,6 +6,7 @@ require (
 	github.com/coder/websocket v1.8.15
 	github.com/gin-contrib/gzip v1.2.8
 	github.com/gin-gonic/gin v1.12.0
+	golang.org/x/oauth2 v0.37.0
 	rsc.io/qr v0.2.0
 )
 
@@ -24,7 +25,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/mattn/go-isatty v0.0.23 // indirect
+	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
@@ -36,7 +37,7 @@ require (
 	golang.org/x/arch v0.29.0 // indirect
 	golang.org/x/crypto v0.56.0 // indirect
 	golang.org/x/net v0.57.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )

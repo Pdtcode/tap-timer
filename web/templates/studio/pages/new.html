@@ -1,0 +1,13 @@
+{{define "content"}}
+<form class="st-card st-new" id="new-post" data-max-mb="{{.MaxMB}}">
+  <h1>New post</h1>
+
+  <label class="st-file">
+    <span data-file-label>Video</span>
+    <input type="file" name="video" accept="video/*" required>
+  </label>
+  <video class="st-preview" playsinline muted controls hidden></video>
+
+  {{template "postfields" .}}
+</form>
+{{end}}

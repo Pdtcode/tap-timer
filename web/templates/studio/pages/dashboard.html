@@ -1,0 +1,50 @@
+{{define "content"}}
+<section class="st-card st-streak">
+  <div class="st-streak__num">{{.Streak}}</div>
+  <div>
+    <h1>day streak</h1>
+    <p class="st-muted">{{if .PostedToday}}Posted today. See you tomorrow.{{else}}Nothing posted yet today.{{end}}</p>
+  </div>
+  {{if not .PostedToday}}<a class="st-btn" href="/studio/new">Post today's video</a>{{end}}
+</section>
+
+<section class="st-card">
+  <h2>Last 4 weeks</h2>
+  <ol class="st-cal" aria-label="Days posted">
+    {{range .Calendar}}<li class="{{if .Posted}}is-posted{{end}} {{if .Today}}is-today{{end}}" title="{{.Date.Format "Mon Jan 2"}}{{if .Posted}}: posted{{end}}"></li>{{end}}
+  </ol>
+</section>
+
+<section class="st-card">
+  <h2>Accounts</h2>
+  <ul class="st-plats">
+    {{range .Platforms}}
+    <li><span>{{.Label}}</span>
+      {{if .Error}}<a class="st-pill is-bad" href="/studio/connections">Problem</a>
+      {{else if .Connected}}<span class="st-pill is-ok">{{with .Handle}}{{.}}{{else}}Connected{{end}}</span>
+      {{else}}<a class="st-pill is-warn" href="/studio/connections">Not connected</a>{{end}}
+    </li>
+    {{with .Error}}<li class="st-error">{{.}}</li>{{end}}
+    {{end}}
+  </ul>
+</section>
+
+<section class="st-card">
+  <h2>Recent posts</h2>
+  {{if not .Posts}}<p class="st-muted">Nothing yet. Posts from connected accounts show up here, including ones you post from the apps.</p>{{end}}
+  <ul class="st-posts">
+    {{range .Posts}}
+    <li>
+      <div class="st-posts__head">
+        <a href="{{.URL}}" target="_blank" rel="noopener"><strong>{{.Title}}</strong></a>
+        <time>{{localTime .PostedAt}}</time>
+      </div>
+      <p class="st-posts__meta">
+        {{label .Platform}}{{if and .Privacy (ne .Privacy "public")}} · <span class="is-warn">{{.Privacy}}</span>{{end}}
+        · {{.Stats.Views}} views · {{.Stats.Likes}} likes · {{.Stats.Comments}} comments
+      </p>
+    </li>
+    {{end}}
+  </ul>
+</section>
+{{end}}

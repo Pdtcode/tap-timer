@@ -1,0 +1,77 @@
+{{define "content"}}
+<div class="container narrow prose">
+  <header class="page-hero">
+    <p class="eyebrow">Site</p>
+    <h1>Política de privacidade</h1>
+    <p class="lede">Esta política cobre apenas o site do Tap Timer, <strong>{{.Site.BaseURL}}</strong>. O app Tap Timer para iPhone e iPad é um produto separado, com sua própria <a href="https://nativetranslator.github.io/taptimer/privacy.html" rel="noopener">política de privacidade do app</a>. Esta é uma tradução; se houver diferença entre as versões, vale a <a href="/privacy">versão em inglês</a>.</p>
+  </header>
+
+  <h2>Em resumo</h2>
+  <ul>
+    <li>Não há contas nem cadastro. Você pode jogar sem nos fornecer nada.</li>
+    <li>Suas configurações e os nomes do Modo Festa ficam no seu navegador.</li>
+    <li>Nas salas online, o nome que você digita e os seus tempos são compartilhados com os outros jogadores daquela sala e guardados só enquanto a sala estiver aberta.</li>
+    <li>O site exibe anúncios do Google, que usam cookies. Visitantes do EEE, do Reino Unido e da Suíça recebem um pedido de consentimento antes.</li>
+    <li>Não vendemos as suas informações.</li>
+  </ul>
+
+  <h2>Armazenado no seu navegador</h2>
+  <p>O site salva algumas coisas no seu dispositivo para se lembrar de você. Elas nunca saem do seu dispositivo, salvo quando indicado, e limpar os dados deste site no seu navegador as remove.</p>
+  <ul>
+    <li><strong>Até você limpá-los (armazenamento local):</strong> o tempo de meta escolhido, os nomes dos jogadores e a meta do Modo Festa, e o último nome que você usou nas salas online.</li>
+    <li><strong>Até você fechar a aba (armazenamento de sessão):</strong> um ID aleatório que permite recuperar o seu lugar se você recarregar a página durante uma sala online, o código da sala em que você está e se você já viu a sugestão do app.</li>
+    <li><strong>Só enquanto a página estiver aberta:</strong> as suas estatísticas de Melhor, Média e Rodadas. Elas são zeradas quando você atualiza ou sai da página.</li>
+  </ul>
+
+  <h2>Salas online</h2>
+  <p>Quando você cria ou entra em uma sala em <a href="{{link "/online"}}">{{link "/online"}}</a>, o seu navegador envia ao nosso servidor:</p>
+  <ul>
+    <li>o nome que você digita, que todos os jogadores da sala veem (por isso, não use o seu nome completo);</li>
+    <li>o seu tempo em cada rodada, que os outros jogadores só veem quando a rodada é revelada;</li>
+    <li>o ID aleatório de lugar descrito acima.</li>
+  </ul>
+  <p>Esses dados ficam apenas na memória do servidor, nunca são gravados em disco nem em registros, e desaparecem quando a sala fecha: após 30 minutos sem atividade ou quando o servidor reinicia. Os links e QR codes das salas contêm apenas o código da sala. Não há chat.</p>
+
+  <h2>Registros do servidor e segurança</h2>
+  <p>Como a maioria dos sites, o nosso servidor registra cada requisição: o seu endereço IP, a página solicitada, o horário e a resposta. Quando você segue um link para a App Store, também registramos o tipo do seu navegador e a página de onde você veio, para podermos contar quais links as pessoas usam. Usamos os registros para manter o site funcionando e para impedir abusos.</p>
+  <p>Para evitar abusos nas salas online, o servidor mantém por pouco tempo, na memória, uma contagem de requisições por endereço IP, por cerca de um minuto.</p>
+  <p>O site é hospedado pela <a href="https://fly.io/legal/privacy-policy" rel="noopener">Fly.io</a> em servidores nos Estados Unidos, que processam esses registros em nosso nome e os guardam por um tempo limitado.</p>
+
+  <h2>Publicidade</h2>
+  <p>Este site exibe anúncios por meio do Google AdSense. Fornecedores terceiros, incluindo o Google, usam cookies para exibir anúncios com base nas suas visitas anteriores a este e a outros sites. Os cookies de publicidade do Google permitem que o Google e os seus parceiros exibam anúncios com base nas suas visitas a este site e a outros sites na Internet.</p>
+  <p>Se você acessa a partir do Espaço Econômico Europeu, do Reino Unido ou da Suíça, a mensagem de consentimento do Google pede a sua escolha antes de exibir anúncios personalizados. Você pode consentir, recusar ou gerenciar as opções; se recusar, ainda poderá ver anúncios não personalizados.</p>
+  <p>De qualquer lugar, você pode desativar a publicidade personalizada nas <a href="https://adssettings.google.com" rel="noopener">Configurações de anúncios do Google</a> ou desativar os cookies de alguns fornecedores terceiros em <a href="https://www.aboutads.info/choices/" rel="noopener">aboutads.info</a>. Saiba mais sobre <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">como o Google usa as informações de sites que usam os seus serviços</a>.</p>
+
+  {{if .Site.GAID}}
+  <h2>Análise de dados</h2>
+  <p>Usamos o Google Analytics para saber quantas pessoas visitam o site e quais páginas e recursos elas usam. Ele coleta informações como páginas visualizadas, tipo de dispositivo e localização aproximada, usando cookies. Ele não coleta o seu nome nem os seus dados de contato. Consulte a <a href="https://policies.google.com/privacy" rel="noopener">política de privacidade do Google</a>.</p>
+  {{end}}
+
+  <h2>Compartilhamento e links para outros sites</h2>
+  <p>Os cards de resultado são desenhados no seu navegador e não são enviados para nós. Se você usa um botão de compartilhar (X, Facebook, WhatsApp ou o menu de compartilhamento do seu dispositivo), está enviando o resultado por esse serviço, e a política de privacidade dele se aplica. O mesmo vale para a App Store quando você segue um link para lá.</p>
+
+  <h2>Crianças</h2>
+  <p>Este site é destinado ao público em geral e não é direcionado a crianças menores de 13 anos. Não coletamos intencionalmente informações pessoais de crianças. A única coisa que alguém digita é um nome para o jogo, que não armazenamos.</p>
+
+  <h2>Suas escolhas e direitos</h2>
+  <ul>
+    <li>Limpe os dados deste site no seu navegador para remover tudo o que está armazenado no seu dispositivo.</li>
+    <li>Altere as suas escolhas de anúncios na mensagem de consentimento (EEE, Reino Unido, Suíça) ou nas Configurações de anúncios do Google.</li>
+    <li>Dependendo de onde você mora, você pode ter o direito de acessar ou excluir informações pessoais sobre você. Como não há contas, normalmente não conseguimos associar os registros a você, mas ajudaremos no que for possível: entre em contato conosco abaixo.</li>
+  </ul>
+
+  <p>As regras de uso do site estão nos <a href="{{link "/terms"}}">termos de serviço</a>.</p>
+
+  <h2>Alterações</h2>
+  <p>Se esta política mudar, vamos atualizá-la aqui e alterar a data abaixo.</p>
+
+  <h2>Contato</h2>
+  {{if .Site.ContactEmail}}
+  <p>Dúvidas? Envie um e-mail para <a href="mailto:{{.Site.ContactEmail}}">{{.Site.ContactEmail}}</a>.</p>
+  {{else}}
+  <p>Dúvidas? Fale conosco pela página do Tap Timer na App Store.</p>
+  {{end}}
+
+  <p class="muted small">Última atualização: 2 de outubro de 2026.</p>
+</div>
+{{end}}

@@ -313,7 +313,7 @@ func TestOnlinePages(t *testing.T) {
 	r := newTestRouter(t, testConfig())
 
 	w := get(r, "/online")
-	if w.Code != http.StatusOK || !strings.Contains(w.Body.String(), "data-online") || strings.Contains(w.Body.String(), `name="robots"`) {
+	if w.Code != http.StatusOK || !strings.Contains(w.Body.String(), "data-online") || strings.Contains(w.Body.String(), "noindex") {
 		t.Errorf("/online: %d", w.Code)
 	}
 	w = get(r, "/r/k7qx")

@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	_ "time/tzdata" // the distroless image has no zoneinfo; STUDIO_TZ needs it
 
 	"taptimer/internal/config"
 	"taptimer/internal/server"

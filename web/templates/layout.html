@@ -1,11 +1,16 @@
 {{define "layout"}}<!doctype html>
-<html lang="en">
+<html lang="{{.Lang.Code}}" data-prefix="{{.Lang.Prefix}}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{{.Title}}</title>
   {{if .Description}}<meta name="description" content="{{.Description}}">{{end}}
-  {{if or (eq .Page "404") .NoIndex}}<meta name="robots" content="noindex">{{else}}<link rel="canonical" href="{{.Canonical}}">{{end}}
+  {{if or (eq .Page "404") .NoIndex}}<meta name="robots" content="noindex">{{else}}<link rel="canonical" href="{{.Canonical}}">
+  <!-- Allow large image previews and full snippets (Discover and image-rich results). -->
+  <meta name="robots" content="max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <!-- The same page in every language, so search engines show each searcher theirs. -->
+  {{range .Alternates}}<link rel="alternate" hreflang="{{.Lang.Hreflang}}" href="{{.URL}}">
+  {{end}}{{with index .Alternates 0}}<link rel="alternate" hreflang="x-default" href="{{.URL}}">{{end}}{{end}}
   {{with .Site.GoogleSiteVerification}}<meta name="google-site-verification" content="{{.}}">{{end}}
   {{with .Site.BingSiteVerification}}<meta name="msvalidate.01" content="{{.}}">{{end}}
   <meta name="theme-color" content="#040e08">
@@ -14,6 +19,9 @@
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Tap Timer">
+  <meta property="og:locale" content="{{.Lang.OGLocale}}">
+  {{range .Alternates}}{{if not .Current}}<meta property="og:locale:alternate" content="{{.Lang.OGLocale}}">
+  {{end}}{{end}}
   <meta property="og:title" content="{{.Title}}">
   {{if .Description}}<meta property="og:description" content="{{.Description}}">{{end}}
   <meta property="og:url" content="{{.Canonical}}">
@@ -21,9 +29,12 @@
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Tap Timer: a glowing seven-segment display reading 5.00 with the headline 'Think you know what 5 seconds feels like?'">
+  <meta property="og:image:alt" content="{{t "meta.og_alt"}}">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{.Title}}">
+  {{if .Description}}<meta name="twitter:description" content="{{.Description}}">{{end}}
   <meta name="twitter:image" content="{{.Site.BaseURL}}{{asset "img/og.png"}}">
+  <meta name="twitter:image:alt" content="{{t "meta.og_alt"}}">
 
   <link rel="icon" href="{{asset "img/favicon-32.png"}}" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="{{asset "img/apple-touch-icon.png"}}">
@@ -39,22 +50,34 @@
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config",{{.Site.GAID}});</script>
   {{end}}
 
-  {{/* WebSite gives search engines the site name; WebApplication is the free
-       browser game; MobileApplication is the iPhone/iPad app it funnels to. */}}
+  {{/* WebSite gives search engines the site name (and the names people search
+       it by); the free browser game is both a VideoGame and a WebApplication;
+       MobileApplication is the iPhone/iPad app it funnels to. Inner pages add
+       a BreadcrumbList so results show "tap-timer.com › Party mode". */}}
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "WebSite",
+        "@id": {{print .Site.BaseURL "/#website"}},
         "name": "Tap Timer",
-        "url": {{print .Site.BaseURL "/"}}
+        "alternateName": ["Tap Timer Game", "Tap the Clock", "TapTimer"],
+        "url": {{print .Site.BaseURL "/"}},
+        "inLanguage": [{{range $i, $a := .Alternates}}{{if $i}}, {{end}}{{$a.Lang.Hreflang}}{{end}}]
       },
       {
-        "@type": "WebApplication",
+        "@type": ["VideoGame", "WebApplication"],
         "name": "Tap Timer",
-        "url": {{print .Site.BaseURL "/"}},
-        "description": "A free browser timing game: the clock is hidden, so stop it as close to the goal time as you can. Play solo or pass the phone with friends.",
+        "alternateName": "Tap the Clock",
+        "url": {{print .Site.BaseURL (link "/")}},
+        "inLanguage": {{.Lang.Hreflang}},
+        "description": {{t "meta.ld_desc"}},
+        "genre": ["Timing game", "Party game", "Casual"],
+        "keywords": "stop the clock game, tap the clock, hidden timer, 5 second challenge, 10 second challenge, reaction time, party game",
+        "gamePlatform": ["Web browser", "iPhone", "iPad"],
+        "playMode": ["SinglePlayer", "MultiPlayer"],
+        "numberOfPlayers": {"@type": "QuantitativeValue", "minValue": 1, "maxValue": 8},
         "applicationCategory": "GameApplication",
         "operatingSystem": "Any (web browser)",
         "browserRequirements": "Requires JavaScript",
@@ -69,26 +92,33 @@
         "url": {{print .Site.BaseURL "/"}},
         "installUrl": {{print "https://apps.apple.com/app/id" .Site.AppStoreID}},
         "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}
-      }
+      }{{with .Breadcrumb}},
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {"@type": "ListItem", "position": 1, "name": "Tap Timer", "item": {{print $.Site.BaseURL (link "/")}}},
+          {"@type": "ListItem", "position": 2, "name": {{.}}, "item": {{$.Canonical}}}
+        ]
+      }{{end}}
     ]
   }
   </script>
 </head>
 <body class="page-{{.Page}}">
-  <a class="skip" href="#main">Skip to content</a>
+  <a class="skip" href="#main">{{t "layout.skip"}}</a>
 
   <header class="site-header">
     <div class="container site-header__inner">
-      <a class="logo" href="/" aria-label="Tap Timer home">
+      <a class="logo" href="{{link "/"}}" aria-label="{{t "layout.home_label"}}">
         <img src="{{asset "img/icon-128.png"}}" width="32" height="32" alt="">
         <span class="wordmark">TAP TIMER</span>
       </a>
-      <nav class="site-nav" aria-label="Main">
-        <a href="/" {{if eq .Page "home"}}aria-current="page"{{end}}>Solo</a>
-        <a href="/party" {{if eq .Page "party"}}aria-current="page"{{end}}>Party</a>
-        <a href="/online" {{if eq .Page "online"}}aria-current="page"{{end}}>Online</a>
+      <nav class="site-nav" aria-label="{{t "layout.nav_label"}}">
+        <a href="{{link "/"}}" {{if eq .Page "home"}}aria-current="page"{{end}}>{{t "layout.nav_solo"}}</a>
+        <a href="{{link "/party"}}" {{if eq .Page "party"}}aria-current="page"{{end}}>{{t "layout.nav_party"}}</a>
+        <a href="{{link "/online"}}" {{if eq .Page "online"}}aria-current="page"{{end}}>{{t "layout.nav_online"}}</a>
       </nav>
-      <a class="get-app" href="/get?src=header" data-cta="header">Get the app</a>
+      <a class="get-app" href="/get?src=header" data-cta="header">{{t "layout.get_app"}}</a>
     </div>
   </header>
 
@@ -99,24 +129,32 @@
   <footer class="site-footer">
     <div class="container site-footer__inner">
       <div>
-        <a class="logo logo--sm" href="/" aria-label="Tap Timer home">
+        <a class="logo logo--sm" href="{{link "/"}}" aria-label="{{t "layout.home_label"}}">
           <img src="{{asset "img/icon-128.png"}}" width="26" height="26" alt="">
           <span class="wordmark">TAP TIMER</span>
         </a>
-        <p class="muted">The pass-the-phone timer game. On iPhone &amp; iPad.</p>
+        <p class="muted">{{t "layout.footer_tagline"}}</p>
       </div>
-      <nav class="footer-nav" aria-label="Footer">
-        <a href="/">Play solo</a>
-        <a href="/party">Party mode</a>
-        <a href="/online">Play online</a>
-        <a href="/how-to-play">How to play</a>
-        <a href="/get?src=footer" data-cta="footer">Download the app</a>
-        <a href="/privacy">Privacy</a>
+      <nav class="footer-nav" aria-label="{{t "layout.footer_label"}}">
+        <a href="{{link "/"}}">{{t "layout.footer_solo"}}</a>
+        <a href="{{link "/party"}}">{{t "layout.footer_party"}}</a>
+        <a href="{{link "/online"}}">{{t "layout.footer_online"}}</a>
+        <a href="{{link "/how-to-play"}}">{{t "layout.footer_howto"}}</a>
+        <a href="/get?src=footer" data-cta="footer">{{t "layout.footer_download"}}</a>
+        <a href="{{link "/privacy"}}">{{t "layout.footer_privacy"}}</a>
+        <a href="{{link "/terms"}}">{{t "layout.footer_terms"}}</a>
       </nav>
     </div>
+    {{if not (or .NoIndex (eq .Page "404"))}}
+    <nav class="container lang-picker" aria-label="{{t "layout.language"}}">
+      {{range .Alternates}}<a href="{{.URL}}" hreflang="{{.Lang.Hreflang}}" lang="{{.Lang.Code}}"{{if .Current}} aria-current="true"{{end}}>{{.Lang.Name}}</a>
+      {{end}}
+    </nav>
+    {{end}}
     <p class="container muted small">&copy; {{.Year}} Tap Timer</p>
   </footer>
 
+  <script id="tt-i18n" type="application/json">{{.JS}}</script>
   <script src="{{asset "js/app.js"}}" defer></script>
 </body>
 </html>{{end}}

@@ -6,8 +6,8 @@
 */}}
 {{define "ad"}}
 {{if .Enabled}}
-<aside class="ad ad--{{.Name}}" aria-label="Advertisement">
-  <span class="ad__label">Advertisement</span>
+<aside class="ad ad--{{.Name}}" aria-label="{{t "ad.label"}}">
+  <span class="ad__label">{{t "ad.label"}}</span>
   <ins class="adsbygoogle" style="display:block"
        data-ad-client="{{.Client}}"
        data-ad-slot="{{.Slot}}"

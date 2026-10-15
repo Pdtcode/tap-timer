@@ -20,6 +20,22 @@
     set(key, v) { try { sessionStorage.setItem(key, v); } catch { /* ignore */ } },
   };
 
+  // ---------------------------------------------------------------------------
+  // Translations: the server puts this page's strings (web/i18n, "js." keys)
+  // in #tt-i18n. tr("hint.start") or tr("party.player", { n: 2 }); trn picks
+  // key_one / key_other by count. PREFIX is the language's URL prefix ("" or "/es").
+  // ---------------------------------------------------------------------------
+  const I18N = (() => {
+    try { return JSON.parse(document.getElementById('tt-i18n').textContent) || {}; } catch { return {}; }
+  })();
+  const tr = (key, vars) => {
+    let s = I18N[key] ?? key;
+    if (vars) for (const k in vars) s = s.split(`{${k}}`).join(String(vars[k]));
+    return s;
+  };
+  const trn = (key, n, vars) => tr(`${key}_${n === 1 ? 'one' : 'other'}`, { n, ...vars });
+  const PREFIX = document.documentElement.dataset.prefix || '';
+
   const TARGETS = [3, 5, 10, 15, 30];
   const MAX_SECONDS = 99.99;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -295,13 +311,13 @@
   const fmtDiff = (diff) => (isExact(diff) ? '±' : diff > 0 ? '+' : '-') + Math.abs(diff).toFixed(2) + 's';
 
   const RATINGS = [
-    [0.005, 'PERFECT!', 'perfect'],
-    [0.05, 'INCREDIBLE', 'great'],
-    [0.1, 'SHARP', 'great'],
-    [0.25, 'CLOSE', 'good'],
-    [0.5, 'NOT BAD', 'ok'],
-    [1, 'WARM', 'ok'],
-    [Infinity, 'WAY OFF', 'bad'],
+    [0.005, tr('rating.perfect'), 'perfect'],
+    [0.05, tr('rating.incredible'), 'great'],
+    [0.1, tr('rating.sharp'), 'great'],
+    [0.25, tr('rating.close'), 'good'],
+    [0.5, tr('rating.not_bad'), 'ok'],
+    [1, tr('rating.warm'), 'ok'],
+    [Infinity, tr('rating.way_off'), 'bad'],
   ];
   const rate = (diff) => RATINGS.find(([max]) => Math.abs(diff) < max || max === Infinity);
 
@@ -542,11 +558,11 @@
     ctx.textAlign = 'center';
     pixelText(ctx, r.headline.toUpperCase(), mid, y.headline, 64, GREEN, 920, true);
     drawSevenSeg(ctx, fmt(r.time), mid, y.clock, y.clockH);
-    pixelText(ctx, `GOAL ${fmt(r.target)}s`, mid, y.goal, 28, 'rgba(48, 252, 96, 0.75)', 920);
+    pixelText(ctx, tr('card.goal', { goal: fmt(r.target) }), mid, y.goal, 28, 'rgba(48, 252, 96, 0.75)', 920);
     pixelText(ctx, r.line, mid, y.line, 20, '#93a89b', 920);
     if (r.stats) drawStats(ctx, r.stats, mid, 704);
-    pixelText(ctx, 'CAN YOU BEAT IT?', mid, y.cta, 36, '#ebf3ee', 920);
-    pixelText(ctx, `PLAY FREE AT ${location.host.toUpperCase()}`, mid, y.url, 16, '#93a89b', 920);
+    pixelText(ctx, tr('card.cta'), mid, y.cta, 36, '#ebf3ee', 920);
+    pixelText(ctx, tr('card.play_free', { host: location.host.toUpperCase() }), mid, y.url, 16, '#93a89b', 920);
     if (badge) {
       const bh = 80;
       const bw = (bh * 119.664) / 40; // badge aspect ratio
@@ -561,7 +577,7 @@
     const h = 104;
     const gap = 24;
     const t = 4;
-    const cells = [['BEST', stats.best], ['AVERAGE', stats.avg], ['ROUNDS', stats.rounds]];
+    const cells = [[tr('card.best'), stats.best], [tr('card.average'), stats.avg], [tr('card.rounds'), stats.rounds]];
     cells.forEach(([label, value], i) => {
       const x = mid - (3 * w + 2 * gap) / 2 + i * (w + gap);
       ctx.fillStyle = 'rgba(48, 252, 96, 0.06)';
@@ -607,11 +623,11 @@
     /** @param {{headline:string, time:number, target:number, line:string, text:string, url:string}} r */
     async function show(r) {
       const appUrl = el.dataset.appStore; // straight to the App Store, with campaign tags
-      const message = `${r.text}\n${r.url}\n\nTap Timer for iPhone & iPad: ${appUrl}`;
+      const message = `${r.text}\n${r.url}\n\n${tr('share.app_line', { url: appUrl })}`;
       current = { ...r, message };
       file = null;
       const hrefs = {
-        x: `https://twitter.com/intent/tweet?text=${enc(`${r.text}\n\niPhone & iPad app: ${appUrl}`)}&url=${enc(r.url)}`,
+        x: `https://twitter.com/intent/tweet?text=${enc(`${r.text}\n\n${tr('share.x_app', { url: appUrl })}`)}&url=${enc(r.url)}`,
         facebook: `https://www.facebook.com/sharer/sharer.php?u=${enc(r.url)}`,
         whatsapp: `https://wa.me/?text=${enc(message)}`,
       };
@@ -630,7 +646,7 @@
       blobUrl = URL.createObjectURL(blob);
       file = new File([blob], 'tap-timer-result.png', { type: 'image/png' });
       img.src = saveBtn.href = blobUrl;
-      img.alt = `Result card: ${r.headline}, ${fmt(r.time)}s with a goal of ${fmt(r.target)}s`;
+      img.alt = tr('card.alt', { headline: r.headline, time: fmt(r.time), goal: fmt(r.target) });
     }
 
     function hide() {
@@ -666,12 +682,12 @@
       if (!current) return;
       try {
         await navigator.clipboard.writeText(current.message);
-        copyBtn.textContent = 'Copied!';
+        copyBtn.textContent = tr('share.copied');
         track('share', { mode, method: 'copy' });
       } catch {
-        copyBtn.textContent = 'Could not copy';
+        copyBtn.textContent = tr('share.copy_failed');
       }
-      setTimeout(() => (copyBtn.textContent = 'Copy link'), 2000);
+      setTimeout(() => (copyBtn.textContent = tr('share.copy_link')), 2000);
     });
 
     return { show, hide };
@@ -718,7 +734,7 @@
         resultEl.hidden = true;
         share.hide();
         zone.dataset.state = 'running';
-        hint.textContent = 'Tap to stop';
+        hint.textContent = tr('hint.stop');
         [...targetBtns, stealthBtn, resetBtn].forEach((b) => (b.disabled = true));
         if (stealth) {
           display.set('-.--');
@@ -749,10 +765,10 @@
       ratingEl.textContent = label;
       ratingEl.dataset.tier = tier;
       deltaEl.textContent = isExact(r.diff)
-        ? `Dead on ${fmt(r.target)}s!`
-        : `${fmtDiff(r.diff)} ${r.diff > 0 ? 'over' : 'under'} the goal`;
+        ? tr('solo.dead_on', { goal: fmt(r.target) })
+        : tr(r.diff > 0 ? 'solo.over' : 'solo.under', { diff: fmtDiff(r.diff) });
       if (r.practice) {
-        deltaEl.textContent += ' · practice (clock visible)';
+        deltaEl.textContent += tr('solo.practice');
         share.hide();
       } else {
         share.show({
@@ -760,11 +776,11 @@
           time: r.elapsed,
           target: r.target,
           stats: statText(r.target),
-          line: isExact(r.diff) ? 'DEAD ON!' : `${fmtDiff(r.diff)} ${r.diff > 0 ? 'OVER' : 'UNDER'}`,
+          line: isExact(r.diff) ? tr('card.dead_on') : tr(r.diff > 0 ? 'card.over' : 'card.under', { diff: fmtDiff(r.diff) }),
           text: isExact(r.diff)
-            ? `I stopped the hidden clock at exactly ${fmt(r.target)}s on Tap Timer. Can you?`
-            : `I stopped the hidden clock at ${fmt(r.elapsed)}s (goal ${fmt(r.target)}s) on Tap Timer, off by ${Math.abs(r.diff).toFixed(2)}s. Can you beat me?`,
-          url: `${location.origin}/?t=${r.target}`,
+            ? tr('solo.share_exact', { goal: fmt(r.target) })
+            : tr('solo.share_off', { time: fmt(r.elapsed), goal: fmt(r.target), off: Math.abs(r.diff).toFixed(2) }),
+          url: `${location.origin}${PREFIX}/?t=${r.target}`,
         });
       }
       resultEl.hidden = false;
@@ -772,7 +788,7 @@
       if (resultEl.getBoundingClientRect().bottom > window.innerHeight) {
         resultEl.scrollIntoView({ block: 'nearest', behavior: reducedMotion ? 'auto' : 'smooth' });
       }
-      hint.textContent = 'Tap to go again';
+      hint.textContent = tr('hint.again');
       renderStats();
       if (sessionRounds >= 3 && !session.get('tt.nudged')) {
         nudge.hidden = false;
@@ -813,7 +829,7 @@
       resultEl.hidden = true;
       share.hide();
       display.set('0.00');
-      hint.textContent = 'Tap to start';
+      hint.textContent = tr('hint.start');
       renderStats();
     }
 
@@ -822,7 +838,7 @@
     function setStealth(on) {
       stealth = on;
       stealthBtn.setAttribute('aria-pressed', String(on));
-      stealthBtn.title = on ? 'Stealth on: the clock hides while it runs' : 'Stealth off: practice with the clock visible';
+      stealthBtn.title = tr(on ? 'solo.stealth_on' : 'solo.stealth_off');
       zone.dataset.stealth = on ? 'on' : 'off';
     }
     stealthBtn.addEventListener('click', () => {
@@ -841,10 +857,10 @@
 
     // A quick loading state so the first tap can't land mid-setup.
     zone.dataset.loading = 'true';
-    hint.textContent = 'Loading…';
+    hint.textContent = tr('hint.loading');
     warmUp.then(() => {
       delete zone.dataset.loading;
-      if (zone.dataset.state === 'idle') hint.textContent = 'Tap to start';
+      if (zone.dataset.state === 'idle') hint.textContent = tr('hint.start');
     });
   }
 
@@ -871,8 +887,9 @@
     const nextBtn = $('[data-next]');
     const share = createSharePanel($('[data-share-panel]'));
 
-    let names = store.get('tt.party.players', ['Player 1', 'Player 2']);
-    if (!Array.isArray(names) || names.length < MIN_PLAYERS) names = ['Player 1', 'Player 2'];
+    const defaultNames = [tr('party.player', { n: 1 }), tr('party.player', { n: 2 })];
+    let names = store.get('tt.party.players', defaultNames);
+    if (!Array.isArray(names) || names.length < MIN_PLAYERS) names = defaultNames;
     names = names.slice(0, MAX_PLAYERS).map(String);
     const savedTarget = store.get('tt.party.target', 5);
     if (TARGETS.includes(savedTarget)) targetSel.value = String(savedTarget);
@@ -911,15 +928,15 @@
         input.autocomplete = 'off';
         input.spellcheck = false;
         input.value = name;
-        input.placeholder = `Player ${i + 1}`;
-        input.setAttribute('aria-label', `Player ${i + 1} name`);
+        input.placeholder = tr('party.player', { n: i + 1 });
+        input.setAttribute('aria-label', tr('party.player_name', { n: i + 1 }));
         input.addEventListener('input', () => { names[i] = input.value; saveNames(); });
         input.addEventListener('focus', () => input.select());
 
         const remove = document.createElement('button');
         remove.type = 'button';
         remove.className = 'icon-btn';
-        remove.setAttribute('aria-label', `Remove player ${i + 1}`);
+        remove.setAttribute('aria-label', tr('party.remove', { n: i + 1 }));
         remove.textContent = '✕';
         remove.disabled = names.length <= MIN_PLAYERS;
         remove.addEventListener('click', () => { names.splice(i, 1); saveNames(); renderPlayers(); });
@@ -934,7 +951,7 @@
 
     addBtn.addEventListener('click', () => {
       if (names.length >= MAX_PLAYERS) return;
-      names.push(`Player ${names.length + 1}`);
+      names.push(tr('party.player', { n: names.length + 1 }));
       saveNames();
       renderPlayers(names.length - 1);
     });
@@ -943,7 +960,7 @@
 
     $('[data-start]').addEventListener('click', () => {
       const target = Number(targetSel.value);
-      startGame(target, names.map((n, i) => ({ name: n.trim() || `Player ${i + 1}`, color: PLAYER_COLORS[i] })));
+      startGame(target, names.map((n, i) => ({ name: n.trim() || tr('party.player', { n: i + 1 }), color: PLAYER_COLORS[i] })));
     });
 
     function startGame(target, players) {
@@ -961,7 +978,7 @@
       nameEl.textContent = p.name;
       nameEl.style.color = p.color;
       $('[data-pass-goal]').textContent = `${fmt(game.target)}s`;
-      $('[data-pass-progress]').textContent = `Player ${game.idx + 1} of ${game.players.length}`;
+      $('[data-pass-progress]').textContent = tr('party.progress', { n: game.idx + 1, total: game.players.length });
       show('pass');
     }
 
@@ -976,7 +993,7 @@
       timer.reset();
       zone.dataset.state = 'idle';
       display.set('0.00');
-      hint.textContent = 'Tap to start';
+      hint.textContent = tr('hint.start');
       show('turn');
     });
 
@@ -985,14 +1002,14 @@
       onStart() {
         zone.dataset.state = 'running';
         display.set('-.--');
-        hint.textContent = 'Tap to stop';
+        hint.textContent = tr('hint.stop');
       },
       onStop(elapsed) {
         game.results.push({ ...current(), elapsed, diff: elapsed - game.target });
         zone.dataset.state = 'locked';
-        hint.textContent = 'Locked in ✓';
+        hint.textContent = tr('hint.locked');
         const last = game.idx === game.players.length - 1;
-        nextBtn.textContent = last ? 'Reveal results' : `Pass to ${game.players[game.idx + 1].name}`;
+        nextBtn.textContent = last ? tr('party.reveal') : tr('party.pass_to', { name: game.players[game.idx + 1].name });
         // Short delay so the stopping tap can't land on the button underneath.
         nextTimeout = setTimeout(() => { nextBtn.hidden = false; }, 450);
       },
@@ -1044,20 +1061,20 @@
 
       const winners = ranked.filter((r) => Math.abs(r.diff).toFixed(2) === Math.abs(ranked[0].diff).toFixed(2));
       $('[data-winner]').textContent = winners.length > 1
-        ? `It's a tie: ${winners.map((w) => w.name).join(' & ')}!`
-        : `${winners[0].name} wins!`;
+        ? tr('party.tie', { names: winners.map((w) => w.name).join(' & ') })
+        : tr('party.wins', { name: winners[0].name });
       $('[data-results-goal]').textContent = fmt(game.target);
       const best = winners[0];
       const off = Math.abs(best.diff).toFixed(2);
       share.show({
-        headline: winners.length > 1 ? "It's a tie!" : `${best.name} wins!`,
+        headline: winners.length > 1 ? tr('party.tie_headline') : tr('party.wins', { name: best.name }),
         time: best.elapsed,
         target: game.target,
-        line: `${game.players.length} PLAYERS · ${isExact(best.diff) ? 'DEAD ON!' : `${off}s OFF`}`,
+        line: tr('card.party_line', { n: game.players.length, result: isExact(best.diff) ? tr('card.dead_on') : tr('card.off', { off }) }),
         text: winners.length > 1
-          ? `Tie on Tap Timer party mode! ${winners.map((w) => w.name).join(' & ')} stopped the hidden clock ${off}s from ${fmt(game.target)}s. Think your group can do better?`
-          : `${best.name} won Tap Timer party mode with ${fmt(best.elapsed)}s on a hidden ${fmt(game.target)}s clock, ${off}s off. Think your group can do better?`,
-        url: `${location.origin}/party`,
+          ? tr('party.share_tie', { names: winners.map((w) => w.name).join(' & '), off, goal: fmt(game.target) })
+          : tr('party.share_win', { name: best.name, time: fmt(best.elapsed), goal: fmt(game.target), off }),
+        url: `${location.origin}${PREFIX}/party`,
       });
       track('party_complete', { target: game.target, players: game.players.length });
       show('results');
@@ -1090,16 +1107,8 @@
     const display = createDisplay($('[data-display]'), '##.##');
     const hint = $('[data-hint]');
 
-    const ERRORS = {
-      room_not_found: "That room doesn't exist or has closed. Check the code, or create a new room.",
-      room_full: 'That room is full (8 players).',
-      match_in_progress: "That room's match has already started. Ask the host to let you in at the rematch.",
-      busy: 'Too many rooms are open right now. Try again in a minute.',
-      rate_limited: 'Slow down a little and try again.',
-      room_closed: 'This room closed after being idle.',
-      server_restarting: 'The server restarted for an update, which ends open rooms. Create a new room to keep playing.',
-      not_enough_players: 'You need at least 2 players to start.',
-    };
+    const ERRORS = Object.fromEntries(['room_not_found', 'room_full', 'match_in_progress', 'busy', 'rate_limited',
+      'room_closed', 'server_restarting', 'not_enough_players'].map((k) => [k, tr(`online.err.${k}`)]));
 
     // A per-tab token lets a reload (or a dropped connection) take back the
     // same seat. sessionStorage, so two tabs on one device are two players.
@@ -1169,17 +1178,17 @@
         const res = await fetch('/api/rooms', { method: 'POST' });
         const body = await res.json();
         if (body.error === 'server_full') return waitForSpot('create');
-        if (!res.ok) return entryFail(ERRORS[body.error] || 'Could not create a room. Try again.');
+        if (!res.ok) return entryFail(ERRORS[body.error] || tr('online.create_failed'));
         track('room_create', {});
         enter(body.code);
       } catch {
-        entryFail('Could not reach the server. Check your connection and try again.');
+        entryFail(tr('online.unreachable'));
       }
     }
 
     function enter(c) {
       code = c.toUpperCase();
-      history.replaceState(null, '', `/r/${code}`);
+      history.replaceState(null, '', `${PREFIX}/r/${code}`);
       session.set('tt.online.room', code); // so a reload of this tab rejoins straight away
       gone = false;
       retries = 0;
@@ -1190,7 +1199,7 @@
     $('[data-join]').addEventListener('click', () => enter(code));
     $('[data-join-code]').addEventListener('click', () => {
       const c = codeInput.value.trim().toUpperCase();
-      if (!/^[23456789A-HJ-NP-Z]{4}$/.test(c)) return entryFail('Room codes are 4 letters and numbers, like K7QX.');
+      if (!/^[23456789A-HJ-NP-Z]{4}$/.test(c)) return entryFail(tr('online.bad_code'));
       enter(c);
     });
     codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') $('[data-join-code]').click(); });
@@ -1229,10 +1238,10 @@
         ws = null;
         if (gone) return;
         if (retries >= 8) {
-          setBanner('Lost connection to the room.');
-          return entryFail('Lost connection to the room. Check your connection and join again.');
+          setBanner(tr('online.lost_banner'));
+          return entryFail(tr('online.lost'));
         }
-        setBanner('Reconnecting…');
+        setBanner(tr('online.reconnecting'));
         retryTimer = setTimeout(connect, Math.min(8000, 500 * 2 ** retries++));
       };
     }
@@ -1267,14 +1276,14 @@
       // 8-14s, so a crowd of waiting pages doesn't retry in lockstep.
       let left = 8 + Math.floor(Math.random() * 7);
       const tick = () => {
-        fullCountdown.textContent = `Trying again in ${left}s`;
+        fullCountdown.textContent = tr('online.trying_in', { s: left });
         if (left-- > 0) tickTimer = setTimeout(tick, 1000);
       };
       clearTimeout(tickTimer);
       tick();
       clearTimeout(waitTimer);
       waitTimer = setTimeout(() => {
-        fullCountdown.textContent = 'Checking for a spot…';
+        fullCountdown.textContent = tr('online.checking');
         if (mode === 'create') {
           create();
         } else {
@@ -1303,7 +1312,7 @@
         // Back to "create or join", keeping the code box handy.
         $('[data-join-only]').hidden = true;
         $('[data-create-only]').hidden = false;
-        history.replaceState(null, '', '/online');
+        history.replaceState(null, '', `${PREFIX}/online`);
         session.set('tt.online.room', '');
         return entryFail(ERRORS[c]);
       }
@@ -1322,18 +1331,18 @@
       send({ t: state.phase === 'match_end' ? 'rematch' : 'start' });
     });
 
-    const inviteURL = () => `${location.origin}/r/${code}`;
+    const inviteURL = () => `${location.origin}${PREFIX}/r/${code}`;
     $('[data-copy]').addEventListener('click', async (e) => {
       try {
         await navigator.clipboard.writeText(inviteURL());
-        e.target.textContent = 'Copied!';
-        setTimeout(() => { e.target.textContent = 'Copy link'; }, 1600);
-      } catch { prompt('Copy this link:', inviteURL()); }
+        e.target.textContent = tr('share.copied');
+        setTimeout(() => { e.target.textContent = tr('share.copy_link'); }, 1600);
+      } catch { prompt(tr('online.copy_prompt'), inviteURL()); }
     });
     const shareBtn = $('[data-share]');
     if (!navigator.share) shareBtn.hidden = true;
     shareBtn.addEventListener('click', () => {
-      navigator.share({ title: 'Tap Timer room', text: `Join my Tap Timer room ${code}: stop the hidden clock closest to the goal.`, url: inviteURL() }).catch(() => {});
+      navigator.share({ title: tr('online.share_title'), text: tr('online.share_text', { code }), url: inviteURL() }).catch(() => {});
     });
 
     // --- round --------------------------------------------------------------
@@ -1342,11 +1351,11 @@
       onStart() {
         zone.dataset.state = 'running';
         display.set('-.--');
-        hint.textContent = 'Tap to stop';
+        hint.textContent = tr('hint.stop');
       },
       onStop(elapsed) {
         zone.dataset.state = 'locked';
-        hint.textContent = 'Locked in ✓';
+        hint.textContent = tr('hint.locked');
         lockedRound = state.round;
         const msg = { t: 'result', round: state.round, elapsed: Number(elapsed.toFixed(2)) };
         if (!send(msg)) pending = msg;
@@ -1381,17 +1390,17 @@
           lockedRound = done ? s.round : 0;
           zone.dataset.state = done ? 'locked' : 'idle';
           display.set('0.00');
-          hint.textContent = done ? 'Locked in ✓' : 'Tap to start';
+          hint.textContent = tr(done ? 'hint.locked' : 'hint.start');
           if (fresh && prev && prev.phase !== 'round') track('online_round', { round: s.round });
         }
-        $('[data-round-label]').textContent = `Round ${s.round} of ${s.settings.rounds}`;
+        $('[data-round-label]').textContent = tr('online.round_of', { round: s.round, total: s.settings.rounds });
         $('[data-round-goal]').textContent = fmt(s.goal);
         $('[data-turn-goal]').textContent = fmt(s.goal);
         const doneCount = s.players.filter((p) => p.done).length;
         const waiting = s.players.filter((p) => p.connected && !p.done).length;
         $('[data-progress]').textContent = done
-          ? (waiting ? `Waiting for ${waiting} more…` : 'Revealing…')
-          : `${doneCount} of ${s.players.length} locked in`;
+          ? (waiting ? tr('online.waiting_more', { n: waiting }) : tr('online.revealing'))
+          : tr('online.locked_count', { done: doneCount, total: s.players.length });
         show('round');
       } else {
         renderResults(s, byId, isHost);
@@ -1402,13 +1411,13 @@
       }
     }
 
-    function goalText(g) { return g === 0 ? 'Mixed goals' : `${fmt(g)}s goal`; }
+    function goalText(g) { return g === 0 ? tr('online.mixed_goals') : tr('online.goal_text', { goal: fmt(g) }); }
 
     function renderLobby(s, isHost) {
       $('[data-room-code]').textContent = s.code;
       const qr = $('[data-qr]');
       if (qr.dataset.code !== s.code) {
-        qr.src = `/r/${s.code}/qr.svg`;
+        qr.src = `${PREFIX}/r/${s.code}/qr.svg`;
         qr.dataset.code = s.code;
       }
       $('[data-player-count]').textContent = `(${s.players.length}/8)`;
@@ -1426,7 +1435,7 @@
         name.textContent = p.name;
         const tags = document.createElement('span');
         tags.className = 'online__tags';
-        tags.textContent = [p.id === me && 'you', p.id === s.host && 'host', !p.connected && 'away'].filter(Boolean).join(' · ');
+        tags.textContent = [p.id === me && tr('online.tag_you'), p.id === s.host && tr('online.tag_host'), !p.connected && tr('online.tag_away')].filter(Boolean).join(' · ');
         li.append(dot, name, tags);
         list.appendChild(li);
       }
@@ -1436,10 +1445,10 @@
         if (document.activeElement !== goalSel) goalSel.value = String(s.settings.goal);
         if (document.activeElement !== roundsSel) roundsSel.value = String(s.settings.rounds);
         startBtn.disabled = connected < 2;
-        startBtn.textContent = connected < 2 ? 'Waiting for players…' : 'Start match';
+        startBtn.textContent = tr(connected < 2 ? 'online.waiting_players' : 'online.start_match');
       } else {
         $('[data-settings-text]').textContent =
-          `${s.settings.rounds} round${s.settings.rounds === 1 ? '' : 's'} · ${goalText(s.settings.goal)}. Waiting for the host to start…`;
+          trn('online.settings', s.settings.rounds, { rounds: s.settings.rounds, goal: goalText(s.settings.goal) });
       }
     }
 
@@ -1448,7 +1457,7 @@
       li.className = 'leader' + (first ? ' leader--first' : '');
       li.style.setProperty('--player', p.color);
       li.style.setProperty('--delay', `${delay}ms`);
-      const cells = [['leader__rank', String(rank)], ['leader__name', p.name + (p.id === me ? ' (you)' : '')], ['leader__time', timeText], ['leader__diff', diffText]];
+      const cells = [['leader__rank', String(rank)], ['leader__name', p.name + (p.id === me ? tr('online.you_suffix') : '')], ['leader__time', timeText], ['leader__diff', diffText]];
       for (const [cls, text] of cells) {
         const span = document.createElement('span');
         span.className = cls;
@@ -1461,8 +1470,8 @@
     function renderResults(s, byId, isHost) {
       const final = s.phase === 'match_end';
       $('[data-results-title]').textContent = final
-        ? `Final · ${s.settings.rounds} round${s.settings.rounds === 1 ? '' : 's'}`
-        : `Round ${s.round} of ${s.settings.rounds} · goal ${fmt(s.goal)}s`;
+        ? trn('online.final', s.settings.rounds)
+        : tr('online.round_goal', { round: s.round, total: s.settings.rounds, goal: fmt(s.goal) });
 
       // This round, closest first, revealed from last place up.
       const reveal = $('[data-reveal]');
@@ -1473,7 +1482,7 @@
         const p = byId[r.player];
         if (!p) return;
         reveal.appendChild(leaderRow(p, rank,
-          r.missed ? 'missed' : `${fmt(r.elapsed)}s`,
+          r.missed ? tr('online.missed') : `${fmt(r.elapsed)}s`,
           fmtDiff(r.diff),
           r.won, (s.reveal.length - 1 - i) * 220));
       });
@@ -1483,8 +1492,8 @@
       standings.textContent = '';
       const order = [...s.players].sort((a, b) => a.rank - b.rank);
       order.forEach((p, i) => {
-        standings.appendChild(leaderRow(p, p.rank, `${p.total.toFixed(2)}s off`,
-          `${p.wins} win${p.wins === 1 ? '' : 's'}`, final && p.rank === 1, s.reveal.length * 220 + i * 120));
+        standings.appendChild(leaderRow(p, p.rank, tr('online.total_off', { off: p.total.toFixed(2) }),
+          trn('online.wins', p.wins), final && p.rank === 1, s.reveal.length * 220 + i * 120));
       });
       $('[data-standings-label]').hidden = s.settings.rounds === 1;
       standings.hidden = s.settings.rounds === 1;
@@ -1492,15 +1501,15 @@
       const leaders = order.filter((p) => p.rank === 1);
       const roundWinners = s.reveal.filter((r) => r.won).map((r) => byId[r.player]?.name).filter(Boolean);
       $('[data-winner]').textContent = final
-        ? (leaders.length > 1 ? `It's a tie: ${leaders.map((p) => p.name).join(' & ')}!` : `${leaders[0].name} wins the match!`)
-        : (roundWinners.length ? `${roundWinners.join(' & ')} ${roundWinners.length > 1 ? 'take' : 'takes'} the round` : 'Nobody locked in a time');
+        ? (leaders.length > 1 ? tr('online.match_tie', { names: leaders.map((p) => p.name).join(' & ') }) : tr('online.match_win', { name: leaders[0].name }))
+        : (roundWinners.length ? trn('online.round_take', roundWinners.length, { names: roundWinners.join(' & ') }) : tr('online.nobody'));
       $('[data-winner]').classList.toggle('winner--round', !final);
 
-      if (isHost) nextBtn.textContent = final ? 'Rematch' : `Start round ${s.round + 1}`;
+      if (isHost) nextBtn.textContent = final ? tr('online.rematch') : tr('online.start_round', { n: s.round + 1 });
       // Mine, rated like solo, so the reveal still says how I did.
       const mine = s.reveal.find((r) => r.player === me);
       if (mine && !mine.missed && !final) {
-        $('[data-results-title]').textContent += ` · you: ${rate(mine.diff)[1]}`;
+        $('[data-results-title]').textContent += tr('online.you_rating', { rating: rate(mine.diff)[1] });
       }
     }
 

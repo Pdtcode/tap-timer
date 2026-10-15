@@ -1,0 +1,58 @@
+{{define "content"}}
+<div class="container narrow prose">
+  <header class="page-hero">
+    <p class="eyebrow">Reglas y consejos</p>
+    <h1>Cómo jugar a Tap Timer</h1>
+    <p class="lede">Una sola regla: detén el reloj oculto lo más cerca posible del tiempo meta.</p>
+  </header>
+
+  <h2>Lo básico</h2>
+  <ol>
+    <li>Elige un tiempo meta. <strong>5.00 segundos</strong> es el clásico.</li>
+    <li>Toca una vez para empezar. El reloj sigue corriendo, pero no puedes verlo.</li>
+    <li>Vuelve a tocar cuando creas que ya pasó el tiempo meta.</li>
+    <li>Se revela tu tiempo real. Cuanto menor sea la diferencia, mejor.</li>
+  </ol>
+
+  <h2>Modos de juego</h2>
+  <h3>Reto de tiempo <span class="tag">Web + App</span></h3>
+  <p>Fija una meta y pasen el teléfono de mano en mano. Cada jugador hace su turno a ciegas y el juego ordena a todos según lo cerca que quedaron. <a href="{{link "/party"}}">Juega gratis en tu navegador</a>.</p>
+
+  <h3>Torneo <span class="tag tag--app">App</span></h3>
+  <p>Eliminatorias cara a cara con sorteo aleatorio y pases automáticos cuando el número de jugadores es impar. Ideal para noches de juegos, clases y fiestas de oficina.</p>
+
+  <h3>Equipos <span class="tag tag--app">App</span></h3>
+  <p>Divide al grupo en equipos. La puntuación de cada equipo es el promedio de sus jugadores, así que cada toque cuenta.</p>
+
+  <p><a class="app-badge" href="/get?src=howto" data-cta="howto"><img src="{{asset "img/app-store-badge.svg"}}" width="144" height="48" alt="Descargar en el App Store"></a></p>
+  <p class="muted small">{{t "layout.app_english"}}</p>
+
+  {{template "ad" (ad "incontent")}}
+
+  <h2>Consejos para acercarte más</h2>
+  <ul>
+    <li><strong>Cuenta en medios segundos.</strong> "Uno-y-dos-y…" te da el doble de puntos de control que "uno, dos…".</li>
+    <li><strong>Usa un ritmo.</strong> Las canciones de unos 120 BPM tienen dos pulsos por segundo. Sigue el ritmo mentalmente.</li>
+    <li><strong>Relaja el dedo.</strong> Tu tiempo de reacción forma parte del resultado. Mantén el pulgar justo encima de la pantalla.</li>
+    <li><strong>No te apresures al empezar.</strong> La mayoría empieza a contar tarde y luego se detiene antes de tiempo para compensar.</li>
+  </ul>
+
+  <h2>¿Qué se considera una buena puntuación?</h2>
+  <table class="table">
+    <thead><tr><th>Diferencia</th><th>Calificación</th></tr></thead>
+    <tbody>
+      <tr><td>0.00s</td><td>¡Perfecto!</td></tr>
+      <tr><td>≤ 0.05s</td><td>Increíble</td></tr>
+      <tr><td>≤ 0.10s</td><td>Muy cerca</td></tr>
+      <tr><td>≤ 0.25s</td><td>Cerca</td></tr>
+      <tr><td>≤ 0.50s</td><td>Nada mal</td></tr>
+      <tr><td>≤ 1.00s</td><td>Tibio</td></tr>
+      <tr><td>&gt; 1.00s</td><td>Muy lejos</td></tr>
+    </tbody>
+  </table>
+
+  <p><a class="btn btn--primary" href="{{link "/"}}">Jugar ahora</a></p>
+
+  {{template "ad" (ad "footer")}}
+</div>
+{{end}}

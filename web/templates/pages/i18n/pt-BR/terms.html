@@ -1,0 +1,59 @@
+{{define "content"}}
+<div class="container narrow prose">
+  <header class="page-hero">
+    <p class="eyebrow">Site</p>
+    <h1>Termos de serviço</h1>
+    <p class="lede">Estes termos cobrem o site do Tap Timer, <strong>{{.Site.BaseURL}}</strong>. Ao usar o site, você concorda com eles. O app Tap Timer para iPhone e iPad é um produto separado, coberto pelo <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" rel="noopener">contrato de licença padrão</a> da Apple para apps da App Store. Esta é uma tradução; se houver diferença entre as versões, vale a <a href="/terms">versão em inglês</a>.</p>
+  </header>
+
+  <h2>Em resumo</h2>
+  <ul>
+    <li>O jogo neste site é grátis. Ele é pago pelos anúncios.</li>
+    <li>Tenha bom senso nas salas online: nada de nomes ofensivos, ferramentas de trapaça ou ataques ao site.</li>
+    <li>O site é fornecido como está. Trabalhamos para mantê-lo funcionando, mas as salas podem acabar e as coisas podem quebrar.</li>
+    <li>A forma como tratamos as suas informações está na <a href="{{link "/privacy"}}">política de privacidade</a>.</li>
+  </ul>
+
+  <h2>Uso do site</h2>
+  <p>Você pode jogar os modos Solo, Festa e Online sem conta nem pagamento. Você pode usar o site para a sua diversão pessoal e não comercial, inclusive em festas, salas de aula e em transmissões ao vivo ou vídeos.</p>
+  <p>Por favor, não:</p>
+  <ul>
+    <li>use nas salas online nomes ofensivos, de ódio, de cunho sexual ou que se passem por outra pessoa;</li>
+    <li>use bots, scripts ou outras ferramentas automatizadas para jogar, criar salas ou entrar nelas;</li>
+    <li>tente quebrar, sobrecarregar, sondar ou contornar os limites ou a segurança do site;</li>
+    <li>copie, incorpore em frames ou revenda o site ou o jogo como se fossem seus;</li>
+    <li>use o site de forma que viole a lei.</li>
+  </ul>
+  <p>Podemos fechar uma sala, bloquear o acesso ou remover um nome se acreditarmos que estes termos estão sendo violados.</p>
+
+  <h2>Salas online</h2>
+  <p>Qualquer pessoa com o código, o link ou o QR code de uma sala pode entrar nela enquanto houver vaga, então compartilhe apenas com quem você quer jogar. O nome que você escolher e os seus tempos de cada rodada são mostrados para todos na sala. As salas são temporárias: elas fecham após 30 minutos sem atividade e quando o servidor reinicia, e os resultados não são salvos.</p>
+
+  <h2>O app para iPhone e iPad</h2>
+  <p>Os links marcados com "Baixe o app" ou "Baixar" levam você à App Store. O app é grátis para testar, com uma compra única opcional para desbloqueá-lo. Downloads, compras e reembolsos são tratados pela Apple de acordo com os termos dela, e não por este site. Os recursos descritos como exclusivos do app (como Torneio, Equipes e temas extras) não estão disponíveis no site.</p>
+
+  <h2>Anúncios e outros sites</h2>
+  <p>O site exibe anúncios do Google e links para outros serviços, como a App Store e os sites em que você compartilha resultados. Não controlamos esses serviços e não somos responsáveis pelo conteúdo deles nem pela forma como funcionam; os termos e políticas deles se aplicam.</p>
+
+  <h2>Nosso conteúdo</h2>
+  <p>O nome Tap Timer, o logotipo, o design, os textos e o código deste site pertencem a nós. Você pode compartilhar capturas de tela, cards de resultado e vídeos seus jogando. A fonte pixelada é a Press Start 2P, usada sob a SIL Open Font License. O selo da App Store é uma marca registrada da Apple.</p>
+
+  <h2>Sem garantias</h2>
+  <p>O site é fornecido "no estado em que se encontra" e "conforme disponível", sem garantias de qualquer tipo, na medida permitida por lei. Não prometemos que ele estará sempre disponível, livre de erros, nem que os tempos serão exatos em todos os dispositivos: navegadores e dispositivos variam.</p>
+
+  <h2>Limitação de responsabilidade</h2>
+  <p>Na medida permitida por lei, não somos responsáveis por nenhuma perda indireta ou consequente, nem por qualquer perda de dados, decorrente do seu uso do site. É um jogo grátis; jogue por diversão. Nada nestes termos limita os direitos que você tem pela legislação de defesa do consumidor que não podem ser limitados.</p>
+
+  <h2>Alterações</h2>
+  <p>Podemos atualizar estes termos à medida que o site muda. Publicaremos a nova versão aqui e alteraremos a data abaixo. Se você continuar usando o site depois disso, os novos termos se aplicam.</p>
+
+  <h2>Contato</h2>
+  {{if .Site.ContactEmail}}
+  <p>Dúvidas? Envie um e-mail para <a href="mailto:{{.Site.ContactEmail}}">{{.Site.ContactEmail}}</a>.</p>
+  {{else}}
+  <p>Dúvidas? Fale conosco pela página do Tap Timer na App Store.</p>
+  {{end}}
+
+  <p class="muted small">Última atualização: 14 de outubro de 2026.</p>
+</div>
+{{end}}

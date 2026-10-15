@@ -174,6 +174,11 @@ kbd {
 .footer-nav { display: grid; grid-template-columns: repeat(2, auto); gap: 8px 32px; font-size: 14px; align-content: start; }
 .footer-nav a { color: var(--muted); text-decoration: none; }
 .footer-nav a:hover { color: var(--text); }
+/* Language picker: the same page in each language. */
+.lang-picker { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 20px; font-size: 13px; }
+.lang-picker a { color: var(--muted); text-decoration: none; }
+.lang-picker a:hover { color: var(--text); }
+.lang-picker a[aria-current] { color: var(--text); font-weight: 600; }
 
 /* ==========================================================================
    Buttons & controls

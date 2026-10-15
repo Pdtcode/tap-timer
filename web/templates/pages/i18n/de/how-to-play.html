@@ -1,0 +1,58 @@
+{{define "content"}}
+<div class="container narrow prose">
+  <header class="page-hero">
+    <p class="eyebrow">Regeln &amp; Tipps</p>
+    <h1>So spielst du Tap Timer</h1>
+    <p class="lede">Eine einzige Regel: Stopp die versteckte Uhr so nah wie möglich an der Zielzeit.</p>
+  </header>
+
+  <h2>Die Grundlagen</h2>
+  <ol>
+    <li>Wähle eine Zielzeit. <strong>5.00 Sekunden</strong> sind der Klassiker.</li>
+    <li>Tippe einmal zum Starten. Die Uhr läuft weiter, aber du siehst sie nicht.</li>
+    <li>Tippe noch einmal, wenn du glaubst, dass die Zielzeit um ist.</li>
+    <li>Deine echte Zeit wird aufgedeckt. Je kleiner der Abstand, desto besser.</li>
+  </ol>
+
+  <h2>Spielmodi</h2>
+  <h3>Zielzeit-Challenge <span class="tag">Web + App</span></h3>
+  <p>Legt eine Zielzeit fest und reicht das Handy herum. Alle sind nacheinander blind dran, und das Spiel sortiert alle danach, wie nah sie dran waren. <a href="{{link "/party"}}">Kostenlos im Browser spielen</a>.</p>
+
+  <h3>Turnier <span class="tag tag--app">App</span></h3>
+  <p>Duelle im K.-o.-System mit zufälliger Setzliste und automatischen Freilosen bei ungerader Spielerzahl. Ideal für Spieleabende, den Unterricht und Büropartys.</p>
+
+  <h3>Teams <span class="tag tag--app">App</span></h3>
+  <p>Teilt die Gruppe in Teams auf. Die Wertung jedes Teams ist der Durchschnitt seiner Spieler, also zählt jeder einzelne Versuch.</p>
+
+  <p><a class="app-badge" href="/get?src=howto" data-cta="howto"><img src="{{asset "img/app-store-badge.svg"}}" width="144" height="48" alt="Laden im App Store"></a></p>
+  <p class="muted small">{{t "layout.app_english"}}</p>
+
+  {{template "ad" (ad "incontent")}}
+
+  <h2>Tipps, um näher ranzukommen</h2>
+  <ul>
+    <li><strong>Zähl in halben Sekunden.</strong> „Eins-und-zwei-und…“ gibt dir doppelt so viele Anhaltspunkte wie „eins, zwei…“.</li>
+    <li><strong>Nutz einen Beat.</strong> Songs mit etwa 120 BPM haben zwei Schläge pro Sekunde. Tippe im Kopf mit.</li>
+    <li><strong>Bleib locker.</strong> Deine Reaktionszeit gehört zum Ergebnis. Lass den Daumen knapp über dem Bildschirm schweben.</li>
+    <li><strong>Hetz nicht beim Start.</strong> Die meisten fangen zu spät an zu zählen und stoppen dann zu früh, um das auszugleichen.</li>
+  </ul>
+
+  <h2>Was ist ein gutes Ergebnis?</h2>
+  <table class="table">
+    <thead><tr><th>Abweichung</th><th>Bewertung</th></tr></thead>
+    <tbody>
+      <tr><td>0.00s</td><td>Perfekt</td></tr>
+      <tr><td>≤ 0.05s</td><td>Unglaublich</td></tr>
+      <tr><td>≤ 0.10s</td><td>Präzise</td></tr>
+      <tr><td>≤ 0.25s</td><td>Knapp</td></tr>
+      <tr><td>≤ 0.50s</td><td>Nicht übel</td></tr>
+      <tr><td>≤ 1.00s</td><td>Warm</td></tr>
+      <tr><td>&gt; 1.00s</td><td>Weit daneben</td></tr>
+    </tbody>
+  </table>
+
+  <p><a class="btn btn--primary" href="{{link "/"}}">Jetzt spielen</a></p>
+
+  {{template "ad" (ad "footer")}}
+</div>
+{{end}}

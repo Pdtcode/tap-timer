@@ -1,0 +1,62 @@
+<!doctype html>
+<!-- Source for the YouTube channel banner. Render at a 2560×1440 viewport:
+     chrome --headless --screenshot=banner.png --window-size=2560,1440 --hide-scrollbars --force-device-scale-factor=1 banner.html
+     Everything that matters sits in the centre 1546×423 "safe area", the only part every device shows.
+     Add ?guides to the URL to outline it. -->
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:"Press Start 2P";src:url("../../web/static/fonts/press-start-2p.woff2") format("woff2")}
+*{box-sizing:border-box;margin:0}
+body{width:2560px;height:1440px;overflow:hidden;background:#040e08;color:#ebf3ee;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;position:relative}
+#bg{position:absolute;inset:0}
+.glow{position:absolute;inset:0;background:
+  radial-gradient(900px 520px at 50% 50%,rgba(48,252,96,.14),transparent 70%),
+  radial-gradient(1400px 700px at 50% 50%,rgba(48,252,96,.05),transparent 75%),
+  linear-gradient(180deg,rgba(0,0,0,.35),transparent 30%,transparent 70%,rgba(0,0,0,.35))}
+/* the safe area */
+.safe{position:absolute;left:507px;top:508.5px;width:1546px;height:423px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;gap:60px}
+body.guides .safe{outline:3px dashed #ff6b6b}
+.screen{position:relative;flex:none;width:560px;height:330px;border-radius:44px;border:4px solid rgba(48,252,96,.75);background:radial-gradient(60% 45% at 50% 55%,rgba(48,252,96,.1),transparent 75%),linear-gradient(180deg,#0b1a10,#020805);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;box-shadow:0 0 90px rgba(48,252,96,.32),inset 0 0 40px rgba(0,0,0,.6)}
+.label{font-size:20px;font-weight:700;letter-spacing:.2em;color:#22a946}
+.display{display:flex;align-items:flex-end;gap:14px;height:150px;filter:drop-shadow(0 0 12px rgba(48,252,96,.6))}
+.display svg{height:100%;width:auto}
+.display .dot{margin:0 -10px}
+.seg{fill:rgba(48,252,96,.09)}.seg.on{fill:#30fc60}
+.perfect{font-family:"Press Start 2P",monospace;font-size:24px;color:#ffe45c;text-shadow:0 0 18px #ffe45c;letter-spacing:.06em}
+.copy{flex:1;min-width:0}
+.brand{display:flex;align-items:center;gap:20px;margin-bottom:22px}
+.brand img{width:68px;height:68px;border-radius:16px;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 0 36px rgba(48,252,96,.3)}
+.wordmark{font-family:"Press Start 2P",monospace;font-size:30px;letter-spacing:.06em;color:#eef1f7}
+h1{font-size:68px;line-height:1.02;font-weight:800;letter-spacing:-.03em;margin-bottom:24px}
+h1 span{color:#30fc60;text-shadow:0 0 34px rgba(48,252,96,.55)}
+.sub{display:flex;gap:14px;white-space:nowrap}
+.pill{font-weight:700;font-size:23px;padding:12px 22px;border-radius:999px;border:2px solid #1c3326;background:#0a1610;color:#ebf3ee}
+.pill.hot{background:#30fc60;border-color:#30fc60;color:#03140a}
+</style></head><body><canvas id="bg"></canvas><div class="glow"></div>
+<div class="safe">
+  <div class="screen"><span class="label">GOAL 5.00s</span><div class="display" id="d"></div><span class="perfect">PERFECT!</span></div>
+  <div class="copy">
+    <div class="brand"><img src="../../web/static/img/icon-128.png" alt=""><span class="wordmark">TAP TIMER</span></div>
+    <h1>Can you stop the clock at <span>exactly 5.00?</span></h1>
+    <div class="sub"><span class="pill hot">New Shorts daily</span><span class="pill">Free to try on iPhone</span><span class="pill">tap-timer.com</span></div>
+  </div>
+</div>
+<script>
+if(location.search.includes('guides'))document.body.classList.add('guides');
+const S={a:[16,2,32,12],g:[16,48,32,12],d:[16,94,32,12],f:[2,15,12,32],b:[50,15,12,32],e:[2,61,12,32],c:[50,61,12,32]};
+const G={0:'abcdef',5:'acdfg'};
+const digit=ch=>{let s='<svg viewBox="0 0 64 108">';for(const k in S){const[x,y,w,h]=S[k];s+=`<rect class="seg${G[ch].includes(k)?' on':''}" x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/>`}return s+'</svg>'};
+d.innerHTML=digit('5')+'<svg class="dot" viewBox="0 0 22 108"><circle class="seg on" cx="11" cy="100" r="7"/></svg>'+digit('0')+digit('0');
+// Background: faint unlit segments and deterministic particles, so re-renders match.
+const cv=document.getElementById('bg');cv.width=2560;cv.height=1440;const x=cv.getContext('2d');
+let seed=11;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+x.fillStyle='#30fc60';
+for(let i=0;i<34;i++){ // scattered ghost digits
+  const px=rnd()*2560,py=rnd()*1440,sc=.5+rnd()*1.3;x.globalAlpha=.025+rnd()*.035;
+  for(const k in S){if(rnd()<.45)continue;const[sx,sy,w,h]=S[k];x.beginPath();x.roundRect(px+sx*sc,py+sy*sc,w*sc,h*sc,6*sc);x.fill()}
+}
+for(let i=0;i<260;i++){
+  const soft=rnd()<.35;x.globalAlpha=soft?.06+rnd()*.1:.15+rnd()*.4;
+  x.beginPath();x.arc(rnd()*2560,rnd()*1440,soft?3+rnd()*5:1+rnd()*2.4,0,7);x.fill()
+}
+</script></body></html>

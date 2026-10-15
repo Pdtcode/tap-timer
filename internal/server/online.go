@@ -88,9 +88,9 @@ func newOnline(baseURL string) *online {
 		tick:    time.Second,
 
 		maxPlayers: envInt("ONLINE_MAX_PLAYERS", maxPlayers),
-		clients: make(map[*rooms.Room]map[*client]struct{}),
-		creates: newIPLimiter(createsPerMinute, time.Minute),
-		joins:   newIPLimiter(joinsPerMinute, time.Minute),
+		clients:    make(map[*rooms.Room]map[*client]struct{}),
+		creates:    newIPLimiter(createsPerMinute, time.Minute),
+		joins:      newIPLimiter(joinsPerMinute, time.Minute),
 	}
 }
 
@@ -415,13 +415,19 @@ func (o *online) Close() {
 // qrSVG serves GET /r/:code/qr.svg: a QR code of the room's join link.
 // Dark modules on light, with the standard 4-module quiet zone, scan most
 // reliably.
-func (o *online) qrSVG(c *gin.Context) {
+// qrSVG serves the QR code for a room's invite link, in the language of the
+// page that asked (prefix "" or "/es"...), so scanning it opens that language.
+func (o *online) qrSVG(prefix string) gin.HandlerFunc {
+	return func(c *gin.Context) { o.qr(c, prefix) }
+}
+
+func (o *online) qr(c *gin.Context, prefix string) {
 	code := rooms.NormalizeCode(c.Param("code"))
 	if !roomCodeRe.MatchString(code) {
 		c.String(http.StatusNotFound, "not found")
 		return
 	}
-	q, err := qr.Encode(o.baseURL+"/r/"+code, qr.M)
+	q, err := qr.Encode(o.baseURL+prefix+"/r/"+code, qr.M)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "internal error")
 		return

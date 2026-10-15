@@ -106,8 +106,8 @@ primary_region = "dfw"
 **`[http_service.concurrency]`:** count `connections`, not `requests`: a WebSocket is one connection for as long as a player is in a room. In the repo's `fly.toml` since 2026-10-02.
 
 **`min_machines_running`:**
-- `1` keeps the site instantly responsive. Recommended, since first impressions drive app downloads.
-- `0` lets the last machine stop when idle (cheapest). The next visitor waits while it boots, usually under a second or two for a small Go binary.
+- `1` keeps the site instantly responsive. Recommended, since first impressions drive app downloads. Roughly $2/month for one always-on 256 MB machine **(verify current pricing)**.
+- `0` lets the last machine stop when idle (cheapest; the current setting). The next visitor waits while it boots: measured at **~1.5s** to first byte, versus ~0.15s when awake. Nothing of ours can show during that wait (Fly holds the request until the app is up), so it can't be hidden with a loading screen. The `/online` page pings `/healthz` every 2 minutes while open, and shows "Connecting…" if a room takes a moment, so rooms mostly avoid it.
 
 ## 4. Secrets and settings
 

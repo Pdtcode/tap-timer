@@ -1,0 +1,58 @@
+{{define "content"}}
+<div class="container narrow prose">
+  <header class="page-hero">
+    <p class="eyebrow">Aturan &amp; tips</p>
+    <h1>Cara main Tap Timer</h1>
+    <p class="lede">Aturannya cuma satu: hentikan jam tersembunyi sedekat mungkin dengan target waktu.</p>
+  </header>
+
+  <h2>Dasar-dasarnya</h2>
+  <ol>
+    <li>Pilih target waktu. <strong>5.00 detik</strong> itu yang klasik.</li>
+    <li>Ketuk sekali untuk mulai. Jamnya tetap berjalan, tapi kamu tidak bisa melihatnya.</li>
+    <li>Ketuk lagi saat kamu rasa target waktunya sudah lewat.</li>
+    <li>Waktu aslimu akan terungkap. Makin kecil selisihnya, makin bagus.</li>
+  </ol>
+
+  <h2>Mode game</h2>
+  <h3>Tantangan Target <span class="tag">Web + Aplikasi</span></h3>
+  <p>Tentukan target lalu gantian pakai satu HP. Tiap pemain main tanpa melihat jam, dan game mengurutkan semua pemain berdasarkan seberapa dekat waktunya. <a href="{{link "/party"}}">Main gratis di browser-mu</a>.</p>
+
+  <h3>Turnamen <span class="tag tag--app">Aplikasi</span></h3>
+  <p>Bagan pertandingan satu lawan satu dengan unggulan acak dan bye otomatis kalau jumlah pemainnya ganjil. Cocok untuk malam main game, kelas, dan acara kantor.</p>
+
+  <h3>Tim <span class="tag tag--app">Aplikasi</span></h3>
+  <p>Bagi grup jadi beberapa tim. Skor tiap tim adalah rata-rata skor pemainnya, jadi setiap ketukan berarti.</p>
+
+  <p><a class="app-badge" href="/get?src=howto" data-cta="howto"><img src="{{asset "img/app-store-badge.svg"}}" width="144" height="48" alt="Unduh di App Store"></a></p>
+  <p class="muted small">{{t "layout.app_english"}}</p>
+
+  {{template "ad" (ad "incontent")}}
+
+  <h2>Tips supaya makin dekat</h2>
+  <ul>
+    <li><strong>Hitung per setengah detik.</strong> "Satu-dan-dua-dan…" memberimu dua kali lebih banyak patokan daripada "satu, dua…".</li>
+    <li><strong>Pakai ketukan lagu.</strong> Lagu sekitar 120 BPM punya dua ketukan per detik. Ikuti iramanya dalam hati.</li>
+    <li><strong>Santaikan jarimu.</strong> Waktu reaksimu ikut dihitung. Biarkan jempolmu siap tepat di atas layar.</li>
+    <li><strong>Jangan buru-buru di awal.</strong> Kebanyakan orang telat mulai menghitung, lalu berhenti terlalu cepat untuk menebusnya.</li>
+  </ul>
+
+  <h2>Skor seperti apa yang bagus?</h2>
+  <table class="table">
+    <thead><tr><th>Selisih</th><th>Rating</th></tr></thead>
+    <tbody>
+      <tr><td>0.00s</td><td>Sempurna</td></tr>
+      <tr><td>≤ 0.05s</td><td>Luar biasa</td></tr>
+      <tr><td>≤ 0.10s</td><td>Jitu</td></tr>
+      <tr><td>≤ 0.25s</td><td>Nyaris</td></tr>
+      <tr><td>≤ 0.50s</td><td>Lumayan</td></tr>
+      <tr><td>≤ 1.00s</td><td>Kurang pas</td></tr>
+      <tr><td>&gt; 1.00s</td><td>Meleset jauh</td></tr>
+    </tbody>
+  </table>
+
+  <p><a class="btn btn--primary" href="{{link "/"}}">Main sekarang</a></p>
+
+  {{template "ad" (ad "footer")}}
+</div>
+{{end}}

@@ -1,0 +1,12 @@
+{{define "content"}}
+<section class="st-card st-login">
+  <h1>Tap Timer Studio</h1>
+  {{with .Error}}<p class="st-error" role="alert">{{.}}</p>{{end}}
+  <form method="post" action="/studio/login">
+    <label>Password
+      <input type="password" name="password" autocomplete="current-password" required autofocus>
+    </label>
+    <button class="st-btn" type="submit">Sign in</button>
+  </form>
+</section>
+{{end}}

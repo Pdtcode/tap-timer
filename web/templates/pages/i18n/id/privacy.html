@@ -1,0 +1,77 @@
+{{define "content"}}
+<div class="container narrow prose">
+  <header class="page-hero">
+    <p class="eyebrow">Situs web</p>
+    <h1>Kebijakan privasi</h1>
+    <p class="lede">Kebijakan ini hanya berlaku untuk situs web Tap Timer, <strong>{{.Site.BaseURL}}</strong>. Aplikasi Tap Timer untuk iPhone dan iPad adalah produk terpisah dengan <a href="https://nativetranslator.github.io/taptimer/privacy.html" rel="noopener">kebijakan privasi aplikasinya</a> sendiri. Halaman ini adalah terjemahan; jika ada perbedaan, yang berlaku adalah <a href="/privacy">versi bahasa Inggris</a>.</p>
+  </header>
+
+  <h2>Singkatnya</h2>
+  <ul>
+    <li>Tidak ada akun dan tidak perlu mendaftar. Kamu bisa main tanpa memberi kami apa pun.</li>
+    <li>Pengaturanmu dan nama-nama di mode Party tetap tersimpan di browser-mu.</li>
+    <li>Di room online, nama yang kamu ketik dan waktumu dibagikan ke pemain lain di room itu, dan hanya disimpan selama room masih terbuka.</li>
+    <li>Situs ini menampilkan iklan Google, yang menggunakan cookie. Pengunjung dari EEA, Inggris, dan Swiss akan dimintai persetujuan terlebih dahulu.</li>
+    <li>Kami tidak menjual informasimu.</li>
+  </ul>
+
+  <h2>Yang disimpan di browser-mu</h2>
+  <p>Situs ini menyimpan beberapa hal di perangkatmu supaya bisa mengingatmu. Data ini tidak pernah keluar dari perangkatmu kecuali disebutkan lain, dan menghapus data situs ini di browser-mu akan menghapusnya.</p>
+  <ul>
+    <li><strong>Sampai kamu menghapusnya (local storage):</strong> target waktu pilihanmu, nama pemain dan target di mode Party, serta nama yang terakhir kamu pakai di room online.</li>
+    <li><strong>Sampai kamu menutup tab (session storage):</strong> ID acak yang memungkinkanmu mendapatkan kembali tempatmu jika kamu memuat ulang halaman saat berada di room online, kode room tempatmu berada, dan apakah kamu sudah melihat saran aplikasi.</li>
+    <li><strong>Hanya selama halaman terbuka:</strong> statistik Terbaik, Rata-rata, dan Ronde milikmu. Semuanya direset saat kamu me-refresh atau meninggalkan halaman.</li>
+  </ul>
+
+  <h2>Room online</h2>
+  <p>Saat kamu membuat atau bergabung ke room di <a href="{{link "/online"}}">{{link "/online"}}</a>, browser-mu mengirimkan ke server kami:</p>
+  <ul>
+    <li>nama yang kamu ketik, yang terlihat oleh semua pemain di room (jadi jangan pakai nama lengkapmu);</li>
+    <li>waktumu di setiap ronde, yang baru terlihat oleh pemain lain saat hasil ronde dibuka;</li>
+    <li>ID tempat acak yang dijelaskan di atas.</li>
+  </ul>
+  <p>Data ini hanya disimpan di memori server, tidak pernah ditulis ke disk atau log, dan hilang saat room ditutup: setelah 30 menit tanpa aktivitas, atau saat server dimulai ulang. Link room dan kode QR hanya berisi kode room. Tidak ada fitur chat.</p>
+
+  <h2>Log server dan keamanan</h2>
+  <p>Seperti kebanyakan situs web, server kami mencatat setiap permintaan: alamat IP-mu, halaman yang diminta, waktunya, dan responsnya. Saat kamu mengikuti link ke App Store, kami juga mencatat jenis browser-mu dan halaman asalmu, supaya kami bisa menghitung link mana yang dipakai orang. Kami menggunakan log untuk menjaga situs tetap berjalan dan mencegah penyalahgunaan.</p>
+  <p>Untuk mencegah penyalahgunaan room online, server menyimpan sementara jumlah permintaan per alamat IP di memori, selama sekitar satu menit.</p>
+  <p>Situs ini di-hosting oleh <a href="https://fly.io/legal/privacy-policy" rel="noopener">Fly.io</a> di server yang berlokasi di Amerika Serikat, yang memproses log ini atas nama kami dan menyimpannya untuk waktu terbatas.</p>
+
+  <h2>Iklan</h2>
+  <p>Situs web ini menampilkan iklan melalui Google AdSense. Vendor pihak ketiga, termasuk Google, menggunakan cookie untuk menayangkan iklan berdasarkan kunjunganmu sebelumnya ke situs ini dan situs web lain. Cookie iklan Google memungkinkan Google dan mitranya menayangkan iklan berdasarkan kunjunganmu ke situs ini dan situs lain di Internet.</p>
+  <p>Jika kamu berkunjung dari Wilayah Ekonomi Eropa (EEA), Inggris, atau Swiss, pesan persetujuan Google akan menanyakan pilihanmu sebelum iklan yang dipersonalisasi ditampilkan. Kamu bisa menyetujui, menolak, atau mengatur pilihannya; jika kamu menolak, kamu mungkin tetap melihat iklan yang tidak dipersonalisasi.</p>
+  <p>Di mana pun kamu berada, kamu bisa menolak iklan yang dipersonalisasi di <a href="https://adssettings.google.com" rel="noopener">Setelan Iklan Google</a>, atau menolak cookie dari sebagian vendor pihak ketiga di <a href="https://www.aboutads.info/choices/" rel="noopener">aboutads.info</a>. Pelajari lebih lanjut tentang <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">cara Google menggunakan informasi dari situs yang menggunakan layanannya</a>.</p>
+
+  {{if .Site.GAID}}
+  <h2>Analitik</h2>
+  <p>Kami menggunakan Google Analytics untuk melihat berapa banyak orang yang berkunjung serta halaman dan fitur mana yang mereka gunakan. Layanan ini mengumpulkan informasi seperti halaman yang dilihat, jenis perangkat, dan perkiraan lokasi, dengan menggunakan cookie. Layanan ini tidak mengumpulkan nama atau detail kontakmu. Lihat <a href="https://policies.google.com/privacy" rel="noopener">kebijakan privasi Google</a>.</p>
+  {{end}}
+
+  <h2>Berbagi dan link ke situs lain</h2>
+  <p>Kartu hasil dibuat di browser-mu dan tidak diunggah ke kami. Jika kamu menggunakan tombol bagikan (X, Facebook, WhatsApp, atau menu bagikan di perangkatmu), kamu mengirimkan hasilnya melalui layanan tersebut, dan kebijakan privasi layanan itu yang berlaku. Hal yang sama berlaku untuk App Store setelah kamu mengikuti link ke sana.</p>
+
+  <h2>Anak-anak</h2>
+  <p>Situs ini ditujukan untuk khalayak umum dan tidak ditujukan untuk anak di bawah 13 tahun. Kami tidak dengan sengaja mengumpulkan informasi pribadi dari anak-anak. Satu-satunya yang diketik pengguna adalah nama untuk game, yang tidak kami simpan.</p>
+
+  <h2>Pilihan dan hakmu</h2>
+  <ul>
+    <li>Hapus data situs ini di browser-mu untuk menghapus semua yang tersimpan di perangkatmu.</li>
+    <li>Ubah pilihan iklanmu melalui pesan persetujuan (EEA, Inggris, Swiss) atau Setelan Iklan Google.</li>
+    <li>Tergantung tempat tinggalmu, kamu mungkin memiliki hak untuk mengakses atau menghapus informasi pribadi tentang dirimu. Karena tidak ada akun, biasanya kami tidak bisa menghubungkan log dengan dirimu, tetapi kami akan membantu sebisa mungkin: hubungi kami di bawah.</li>
+  </ul>
+
+  <p>Aturan penggunaan situs ini ada di <a href="{{link "/terms"}}">ketentuan layanan</a>.</p>
+
+  <h2>Perubahan</h2>
+  <p>Jika kebijakan ini berubah, kami akan memperbaruinya di sini dan mengganti tanggal di bawah.</p>
+
+  <h2>Kontak</h2>
+  {{if .Site.ContactEmail}}
+  <p>Ada pertanyaan? Kirim email ke <a href="mailto:{{.Site.ContactEmail}}">{{.Site.ContactEmail}}</a>.</p>
+  {{else}}
+  <p>Ada pertanyaan? Hubungi kami melalui halaman Tap Timer di App Store.</p>
+  {{end}}
+
+  <p class="muted small">Terakhir diperbarui: 2 Oktober 2026.</p>
+</div>
+{{end}}

@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"taptimer/internal/config"
+	"taptimer/internal/i18n"
 )
 
 func testConfig() config.Config {
@@ -47,9 +48,45 @@ func do(r http.Handler, method, host, target string) *httptest.ResponseRecorder 
 	return w
 }
 
+// The structured data must be valid JSON on every page (a template slip
+// would silently drop it from search results), with a breadcrumb on inner pages.
+func TestStructuredData(t *testing.T) {
+	r := newTestRouter(t, testConfig())
+	ldRe := regexp.MustCompile(`(?s)<script type="application/ld\+json">(.*?)</script>`)
+	for _, p := range []string{"/", "/party", "/online", "/how-to-play", "/privacy", "/terms"} {
+		body := get(r, p).Body.String()
+		m := ldRe.FindStringSubmatch(body)
+		if m == nil {
+			t.Fatalf("%s: no JSON-LD", p)
+		}
+		var ld struct {
+			Graph []map[string]any `json:"@graph"`
+		}
+		if err := json.Unmarshal([]byte(m[1]), &ld); err != nil {
+			t.Fatalf("%s: JSON-LD doesn't parse: %v\n%s", p, err, m[1])
+		}
+		crumb := false
+		for _, node := range ld.Graph {
+			if node["@type"] == "BreadcrumbList" {
+				crumb = true
+			}
+		}
+		if crumb != (p != "/") {
+			t.Errorf("%s: breadcrumb present = %v", p, crumb)
+		}
+		if !strings.Contains(body, `max-image-preview:large`) {
+			t.Errorf("%s: no max-image-preview robots tag", p)
+		}
+	}
+	// Room links stay out of search entirely.
+	if body := get(r, "/r/ABCD").Body.String(); strings.Contains(body, "max-image-preview") {
+		t.Error("room page has the indexing robots tag")
+	}
+}
+
 func TestPagesRender(t *testing.T) {
 	r := newTestRouter(t, testConfig())
-	for _, p := range []string{"/", "/party", "/how-to-play", "/privacy"} {
+	for _, p := range []string{"/", "/party", "/how-to-play", "/privacy", "/terms"} {
 		w := get(r, p)
 		if w.Code != http.StatusOK {
 			t.Fatalf("%s: status %d", p, w.Code)
@@ -208,14 +245,14 @@ func TestSitemapAndRobots(t *testing.T) {
 	if body := get(r, "/sitemap.xml").Body.String(); !strings.Contains(body, "<loc>https://taptimer.test/party</loc>") {
 		t.Errorf("sitemap: %s", body)
 	}
-	if body := get(r, "/robots.txt").Body.String(); !strings.Contains(body, "Sitemap: https://taptimer.test/sitemap.xml") {
+	if body := get(r, "/robots.txt").Body.String(); !strings.Contains(body, "Sitemap: https://taptimer.test/sitemap.xml") || !strings.Contains(body, "Disallow: /studio") {
 		t.Errorf("robots: %s", body)
 	}
 }
 
 func TestHeadRequests(t *testing.T) {
 	r := newTestRouter(t, testConfig())
-	for _, p := range []string{"/", "/party", "/how-to-play", "/privacy", "/robots.txt", "/sitemap.xml"} {
+	for _, p := range []string{"/", "/party", "/how-to-play", "/privacy", "/terms", "/robots.txt", "/sitemap.xml"} {
 		if w := do(r, http.MethodHead, "taptimer.test", p); w.Code != http.StatusOK {
 			t.Errorf("HEAD %s: status %d", p, w.Code)
 		}
@@ -265,8 +302,8 @@ func TestSEOHead(t *testing.T) {
 	}
 	var ld struct {
 		Graph []struct {
-			Type string `json:"@type"`
-			URL  string `json:"url"`
+			Type json.RawMessage `json:"@type"` // a string, or a list for a node with several types
+			URL  string          `json:"url"`
 		} `json:"@graph"`
 	}
 	if err := json.Unmarshal([]byte(m[1]), &ld); err != nil {
@@ -274,16 +311,89 @@ func TestSEOHead(t *testing.T) {
 	}
 	var types []string
 	for _, n := range ld.Graph {
-		types = append(types, n.Type)
+		var one string
+		var many []string
+		if json.Unmarshal(n.Type, &one) != nil {
+			json.Unmarshal(n.Type, &many)
+			one = strings.Join(many, "+")
+		}
+		types = append(types, one)
 		if n.URL != "https://taptimer.test/" {
-			t.Errorf("%s url = %q", n.Type, n.URL)
+			t.Errorf("%s url = %q", one, n.URL)
 		}
 	}
-	if strings.Join(types, ",") != "WebSite,WebApplication,MobileApplication" {
+	if strings.Join(types, ",") != "WebSite,VideoGame+WebApplication,MobileApplication" {
 		t.Errorf("JSON-LD types = %v", types)
 	}
 
 	if body := get(r, "/nope").Body.String(); !strings.Contains(body, `<meta name="robots" content="noindex">`) || strings.Contains(body, `rel="canonical"`) {
 		t.Error("404 should be noindex with no canonical")
+	}
+}
+
+// A studio that can't start must leave the rest of the site up.
+func TestStudioFailureKeepsSiteUp(t *testing.T) {
+	cfg := testConfig()
+	cfg.Studio = config.Studio{
+		Password: "correct horse battery",
+		Secret:   strings.Repeat("s", 32),
+		TZ:       "Mars/Base", // config.Load would refuse this; here it makes studio.New fail
+	}
+	r := newTestRouter(t, cfg)
+	if w := get(r, "/"); w.Code != http.StatusOK {
+		t.Errorf("home: status %d", w.Code)
+	}
+	if w := get(r, "/studio/login"); w.Code != http.StatusNotFound {
+		t.Errorf("studio: status %d, want 404 when disabled", w.Code)
+	}
+}
+
+// Every page exists in every language, says which language it is, links
+// within that language, and lists all the versions for search engines.
+func TestLocalizedPages(t *testing.T) {
+	r := newTestRouter(t, testConfig())
+	for _, l := range i18n.Langs {
+		for _, p := range sitePages {
+			url := l.Path(p.path)
+			w := get(r, url)
+			if w.Code != http.StatusOK {
+				t.Errorf("%s: status %d", url, w.Code)
+				continue
+			}
+			body := w.Body.String()
+			for _, want := range []string{
+				`<html lang="` + l.Code + `"`,
+				`<link rel="canonical" href="https://taptimer.test` + url + `">`,
+				`href="` + l.Path("/party") + `"`,
+				`hreflang="x-default" href="https://taptimer.test` + p.path + `"`,
+			} {
+				if !strings.Contains(body, want) {
+					t.Errorf("%s: missing %q", url, want)
+				}
+			}
+			for _, al := range i18n.Langs {
+				if !strings.Contains(body, `hreflang="`+al.Hreflang+`" href="https://taptimer.test`+al.Path(p.path)+`"`) {
+					t.Errorf("%s: no hreflang link to %s", url, al.Code)
+				}
+			}
+		}
+		// Room links and 404s in each language too.
+		if w := get(r, l.Path("/r/K7QX")); w.Code != http.StatusOK || !strings.Contains(w.Body.String(), `<html lang="`+l.Code+`"`) {
+			t.Errorf("%s: status %d", l.Path("/r/K7QX"), w.Code)
+		}
+		if w := get(r, l.Path("/nope")); w.Code != http.StatusNotFound || !strings.Contains(w.Body.String(), `<html lang="`+l.Code+`"`) {
+			t.Errorf("%s: status %d", l.Path("/nope"), w.Code)
+		}
+	}
+	// /es redirects to /es/ (one URL per page).
+	if w := get(r, "/es"); w.Code != http.StatusMovedPermanently || w.Header().Get("Location") != "/es/" {
+		t.Errorf("/es: %d %q", w.Code, w.Header().Get("Location"))
+	}
+	// The sitemap lists every language version.
+	sm := get(r, "/sitemap.xml").Body.String()
+	for _, want := range []string{"<loc>https://taptimer.test/de/party</loc>", `hreflang="pt-BR" href="https://taptimer.test/pt/how-to-play"`} {
+		if !strings.Contains(sm, want) {
+			t.Errorf("sitemap missing %q", want)
+		}
 	}
 }

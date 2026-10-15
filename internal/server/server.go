@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"html/template"
 	"io/fs"
 	"log/slog"
@@ -17,14 +18,18 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"taptimer/internal/config"
+	"taptimer/internal/i18n"
+	"taptimer/internal/studio"
 	"taptimer/web"
 )
 
 type Server struct {
 	cfg          config.Config
-	pages        map[string]*template.Template
+	i18n         *i18n.Catalog
+	pages        map[string]map[string]*template.Template // lang code -> page -> template
 	assetVersion string
 	online       *online
+	studio       *studio.Studio // nil unless STUDIO_PASSWORD is set
 }
 
 // App is the HTTP handler plus what main needs at shutdown.
@@ -67,6 +72,9 @@ func NewApp(cfg config.Config) (*App, error) {
 	if s.assetVersion, err = hashAssets(); err != nil {
 		return nil, err
 	}
+	if s.i18n, err = i18n.Load(web.FS, "i18n"); err != nil {
+		return nil, err
+	}
 	if err = s.loadTemplates(); err != nil {
 		return nil, err
 	}
@@ -82,9 +90,10 @@ func NewApp(cfg config.Config) (*App, error) {
 	}
 	r.Use(gin.Recovery(), gin.LoggerWithConfig(gin.LoggerConfig{SkipPaths: []string{"/healthz"}}), s.securityHeaders())
 	// Compress text responses (app.js and app.css shrink to roughly a quarter).
-	// Not WebSockets, which need the raw connection, nor already-compressed files.
+	// Not WebSockets, which need the raw connection, nor already-compressed
+	// files, nor the studio API, whose video upload extends its own deadlines.
 	r.Use(gzip.Gzip(gzip.DefaultCompression,
-		gzip.WithExcludedPaths([]string{"/ws/"}),
+		gzip.WithExcludedPaths([]string{"/ws/", "/studio/api/"}),
 		gzip.WithExcludedExtensions([]string{".png", ".woff2"})))
 	if cfg.IsProduction() {
 		r.Use(s.canonicalHost())
@@ -108,23 +117,16 @@ func NewApp(cfg config.Config) (*App, error) {
 		r.GET(p, h)
 		r.HEAD(p, h)
 	}
-	getHead("/", s.page("home",
-		"Tap Timer — Can you stop the clock at exactly 5 seconds?",
-		"A free online timing game. The clock is hidden, so tap when you think 5 seconds have passed. Play solo or pass the phone with friends."))
-	getHead("/party", s.page("party",
-		"Party Mode — The pass-the-phone timer game | Tap Timer",
-		"Pass one phone around your group. Everyone tries to hit the same goal time with the clock hidden. Closest wins."))
-	getHead("/how-to-play", s.page("how-to-play",
-		"How to Play Tap Timer — Rules, Modes & Tips",
-		"Rules for Tap Timer's Goal Challenge, Tournament and Teams modes, plus tips for getting better at judging time."))
-	getHead("/privacy", s.page("privacy",
-		"Website Privacy Policy | Tap Timer",
-		"How the Tap Timer website handles your information: browser storage, online rooms, server logs and Google ads."))
-	getHead("/online", s.page("online",
-		"Play Tap Timer Online with Friends: Multiplayer Timer Game",
-		"Play the hidden-clock timer game online with friends, each on your own phone. Share a room code; closest to the goal over the match wins."))
-	getHead("/r/:code", s.roomPage)
-	r.GET("/r/:code/qr.svg", s.online.qrSVG)
+	// Every page in every language: English at the root, the others under
+	// their prefix (/es/party). Titles and descriptions are in web/i18n
+	// (meta.<key>.title/.desc); see sitePages.
+	for _, l := range i18n.Langs {
+		for _, p := range sitePages {
+			getHead(l.Path(p.path), s.page(l, p.page, p.key))
+		}
+		getHead(l.Path("/r/:code"), s.roomPage(l))
+		r.GET(l.Path("/r/:code/qr.svg"), s.online.qrSVG(l.Prefix))
+	}
 	r.POST("/api/rooms", s.online.createRoom)
 	r.GET("/ws/:code", s.online.socket)
 
@@ -138,48 +140,85 @@ func NewApp(cfg config.Config) (*App, error) {
 	r.GET("/healthz", healthz)
 	r.HEAD("/healthz", healthz)
 
+	if cfg.Studio.Enabled() {
+		// A studio problem must not take the game down with it: log it and
+		// serve the site without /studio.
+		if st, err := studio.New(cfg, template.FuncMap{"asset": s.asset}); err != nil {
+			slog.Error("studio off: it failed to start", "err", err)
+		} else {
+			s.studio = st
+			s.studio.Register(r)
+			slog.Info("studio on", "url", cfg.BaseURL+"/studio")
+		}
+	} else {
+		slog.Info("studio off: STUDIO_PASSWORD isn't set")
+	}
+
 	r.NoRoute(func(c *gin.Context) {
-		s.render(c, http.StatusNotFound, "404", s.pageData(c, "404", "Page not found | Tap Timer", ""))
+		l, _ := i18n.FromPath(c.Request.URL.Path)
+		s.render(c, http.StatusNotFound, l, "404", s.pageData(c, l, "404", "404"))
 	})
 	return &App{Handler: r, Close: s.online.Close, online: s.online}, nil
 }
 
+// loadTemplates parses every page once per language, with "t", "th" and
+// "link" bound to that language. Pages that are mostly prose (how to play,
+// privacy, terms) are translated as whole files in templates/pages/i18n/<code>/;
+// the rest use keys from web/i18n.
 func (s *Server) loadTemplates() error {
-	funcs := template.FuncMap{
-		"asset": func(p string) string { return "/static/" + p + "?v=" + s.assetVersion },
-		"appStoreURL": s.appStoreURL,
-		"ad": func(name string) AdUnit {
-			return AdUnit{
-				Name:        name,
-				Client:      s.cfg.AdSenseClient,
-				Slot:        s.cfg.AdSlots[name],
-				Placeholder: !s.cfg.IsProduction(),
-			}
-		},
-	}
-	base, err := template.New("").Funcs(funcs).ParseFS(web.FS, "templates/layout.html", "templates/partials/*.html")
-	if err != nil {
-		return err
-	}
 	pageFiles, err := fs.Glob(web.FS, "templates/pages/*.html")
 	if err != nil {
 		return err
 	}
-	s.pages = make(map[string]*template.Template, len(pageFiles))
-	for _, f := range pageFiles {
-		t, err := template.Must(base.Clone()).ParseFS(web.FS, f)
+	s.pages = make(map[string]map[string]*template.Template, len(i18n.Langs))
+	for _, l := range i18n.Langs {
+		code := l.Code
+		funcs := template.FuncMap{
+			"asset":       s.asset,
+			"appStoreURL": s.appStoreURL,
+			"ad": func(name string) AdUnit {
+				return AdUnit{
+					Name:        name,
+					Client:      s.cfg.AdSenseClient,
+					Slot:        s.cfg.AdSlots[name],
+					Placeholder: !s.cfg.IsProduction(),
+				}
+			},
+			"t":    func(key string, pairs ...any) string { return s.i18n.T(code, key, pairs...) },
+			"th":   func(key string, pairs ...any) template.HTML { return s.i18n.HTML(code, key, pairs...) },
+			"has":  func(key string) bool { return s.i18n.Has(code, key) },
+			"link": l.Path,
+		}
+		base, err := template.New("").Funcs(funcs).ParseFS(web.FS, "templates/layout.html", "templates/partials/*.html")
 		if err != nil {
 			return err
 		}
-		name := path.Base(f)
-		s.pages[name[:len(name)-len(".html")]] = t
+		s.pages[code] = make(map[string]*template.Template, len(pageFiles))
+		for _, f := range pageFiles {
+			name := path.Base(f)
+			if !l.IsDefault() {
+				if alt := path.Join("templates/pages/i18n", code, name); fileExists(alt) {
+					f = alt
+				}
+			}
+			t, err := template.Must(base.Clone()).ParseFS(web.FS, f)
+			if err != nil {
+				return fmt.Errorf("%s (%s): %w", f, code, err)
+			}
+			s.pages[code][name[:len(name)-len(".html")]] = t
+		}
 	}
 	return nil
 }
 
+func fileExists(name string) bool {
+	_, err := fs.Stat(web.FS, name)
+	return err == nil
+}
+
 // render executes into a buffer first so a template error never sends a half-written page.
-func (s *Server) render(c *gin.Context, status int, page string, data PageData) {
-	t, ok := s.pages[page]
+func (s *Server) render(c *gin.Context, status int, l i18n.Lang, page string, data PageData) {
+	t, ok := s.pages[l.Code][page]
 	if !ok {
 		slog.Error("unknown page template", "page", page)
 		c.String(http.StatusInternalServerError, "internal error")
@@ -193,6 +232,8 @@ func (s *Server) render(c *gin.Context, status int, page string, data PageData) 
 	}
 	c.Data(status, "text/html; charset=utf-8", buf.Bytes())
 }
+
+func (s *Server) asset(p string) string { return "/static/" + p + "?v=" + s.assetVersion }
 
 func hashAssets() (string, error) {
 	h := sha256.New()
