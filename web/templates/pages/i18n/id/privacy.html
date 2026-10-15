@@ -1,5 +1,6 @@
 {{define "content"}}
-<div class="container narrow prose">
+<div class="container with-side">
+<div class="side-main prose">
   <header class="page-hero">
     <p class="eyebrow">Situs web</p>
     <h1>Kebijakan privasi</h1>
@@ -41,6 +42,7 @@
   <p>Situs web ini menampilkan iklan melalui Google AdSense. Vendor pihak ketiga, termasuk Google, menggunakan cookie untuk menayangkan iklan berdasarkan kunjunganmu sebelumnya ke situs ini dan situs web lain. Cookie iklan Google memungkinkan Google dan mitranya menayangkan iklan berdasarkan kunjunganmu ke situs ini dan situs lain di Internet.</p>
   <p>Jika kamu berkunjung dari Wilayah Ekonomi Eropa (EEA), Inggris, atau Swiss, pesan persetujuan Google akan menanyakan pilihanmu sebelum iklan yang dipersonalisasi ditampilkan. Kamu bisa menyetujui, menolak, atau mengatur pilihannya; jika kamu menolak, kamu mungkin tetap melihat iklan yang tidak dipersonalisasi.</p>
   <p>Di mana pun kamu berada, kamu bisa menolak iklan yang dipersonalisasi di <a href="https://adssettings.google.com" rel="noopener">Setelan Iklan Google</a>, atau menolak cookie dari sebagian vendor pihak ketiga di <a href="https://www.aboutads.info/choices/" rel="noopener">aboutads.info</a>. Pelajari lebih lanjut tentang <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">cara Google menggunakan informasi dari situs yang menggunakan layanannya</a>.</p>
+  <p>Beberapa ruang iklan menampilkan kampanye kami sendiri. Salah satunya, untuk Han Jan Pocha, restoran Korea di Oklahoma City, dimuat dalam bingkai dari <a href="https://hanjanpochaok.com" rel="noopener">hanjanpochaok.com</a>. Saat iklan itu muncul, browsermu terhubung ke situs tersebut, yang menerima detail biasa dari setiap permintaan web (alamat IP-mu, browsermu, dan bahwa kamu datang dari situs ini) dan tunduk pada kebijakan privasinya sendiri. Kami tidak mengirimkan apa pun selain itu. Iklan kami yang lain dimuat dari situs ini.</p>
 
   {{if .Site.GAID}}
   <h2>Analitik</h2>
@@ -72,6 +74,8 @@
   <p>Ada pertanyaan? Hubungi kami melalui halaman Tap Timer di App Store.</p>
   {{end}}
 
-  <p class="muted small">Terakhir diperbarui: 2 Oktober 2026.</p>
+  <p class="muted small">Terakhir diperbarui: 15 Oktober 2026.</p>
+</div>
+{{template "page-side" .}}
 </div>
 {{end}}

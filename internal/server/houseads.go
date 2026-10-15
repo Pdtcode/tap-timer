@@ -27,8 +27,8 @@ import (
 type HouseAd struct {
 	ID    string
 	Title string // the iframe's accessible title
-	// Each slot holds a LIST, cycled per appearance of this campaign (in
-	// app.js), so the same box doesn't repeat down the page.
+	// Each slot holds a LIST in order of preference, widest first: app.js
+	// shows the first one that suits the viewport and fits the slot.
 	Creatives map[string][]HouseCreative
 }
 
@@ -75,13 +75,12 @@ var houseAds = []HouseAd{
 		ID:    "grail-seekers",
 		Title: "Grail Seekers",
 		Creatives: map[string][]HouseCreative{
-			// The leaderboard only fits the home page's wider column; the client
-			// skips any creative wider than its slot, so elsewhere it never
-			// enters the rotation.
+			// The leaderboard only fits the home page's 760px column; the
+			// 688px columns elsewhere and phones get the box.
 			"incontent": {
 				{Src: "/static/gs-banner.html?size=728x90&theme=dark", Width: 728, Height: 90, Viewport: "desktop"},
 				{Src: "/static/gs-banner.html?size=300x250&theme=dark", Width: 300, Height: 250},
-				// A phone unit; on desktop it reads as a stray strip.
+				// Last resort for a phone narrower than the box.
 				{Src: "/static/gs-banner.html?size=320x50&theme=dark", Width: 320, Height: 50, Viewport: "mobile"},
 			},
 			"footer": {
@@ -106,14 +105,16 @@ var houseAds = []HouseAd{
 		ID:    "han-jan-pocha",
 		Title: "Han Jan Pocha: Korean Kitchen & Pocha in OKC",
 		Creatives: map[string][]HouseCreative{
-			// `strip` is the creative's own pick for a content-width slot.
+			// `strip` is the creative's own pick for a content-width slot,
+			// capped so a 688px column doesn't stretch it into a 215px-tall
+			// slab. The leaderboard takes the home page's wider column.
 			"incontent": {
-				{Src: hanJanSrc("strip"), AspectRatio: "16 / 5"},
-				{Src: hanJanSrc("rect"), Width: 300, Height: 250},
+				{Src: hanJanSrc("leaderboard"), Width: 728, Height: 90, Viewport: "desktop"},
+				{Src: hanJanSrc("strip"), AspectRatio: "16 / 5", MaxWidth: 560},
 			},
 			"footer": {
 				{Src: hanJanSrc("leaderboard"), Width: 728, Height: 90, Viewport: "desktop"},
-				{Src: hanJanSrc("strip"), AspectRatio: "16 / 5"},
+				{Src: hanJanSrc("strip"), AspectRatio: "16 / 5", MaxWidth: 560},
 			},
 			"sidebar": {
 				{Src: hanJanSrc("square"), AspectRatio: "1 / 1", MaxWidth: 300},
@@ -143,7 +144,7 @@ type HouseSlot struct {
 type HouseCampaign struct {
 	ID     string
 	Title  string
-	Frames []HouseFrame // the campaign's creatives for this slot, in cycle order
+	Frames []HouseFrame // the campaign's creatives for this slot, best fit first
 }
 
 type HouseFrame struct {

@@ -1540,11 +1540,12 @@
   // ---------------------------------------------------------------------------
   const PHONE = window.matchMedia('(max-width: 559px)');
   let houseTurn = Math.floor(Math.random() * 1000);
-  const houseSeen = new Map(); // campaign id -> its appearances on this page
 
-  // Insert a creative that suits this viewport and fits the slot. The check
-  // happens before insertion because a hidden iframe still downloads its
-  // creative in full. Returns false when nothing fits.
+  // Insert the campaign's first creative that suits this viewport and fits
+  // the slot: houseads.go lists them best fit first (widest), so a wide
+  // column gets the leaderboard and a phone the box. The check happens before
+  // insertion because a hidden iframe still downloads its creative in full.
+  // Returns false when nothing fits.
   function showHouseAd(ad) {
     const viewport = PHONE.matches ? 'mobile' : 'desktop';
     const room = ad.clientWidth;
@@ -1564,15 +1565,9 @@
     // when nothing at all fits it.
     for (let i = 0; i < ids.length; i++) {
       const id = ids[(houseTurn + i) % ids.length];
-      const frames = campaigns.get(id);
-      // Each campaign cycles its own sizes per appearance, so the same box
-      // doesn't repeat: A₁ B₁ A₂ B₂ …
-      const seen = houseSeen.get(id) ?? Math.floor(Math.random() * frames.length);
-      for (let j = 0; j < frames.length; j++) {
-        const t = frames[(seen + j) % frames.length];
-        if (!fits(t)) continue;
+      const t = campaigns.get(id).find(fits);
+      if (t) {
         ad.append(t.content.cloneNode(true));
-        houseSeen.set(id, seen + 1);
         houseTurn += 1;
         return true;
       }

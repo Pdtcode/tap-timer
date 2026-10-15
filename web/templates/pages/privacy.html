@@ -1,5 +1,6 @@
 {{define "content"}}
-<div class="container narrow prose">
+<div class="container with-side">
+<div class="side-main prose">
   <header class="page-hero">
     <p class="eyebrow">Website</p>
     <h1>Privacy policy</h1>
@@ -41,6 +42,7 @@
   <p>This website shows ads through Google AdSense. Third-party vendors, including Google, use cookies to serve ads based on your previous visits to this and other websites. Google's advertising cookies let Google and its partners serve ads based on your visits to this site and other sites on the Internet.</p>
   <p>If you visit from the European Economic Area, the UK or Switzerland, Google's consent message asks for your choice before personalised ads are shown. You can consent, decline, or manage the options; if you decline, you may still see non-personalised ads.</p>
   <p>Anywhere, you can opt out of personalised advertising in <a href="https://adssettings.google.com" rel="noopener">Google Ads Settings</a>, or opt out of some third-party vendors' cookies at <a href="https://www.aboutads.info/choices/" rel="noopener">aboutads.info</a>. Learn more about <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">how Google uses information from sites that use its services</a>.</p>
+  <p>Some ad spaces show our own campaigns instead. One of them, for Han Jan Pocha, a Korean restaurant in Oklahoma City, is loaded in a frame from <a href="https://hanjanpochaok.com" rel="noopener">hanjanpochaok.com</a>. When it appears, your browser connects to that site, which receives the usual details of any web request (your IP address, your browser and that you came from this website) and is covered by its own privacy policy. We don't send it anything else. Our other house ads load from this website.</p>
 
   {{if .Site.GAID}}
   <h2>Analytics</h2>
@@ -72,6 +74,8 @@
   <p>Questions? Contact us through the Tap Timer App Store listing.</p>
   {{end}}
 
-  <p class="muted small">Last updated: 2 October 2026.</p>
+  <p class="muted small">Last updated: 15 October 2026.</p>
+</div>
+{{template "page-side" .}}
 </div>
 {{end}}

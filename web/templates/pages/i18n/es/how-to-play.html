@@ -1,5 +1,6 @@
 {{define "content"}}
-<div class="container narrow prose">
+<div class="container with-side">
+<div class="side-main prose">
   <header class="page-hero">
     <p class="eyebrow">Reglas y consejos</p>
     <h1>Cómo jugar a Tap Timer</h1>
@@ -54,5 +55,7 @@
   <p><a class="btn btn--primary" href="{{link "/"}}">Jugar ahora</a></p>
 
   {{template "ad" (ad "footer" .Ads)}}
+</div>
+{{template "page-side" .}}
 </div>
 {{end}}

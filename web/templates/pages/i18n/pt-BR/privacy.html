@@ -1,5 +1,6 @@
 {{define "content"}}
-<div class="container narrow prose">
+<div class="container with-side">
+<div class="side-main prose">
   <header class="page-hero">
     <p class="eyebrow">Site</p>
     <h1>Política de privacidade</h1>
@@ -41,6 +42,7 @@
   <p>Este site exibe anúncios por meio do Google AdSense. Fornecedores terceiros, incluindo o Google, usam cookies para exibir anúncios com base nas suas visitas anteriores a este e a outros sites. Os cookies de publicidade do Google permitem que o Google e os seus parceiros exibam anúncios com base nas suas visitas a este site e a outros sites na Internet.</p>
   <p>Se você acessa a partir do Espaço Econômico Europeu, do Reino Unido ou da Suíça, a mensagem de consentimento do Google pede a sua escolha antes de exibir anúncios personalizados. Você pode consentir, recusar ou gerenciar as opções; se recusar, ainda poderá ver anúncios não personalizados.</p>
   <p>De qualquer lugar, você pode desativar a publicidade personalizada nas <a href="https://adssettings.google.com" rel="noopener">Configurações de anúncios do Google</a> ou desativar os cookies de alguns fornecedores terceiros em <a href="https://www.aboutads.info/choices/" rel="noopener">aboutads.info</a>. Saiba mais sobre <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">como o Google usa as informações de sites que usam os seus serviços</a>.</p>
+  <p>Alguns espaços de anúncio mostram nossas próprias campanhas. Uma delas, do Han Jan Pocha, um restaurante coreano em Oklahoma City, é carregada em um quadro a partir de <a href="https://hanjanpochaok.com" rel="noopener">hanjanpochaok.com</a>. Quando ela aparece, seu navegador se conecta a esse site, que recebe os dados normais de qualquer solicitação na web (seu endereço IP, seu navegador e que você veio deste site) e segue a própria política de privacidade dele. Não enviamos mais nada. Nossos outros anúncios próprios são carregados deste site.</p>
 
   {{if .Site.GAID}}
   <h2>Análise de dados</h2>
@@ -72,6 +74,8 @@
   <p>Dúvidas? Fale conosco pela página do Tap Timer na App Store.</p>
   {{end}}
 
-  <p class="muted small">Última atualização: 2 de outubro de 2026.</p>
+  <p class="muted small">Última atualização: 15 de outubro de 2026.</p>
+</div>
+{{template "page-side" .}}
 </div>
 {{end}}

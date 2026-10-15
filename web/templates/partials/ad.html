@@ -38,3 +38,13 @@
 </aside>
 {{end}}
 {{end}}
+
+{{/*
+  The desktop sidebar beside a page's content (.with-side). Hidden below
+  1100px, and a hidden unit is never requested. Usage: {{template "page-side" .}}
+*/}}
+{{define "page-side"}}
+<div class="page-side">
+  {{template "ad" (ad "sidebar" .Ads)}}
+</div>
+{{end}}

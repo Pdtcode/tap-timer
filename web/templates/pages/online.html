@@ -1,5 +1,6 @@
 {{define "content"}}
-<div class="container narrow">
+<div class="container with-side">
+<div class="side-main">
   <header class="page-hero">
     <p class="eyebrow">{{t "online.eyebrow"}}</p>
     <h1>{{if .RoomCode}}{{th "online.h1_invited" "code" .RoomCode}}{{else}}{{th "online.h1"}}{{end}}</h1>
@@ -121,5 +122,7 @@
   {{template "promo" "online"}}
 
   {{template "ad" (ad "incontent" .Ads)}}
+</div>
+{{template "page-side" .}}
 </div>
 {{end}}

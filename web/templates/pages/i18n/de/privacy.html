@@ -1,5 +1,6 @@
 {{define "content"}}
-<div class="container narrow prose">
+<div class="container with-side">
+<div class="side-main prose">
   <header class="page-hero">
     <p class="eyebrow">Website</p>
     <h1>Datenschutzerklärung</h1>
@@ -41,6 +42,7 @@
   <p>Diese Website zeigt Werbung über Google AdSense. Drittanbieter, darunter Google, verwenden Cookies, um Anzeigen auf Grundlage deiner früheren Besuche auf dieser und anderen Websites auszuliefern. Mit den Werbe-Cookies von Google können Google und seine Partner Anzeigen auf Grundlage deiner Besuche auf dieser Website und anderen Websites im Internet ausliefern.</p>
   <p>Wenn du die Website aus dem Europäischen Wirtschaftsraum, dem Vereinigten Königreich oder der Schweiz besuchst, fragt dich die Einwilligungsmeldung von Google nach deiner Entscheidung, bevor personalisierte Anzeigen gezeigt werden. Du kannst einwilligen, ablehnen oder die Optionen verwalten; wenn du ablehnst, siehst du möglicherweise trotzdem nicht personalisierte Anzeigen.</p>
   <p>Überall kannst du personalisierte Werbung in den <a href="https://adssettings.google.com" rel="noopener">Google-Anzeigeneinstellungen</a> deaktivieren oder die Cookies einiger Drittanbieter unter <a href="https://www.aboutads.info/choices/" rel="noopener">aboutads.info</a> ablehnen. Erfahre mehr darüber, <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">wie Google Daten von Websites nutzt, die seine Dienste verwenden</a>.</p>
+  <p>Manche Werbeflächen zeigen stattdessen unsere eigenen Kampagnen. Eine davon, für Han Jan Pocha, ein koreanisches Restaurant in Oklahoma City, wird in einem Rahmen von <a href="https://hanjanpochaok.com" rel="noopener">hanjanpochaok.com</a> geladen. Wenn sie erscheint, verbindet sich dein Browser mit dieser Website. Sie erhält die üblichen Angaben jeder Webanfrage (deine IP-Adresse, deinen Browser und dass du von dieser Website kommst), und es gilt ihre eigene Datenschutzerklärung. Wir senden ihr nichts weiter. Unsere anderen eigenen Anzeigen werden von dieser Website geladen.</p>
 
   {{if .Site.GAID}}
   <h2>Analyse</h2>
@@ -72,6 +74,8 @@
   <p>Fragen? Kontaktiere uns über den Eintrag von Tap Timer im App Store.</p>
   {{end}}
 
-  <p class="muted small">Zuletzt aktualisiert: 2. Oktober 2026.</p>
+  <p class="muted small">Zuletzt aktualisiert: 15. Oktober 2026.</p>
+</div>
+{{template "page-side" .}}
 </div>
 {{end}}

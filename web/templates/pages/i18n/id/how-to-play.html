@@ -1,5 +1,6 @@
 {{define "content"}}
-<div class="container narrow prose">
+<div class="container with-side">
+<div class="side-main prose">
   <header class="page-hero">
     <p class="eyebrow">Aturan &amp; tips</p>
     <h1>Cara main Tap Timer</h1>
@@ -54,5 +55,7 @@
   <p><a class="btn btn--primary" href="{{link "/"}}">Main sekarang</a></p>
 
   {{template "ad" (ad "footer" .Ads)}}
+</div>
+{{template "page-side" .}}
 </div>
 {{end}}

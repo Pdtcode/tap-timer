@@ -1,5 +1,6 @@
 {{define "content"}}
-<div class="container narrow prose">
+<div class="container with-side">
+<div class="side-main prose">
   <header class="page-hero">
     <p class="eyebrow">Sitio web</p>
     <h1>Términos de servicio</h1>
@@ -55,5 +56,7 @@
   {{end}}
 
   <p class="muted small">Última actualización: 14 de octubre de 2026.</p>
+</div>
+{{template "page-side" .}}
 </div>
 {{end}}
