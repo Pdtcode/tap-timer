@@ -89,7 +89,7 @@
   // --- layout (on the 1080×1920 canvas) ---
   const L = {
     header: 162, // the site's 65px header
-    cam: { x: (W - 600) / 2, y: 222, s: 600, r: 64 }, // smaller while there's a hook: see camRect
+    cam: { x: (W - 600) / 2, y: 222, s: 600, r: 64 }, // smaller while there's a hook: see frameLayout
     chips: 900, // top of the goal chips
     zone: { x: 40, y: 1040, w: W - 80, h: 560, r: 20 * K },
     result: 1690,
@@ -353,56 +353,178 @@
     ctx.textBaseline = "alphabetic";
   }
 
-  const hookText = () => hookInput.value.trim();
+  // --- the hook: line breaks, *highlights*, style, size, position ---
+  const MAX_HOOK_LINES = 4;
+  const hookRaw = () => hookInput.value.replace(/\r/g, "").trim();
+  // Without formatting, for the post's title.
+  const hookPlain = () => hookRaw().replace(/\*/g, "").replace(/\s*\n\s*/g, " ").trim();
 
-  // With a hook, the camera shrinks to make room for it underneath.
-  const HOOK_CAM = { x: (W - 480) / 2, y: 206, s: 480, r: 56 };
-  const camRect = () => (hookText() ? HOOK_CAM : L.cam);
+  const FMT_KEY = "st.hookFormat";
+  const hookFmt = { style: "sans", size: "m", pos: "under" };
+  try {
+    Object.assign(hookFmt, JSON.parse(localStorage.getItem(FMT_KEY) || "{}"));
+  } catch {}
+  const HOOK_FONT = {
+    sans: (px) => `800 ${px}px ${SANS}`,
+    caption: (px) => `800 ${px}px ${SANS}`,
+    pixel: (px) => `${px}px ${PIXEL}`,
+  };
+  const HOOK_SIZE = { sans: { s: 52, m: 68, l: 84 }, caption: { s: 46, m: 58, l: 72 }, pixel: { s: 30, m: 40, l: 50 } };
+  const HOOK_LH = { sans: 1.14, caption: 1.5, pixel: 1.55 };
+  const HOOK_CAP = { sans: 0.72, caption: 0.72, pixel: 1 }; // cap height, for vertical centring
 
-  // The hook: bold sans under the camera, at most two lines, as big as fits.
-  function drawHook() {
-    const text = hookText();
-    if (!text) return;
-    const maxW = W - 120;
-    let size = 72;
-    let lines;
-    for (; size >= 40; size -= 4) {
-      ctx.font = `800 ${size}px ${SANS}`;
-      lines = wrap(text, maxW);
-      if (lines.length <= 2 && lines.every((l) => ctx.measureText(l).width <= maxW)) break;
-    }
-    const lh = size * 1.1;
-    const top = HOOK_CAM.y + HOOK_CAM.s + 26; // under the camera, above the chips
-    const room = L.chips - 24 - top;
-    let y = top + (room - Math.min(lines.length, 2) * lh) / 2 + size * 0.82;
-    ctx.fillStyle = C.text;
-    ctx.textAlign = "center";
-    ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-    ctx.shadowBlur = 12;
-    for (const line of lines.slice(0, 2)) {
-      ctx.fillText(line, W / 2, y);
-      y += lh;
-    }
-    ctx.shadowBlur = 0;
+  for (const group of root.querySelectorAll("[data-fmt]")) {
+    const key = group.dataset.fmt;
+    const sync = () => group.querySelectorAll("button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.v === hookFmt[key])));
+    group.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-v]");
+      if (!b) return;
+      hookFmt[key] = b.dataset.v;
+      sync();
+      try {
+        localStorage.setItem(FMT_KEY, JSON.stringify(hookFmt));
+      } catch {}
+    });
+    sync();
   }
 
-  function wrap(text, maxWidth) {
+  // At most MAX_HOOK_LINES typed lines.
+  hookInput.addEventListener("input", () => {
+    const lines = hookInput.value.split("\n");
+    if (lines.length > MAX_HOOK_LINES) hookInput.value = lines.slice(0, MAX_HOOK_LINES).join(" ");
+  });
+
+  // Paragraphs (typed lines) of words; each word is runs of { t, hl }.
+  // "*" toggles the highlight, so "*exactly 5.00*?" glows across two words
+  // and leaves the "?" plain.
+  function parseHook(text) {
+    let on = false;
+    return text.split("\n").map((para) => {
+      const words = [];
+      let word = [];
+      const push = (ch) => {
+        const last = word[word.length - 1];
+        if (last && last.hl === on) last.t += ch;
+        else word.push({ t: ch, hl: on });
+      };
+      for (const ch of para) {
+        if (ch === "*") on = !on;
+        else if (/\s/.test(ch)) {
+          if (word.length) words.push(word);
+          word = [];
+        } else push(ch);
+      }
+      if (word.length) words.push(word);
+      return words;
+    });
+  }
+
+  const wordWidth = (w) => w.reduce((n, r) => n + ctx.measureText(r.t).width, 0);
+
+  // Lines of words at size px, wrapping each typed line to maxW.
+  function layoutHook(paras, px, maxW) {
+    ctx.font = HOOK_FONT[hookFmt.style](px);
+    const space = ctx.measureText(" ").width;
     const lines = [];
-    let line = "";
-    for (const word of text.split(/\s+/).filter(Boolean)) {
-      const next = line ? `${line} ${word}` : word;
-      if (line && ctx.measureText(next).width > maxWidth) {
-        lines.push(line);
-        line = word;
-      } else line = next;
+    let fits = true;
+    for (const words of paras) {
+      let line = [];
+      let width = 0;
+      for (const w of words) {
+        const ww = wordWidth(w);
+        if (ww > maxW) fits = false;
+        if (line.length && width + space + ww > maxW) {
+          lines.push(line);
+          line = [];
+          width = 0;
+        }
+        width += (line.length ? space : 0) + ww;
+        line.push(w);
+      }
+      lines.push(line); // an empty typed line stays as a gap
     }
-    if (line) lines.push(line);
-    return lines;
+    return { lines, fits: fits && lines.length <= MAX_HOOK_LINES };
+  }
+
+  // The chosen size, shrunk until every line fits (and no further than maxPx).
+  function fitHook(maxW, maxPx) {
+    const paras = parseHook(hookRaw());
+    const style = hookFmt.style;
+    let px = Math.min(maxPx ?? Infinity, HOOK_SIZE[style][hookFmt.size] || HOOK_SIZE[style].m);
+    let out;
+    for (; px >= 20; px -= 2) {
+      out = layoutHook(paras, px, maxW);
+      if (out.fits) break;
+    }
+    const lh = Math.round(px * HOOK_LH[style]);
+    return { px, lh, lines: out.lines.slice(0, MAX_HOOK_LINES), height: Math.min(out.lines.length, MAX_HOOK_LINES) * lh };
+  }
+
+  // Where the camera and the hook go this frame.
+  const CAM_MAX = 520;
+  const CAM_MIN = 300;
+  const REGION_BOTTOM = L.chips - 24; // everything above the goal chips
+  function frameLayout() {
+    if (!hookRaw()) return { cam: L.cam, hook: null };
+    const pos = hookFmt.pos;
+    if (pos === "over") {
+      const cam = L.cam;
+      const hook = fitHook(cam.s - 56);
+      return { cam, hook: { ...hook, top: cam.y + cam.s - 32 - hook.height } };
+    }
+    // Top or under: the camera gives up height to the text, down to CAM_MIN.
+    const top = pos === "top" ? 196 : 206;
+    let hook = fitHook(W - 120);
+    while (REGION_BOTTOM - top - 28 - hook.height < CAM_MIN && hook.px > 20) hook = fitHook(W - 120, hook.px - 4);
+    const s = Math.max(CAM_MIN - 60, Math.min(CAM_MAX, REGION_BOTTOM - top - 28 - hook.height));
+    const cam = { x: (W - s) / 2, s, r: 56, y: pos === "top" ? top + hook.height + 28 : top };
+    return { cam, hook: { ...hook, top: pos === "top" ? top : cam.y + s + 28 } };
+  }
+
+  function drawHook(h) {
+    if (!h) return;
+    const style = hookFmt.style;
+    ctx.font = HOOK_FONT[style](h.px);
+    ctx.textAlign = "left";
+    const space = ctx.measureText(" ").width;
+    let y = h.top;
+    for (const line of h.lines) {
+      const widths = line.map(wordWidth);
+      const lineW = widths.reduce((a, b) => a + b, 0) + space * Math.max(0, line.length - 1);
+      const base = y + (h.lh + h.px * HOOK_CAP[style]) / 2;
+      if (style === "caption" && line.length) {
+        // TikTok-style: a dark box behind each line.
+        const padX = h.px * 0.35;
+        const boxH = h.px * 1.32;
+        ctx.fillStyle = "rgba(0, 0, 0, 0.78)";
+        rr(W / 2 - lineW / 2 - padX, y + (h.lh - boxH) / 2, lineW + 2 * padX, boxH, h.px * 0.24);
+        ctx.fill();
+      }
+      let x = W / 2 - lineW / 2;
+      line.forEach((word, i) => {
+        for (const run of word) {
+          if (run.hl) {
+            ctx.fillStyle = C.seg;
+            ctx.shadowColor = "rgba(48, 252, 96, 0.7)";
+            ctx.shadowBlur = h.px * 0.45;
+          } else {
+            ctx.fillStyle = style === "caption" ? "#fff" : C.text;
+            ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+            ctx.shadowBlur = style === "caption" ? 0 : 12;
+          }
+          ctx.fillText(run.t, x, base);
+          x += ctx.measureText(run.t).width;
+        }
+        x += i < line.length - 1 ? space : 0;
+      });
+      ctx.shadowBlur = 0;
+      y += h.lh;
+    }
+    ctx.textAlign = "center";
   }
 
   // You: the front camera, mirrored and centre-cropped into a rounded square.
-  function drawCamera() {
-    const { x, y, s, r } = camRect();
+  function drawCamera({ x, y, s, r }) {
     ctx.save();
     ctx.shadowColor = "rgba(48, 252, 96, 0.3)";
     ctx.shadowBlur = 40;
@@ -572,8 +694,9 @@
     ctx.fillRect(0, 0, W, H);
     drawMotes(t);
     drawHeader();
-    drawCamera();
-    drawHook();
+    const frame = frameLayout();
+    drawCamera(frame.cam);
+    drawHook(frame.hook);
     drawChips();
     drawZone(t);
     drawResult(t);
@@ -617,10 +740,11 @@
     recBtn.classList.add("is-recording");
     recBtn.setAttribute("aria-label", "Stop recording");
     camBtn.disabled = true;
-    recTime.textContent = "0:00";
+    // No running seconds: a visible count would let you time the hidden clock.
+    recTime.textContent = "REC";
     recTick = setInterval(() => {
       const s = Math.floor((performance.now() - recStart) / 1000);
-      recTime.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+      if (s >= MAX_RECORD_SECONDS - 10) recTime.textContent = "Ending soon"; // the only time cue
       if (s >= MAX_RECORD_SECONDS) stopRecording();
     }, 250);
   }
@@ -649,7 +773,7 @@
     after.hidden = false;
     after.scrollIntoView({ behavior: "smooth", block: "start" });
     try {
-      sessionStorage.setItem("st.hook", hookText()); // New post uses it as the title
+      sessionStorage.setItem("st.hook", hookPlain()); // New post uses it as the title
     } catch {}
     // The Post page picks it up from the browser's storage (never the server).
     let kept = true;

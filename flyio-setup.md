@@ -1,6 +1,6 @@
 # Deploying Tap Timer on Fly.io
 
-Setup guide for running the Go server on [Fly.io](https://fly.io) using the existing `Dockerfile`. Last updated 2026-10-02. Written from general knowledge of Fly.io, so check anything marked **(verify)** against `fly help` and Fly's docs, since commands and pricing change.
+Setup guide for running the Go server on [Fly.io](https://fly.io) using the existing `Dockerfile`. Last updated 2026-10-14. Written from general knowledge of Fly.io, so check anything marked **(verify)** against `fly help` and Fly's docs, since commands and pricing change.
 
 ## Why Fly.io for this app
 
@@ -40,7 +40,7 @@ A credit card is required to create apps. **(verify)**
 
 ## 2. Tidy the Docker build context (optional)
 
-`.dockerignore` already skips `.git`, `.env` and binaries. Also add the local research folder so it isn't uploaded with every deploy:
+`.dockerignore` already skips `.git`, `.env`, `secrets/`, Google client JSON files and binaries. Also add the local research folder so it isn't uploaded with every deploy:
 
 ```
 doc
@@ -57,7 +57,7 @@ fly launch --no-deploy
 - It detects the `Dockerfile`. Accept it.
 - Pick an app name. It becomes `https://<name>.fly.dev`, so e.g. `tap-timer` (this app: `https://tap-timer.fly.dev`).
 - Pick a primary region close to most players, e.g. `dfw` (Dallas, US Central; this app uses it), `iad` (US East) or `lhr` (London). Latency barely matters for this game since timing happens on the device.
-- Say **no** to Postgres, Redis, Tigris and other add-ons. The app needs none.
+- Say **no** to Postgres, Redis, Tigris, volumes and other add-ons. The app needs none (the studio has no database either; see section 4).
 
 It writes a `fly.toml`. Replace it with this (keep your app name and region):
 
@@ -77,6 +77,7 @@ primary_region = "dfw"
   # Optional public settings (can also go in secrets):
   # GA_MEASUREMENT_ID = "G-XXXXXXX"
   # CONTACT_EMAIL = "you@example.com"
+  STUDIO_TZ = "America/Chicago"   # "today" for the studio's daily streak
 
 [http_service]
   internal_port = 8080
@@ -121,7 +122,28 @@ fly secrets set GOOGLE_SITE_VERIFICATION=abc BING_SITE_VERIFICATION=def
 fly secrets list
 ```
 
-Setting secrets triggers a redeploy once the app exists. Never commit `.env`; it's already in `.gitignore` and `.dockerignore`.
+Setting secrets triggers a redeploy once the app exists; add `--stage` to save without restarting, and the values apply on the next `fly deploy`. Never commit `.env`; it's already in `.gitignore` and `.dockerignore`.
+
+**Importing from `.env`:** `fly secrets import --stage` reads `NAME=value` lines from stdin. Pipe in only the lines you need, never the whole file (it holds local-only values such as `BASE_URL=http://localhost:8080`, which would break production):
+
+```powershell
+Get-Content .env | Select-String '^YOUTUBE_CLIENT_(ID|SECRET)=' | % { $_.Line } | fly secrets import --stage
+```
+```sh
+grep -E '^YOUTUBE_CLIENT_(ID|SECRET)=' .env | fly secrets import --stage
+```
+
+**Studio (`/studio`):** off unless `STUDIO_PASSWORD` is set. It has no database, so it needs **no volume**: videos stream straight through to the platforms, and history and stats are read from them. Its secrets:
+
+| Secret | What it is |
+|---|---|
+| `STUDIO_PASSWORD` | The studio login (12+ characters) |
+| `STUDIO_SECRET` | 32+ random characters; signs the login cookie. Required in production (locally it may be empty: a random one per run). Changing it signs you out |
+| `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET` | The Google OAuth client |
+| `YOUTUBE_REFRESH_TOKEN` | The saved YouTube login. After you connect, the studio shows the `fly secrets set` command to run |
+| `META_APP_ID`, `META_APP_SECRET`, `INSTAGRAM_ACCESS_TOKEN`, `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REFRESH_TOKEN` | For Instagram and TikTok, once they're built (stubs today) |
+
+Set on `tap-timer` today: `STUDIO_PASSWORD`, `STUDIO_SECRET`, `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, plus a stray lowercase `base_url` the app ignores (`fly secrets unset base_url`). Full setup: `doc/studio.md`.
 
 ## 5. Deploy
 
@@ -264,6 +286,7 @@ Every player in a room holds one WebSocket connection open the whole time, so th
 - [ ] Replace `fly.toml` (port 8080, `/healthz` check, `BASE_URL=https://<app>.fly.dev`, `force_https`)
 - [ ] Add `doc` to `.dockerignore`
 - [ ] `fly secrets set` for AdSense, provider token and verification tokens as needed
+- [ ] Optional: studio secrets (`STUDIO_PASSWORD`, `STUDIO_SECRET`, YouTube client, then `YOUTUBE_REFRESH_TOKEN` after connecting); no volume needed
 - [ ] `fly scale count 1` (Online multiplayer needs one machine) and add the `[http_service.concurrency]` block
 - [ ] `fly deploy`, then check `/`, `/healthz`, `/robots.txt`, `/get?src=header`, `/online`, logs
 - [ ] Optional: GitHub Actions deploy with `FLY_API_TOKEN`

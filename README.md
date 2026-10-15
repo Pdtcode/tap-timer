@@ -10,7 +10,7 @@ go test ./...
 docker build -t taptimer . && docker run -p 8080:8080 -e BASE_URL=https://your.domain taptimer
 ```
 
-All configuration is via environment variables. See [`.env.example`](.env.example). Templates and static files are embedded with `go:embed`, so the binary is fully self-contained.
+All configuration is via environment variables. See [`.env.example`](.env.example): copy it to `.env` for local runs and the app reads it at startup (variables set in your terminal win). Local credentials for the studio go in [`secrets/`](secrets/README.md). Neither `.env` nor `secrets/` goes to git or the Docker image. Templates and static files are embedded with `go:embed`, so the binary is fully self-contained.
 
 ## What's here
 
@@ -25,16 +25,20 @@ All configuration is via environment variables. See [`.env.example`](.env.exampl
 | `/privacy` | The website's own privacy policy (the iOS app has a separate one): browser storage, online rooms, server logs, AdSense with the EEA/UK/CH consent message. The Analytics section appears only when `GA_MEASUREMENT_ID` is set. Keep it in sync with what the code stores and logs. |
 | `/terms` | The website's terms of service: free play, conduct in online rooms, the app (Apple's standard licence), ads and links, no warranty. Linked in the footer and in the sitemap; also the terms URL for the Google OAuth consent screen. |
 | `/get?src=<placement>` | The **only** outbound link to the App Store. Logs `app_store_click` and adds `pt`/`ct` campaign params. |
-| `/studio` | Private dashboard (password, not indexed) for posting one vertical video to YouTube Shorts, Instagram Reels and TikTok at once, with caption templates, a daily streak and per-post views. No database. Off unless `STUDIO_PASSWORD` is set. YouTube works; Instagram and TikTok are stubs. See `doc/studio.md`. |
+| `/studio` | Private dashboard (password, not indexed) for posting one vertical video to YouTube Shorts, Instagram Reels and TikTok at once, with caption templates, a daily streak and per-post views. Tabs: Home, Record (films the web Solo timer with a facecam into a 9:16 video), Post, Accounts; installable as a home-screen web app. No database: videos stream through to the platforms, logins are saved as secrets, history comes from the platforms. Off unless `STUDIO_PASSWORD` is set. YouTube works; Instagram and TikTok are stubs. See `doc/studio.md`. |
 | `/ads.txt`, `/robots.txt`, `/sitemap.xml`, `/healthz` | Operational endpoints. |
 
 ```
 main.go                  server bootstrap + graceful shutdown
-internal/config          env config + validation
-internal/server          router, handlers, template rendering, online.go (room HTTP/WebSocket), tests
+internal/config          env config (+ .env and secrets/ for local runs) + validation
+internal/server          router, handlers, template rendering, sitemap, online.go (room HTTP/WebSocket), tests
 internal/rooms           Online multiplayer game logic: rooms, rounds, scoring, hub (in memory)
-web/templates            layout, partials (ad, promo), pages
-web/static               app.css, app.js (game engine + particles), app icons, og.png
+internal/i18n            languages, string catalogs, completeness tests
+internal/studio          /studio: auth, handlers, upload fan-out, streak, captions; platform/ (YouTube, Instagram, TikTok)
+web/i18n                 strings per language (en, es, pt-BR, de, id)
+web/templates            layout, partials (ad, promo, share), pages (+ pages/i18n/<code>/), studio/
+web/static               app.css, app.js (game engine + particles), studio.css/js, studio-record.js, app icons, og.png
+tools/og, tools/banner   sources for the share image and the YouTube channel banner
 ```
 
 Responses are gzip-compressed (`gin-contrib/gzip`), except WebSockets and already-compressed images and fonts: a first visit is about 38 KB instead of 131 KB.
@@ -85,6 +89,10 @@ npx playwright screenshot --viewport-size=1200,630 --wait-for-timeout=500 tools/
 
 The URL is content-hashed, but social platforms cache previews aggressively, so use each platform's debugger (e.g. Facebook Sharing Debugger) to refresh after a change.
 
+## YouTube banner
+
+`tools/banner/banner.html` is the channel banner (2560×1440). Keep text and logo inside the centre 1546×423 safe area, the only part shown on every device. `tools/banner/banner.png` is the rendered copy; the command to render it is at the top of `banner.html`.
+
 ## Online multiplayer
 
 Rooms live in the server's memory (`internal/rooms`); browsers talk to them over a WebSocket (`internal/server/online.go`). Each phone times its own taps, so network lag never affects a score; the server only opens rounds, collects results and reveals them together.
@@ -109,4 +117,4 @@ Rooms live in the server's memory (`internal/rooms`); browsers talk to them over
 2. Turn on the host's "HTTPS only" / HTTP→HTTPS redirect.
 3. Verify the site in [Google Search Console](https://search.google.com/search-console) and [Bing Webmaster Tools](https://www.bing.com/webmasters). Either use DNS verification, or set `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION`.
 4. Submit `https://<your-domain>/sitemap.xml` in both, then use URL Inspection to request indexing of `/`.
-5. Check the structured data with Google's [Rich Results Test](https://search.google.com/test/rich-results) and share previews with each platform's debugger.
+5. Every page has its own title and description, `max-image-preview:large` in the robots tag, Twitter card tags and JSON-LD (`VideoGame` + `WebApplication`, plus breadcrumbs on inner pages). Check the structured data with Google's [Rich Results Test](https://search.google.com/test/rich-results) and share previews with each platform's debugger.

@@ -167,6 +167,12 @@ html.st-staged, html.st-staged body { overflow: hidden; }
   background: var(--bad); color: #fff; font: 700 0.95rem var(--sans); font-variant-numeric: tabular-nums;
 }
 .st-ov-time:empty { visibility: hidden; }
+/* "● REC" with a steady dot: no seconds and no blinking, since either would
+   be a beat to count the hidden clock by. */
+.st-ov-time:not(:empty)::before {
+  content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%;
+  background: #fff; vertical-align: 1px;
+}
 /* The toolbar under the frame: icons either side of the record button. */
 .st-ov {
   position: absolute; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom) + 14px);
@@ -193,15 +199,31 @@ html.st-staged, html.st-staged body { overflow: hidden; }
 .st-ov.is-collapsed [data-collapsible] { visibility: hidden; }
 .st-ov.is-collapsed .st-ov-collapse svg { transform: rotate(180deg); }
 .st-card .st-ov-hook { /* beats ".st-card form { display: grid }" */
-  display: flex; align-items: center; gap: 8px; width: min(100%, 420px); padding: 6px;
-  background: rgba(10, 22, 16, 0.92); border: 1px solid var(--border); border-radius: 999px;
+  display: grid; gap: 8px; width: min(100%, 420px); padding: 8px;
+  background: rgba(10, 22, 16, 0.94); border: 1px solid var(--border); border-radius: 18px;
 }
-.st-ov-hook input {
-  flex: 1; min-width: 0; border: 0; background: transparent; color: var(--text);
-  padding: 0 12px; font: 16px var(--sans); /* 16px stops iOS zooming */
+.st-ov-hook__row { display: flex; align-items: flex-start; gap: 8px; }
+.st-ov-hook textarea {
+  flex: 1; min-width: 0; min-height: 44px; max-height: 120px; resize: none;
+  border: 0; border-radius: 10px; background: rgba(255, 255, 255, 0.06); color: var(--text);
+  padding: 10px 12px; font: 16px/1.35 var(--sans); /* 16px stops iOS zooming */
 }
-.st-ov-hook input:focus { outline: none; }
-.st-ov-hook .st-ov-icon { width: 40px; height: 40px; background: var(--accent); color: var(--on-accent); }
+.st-ov-hook textarea:focus { outline: none; background: rgba(255, 255, 255, 0.1); }
+.st-ov-hook .st-ov-icon { width: 40px; height: 40px; flex: none; background: var(--accent); color: var(--on-accent); }
+/* Formatting: three small segmented controls (style, size, position). */
+.st-ov-fmt { display: flex; justify-content: space-between; gap: 6px; }
+.st-seg { display: inline-flex; padding: 2px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); }
+.st-seg button {
+  display: grid; place-items: center; min-width: 36px; height: 34px; padding: 0 6px;
+  border: 0; border-radius: 8px; background: transparent; color: var(--muted);
+  font: 700 14px var(--sans); cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.st-seg button[aria-checked="true"] { background: var(--accent); color: var(--on-accent); }
+.st-seg .st-seg--pixel { font: 10px "Press Start 2P", monospace; }
+.st-seg .st-seg--caption span { padding: 1px 4px; border-radius: 4px; background: #000; color: #fff; }
+.st-seg button[aria-checked="true"].st-seg--caption span { background: var(--on-accent); color: var(--accent); }
+.st-ov-tip { margin: 0; padding: 0 4px; color: var(--muted); font-size: 0.78rem; }
+.st-ov-tip b { color: var(--accent); }
 /* Camera-app style: a ring with a red dot, which becomes a square while recording. */
 .st-ov-rec {
   position: relative; width: 76px; height: 76px; border-radius: 50%;

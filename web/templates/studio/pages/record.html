@@ -10,8 +10,28 @@
     <p class="st-ov-msg" data-stage-msg role="status" aria-live="polite"></p>
     <div class="st-ov" data-ov>
       <form class="st-ov-hook" data-hook-panel hidden>
-        <input type="text" data-hook maxlength="70" enterkeyhint="done" placeholder="Hook, e.g. Can you hit 5.00?" aria-label="Hook text shown in the video">
-        <button type="submit" class="st-ov-icon" aria-label="Done"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></button>
+        <div class="st-ov-hook__row">
+          <textarea data-hook rows="2" maxlength="120" enterkeyhint="enter" placeholder="Hook, e.g. Can you hit *5.00*?" aria-label="Hook text shown in the video"></textarea>
+          <button type="submit" class="st-ov-icon" aria-label="Done"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></button>
+        </div>
+        <div class="st-ov-fmt">
+          <div class="st-seg" role="radiogroup" aria-label="Text style" data-fmt="style">
+            <button type="button" role="radio" data-v="sans" aria-label="Bold">Aa</button>
+            <button type="button" role="radio" data-v="pixel" aria-label="Pixel font" class="st-seg--pixel">Aa</button>
+            <button type="button" role="radio" data-v="caption" aria-label="Caption box" class="st-seg--caption"><span>Aa</span></button>
+          </div>
+          <div class="st-seg" role="radiogroup" aria-label="Text size" data-fmt="size">
+            <button type="button" role="radio" data-v="s" aria-label="Small">S</button>
+            <button type="button" role="radio" data-v="m" aria-label="Medium">M</button>
+            <button type="button" role="radio" data-v="l" aria-label="Large">L</button>
+          </div>
+          <div class="st-seg" role="radiogroup" aria-label="Text position" data-fmt="pos">
+            <button type="button" role="radio" data-v="top" aria-label="At the top"><svg viewBox="0 0 16 22" width="16" height="22" aria-hidden="true"><rect x="0.75" y="0.75" width="14.5" height="20.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="3.5" y="3.5" width="9" height="2.5" rx="1" fill="currentColor"/><rect x="4" y="8" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.45"/></svg></button>
+            <button type="button" role="radio" data-v="under" aria-label="Under the camera"><svg viewBox="0 0 16 22" width="16" height="22" aria-hidden="true"><rect x="0.75" y="0.75" width="14.5" height="20.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="4" y="3.5" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.45"/><rect x="3.5" y="13.5" width="9" height="2.5" rx="1" fill="currentColor"/></svg></button>
+            <button type="button" role="radio" data-v="over" aria-label="Over the camera"><svg viewBox="0 0 16 22" width="16" height="22" aria-hidden="true"><rect x="0.75" y="0.75" width="14.5" height="20.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="4" width="10" height="10" rx="1.5" fill="currentColor" opacity="0.45"/><rect x="4.5" y="10.5" width="7" height="2.5" rx="1" fill="currentColor"/></svg></button>
+          </div>
+        </div>
+        <p class="st-ov-tip">Return starts a new line. Put <b>*stars*</b> around words to make them glow green.</p>
       </form>
       <div class="st-ov-bar">
         <div class="st-ov-side" data-collapsible>
