@@ -167,24 +167,26 @@ func TestAdsTxt(t *testing.T) {
 }
 
 func TestAdUnits(t *testing.T) {
-	// Dev without AdSense: placeholders, no AdSense script.
-	body := get(newTestRouter(t, testConfig()), "/").Body.String()
-	if !strings.Contains(body, "ad--placeholder") || strings.Contains(body, "adsbygoogle.js") {
-		t.Error("dev mode should show placeholders and not load AdSense")
-	}
-
-	// Production without AdSense: nothing at all.
-	cfg := testConfig()
-	cfg.Env = "production"
-	body = get(newTestRouter(t, cfg), "/").Body.String()
-	if strings.Contains(body, "ad--placeholder") || strings.Contains(body, "adsbygoogle") {
-		t.Error("production without AdSense should render no ad markup")
+	// Without AdSense, house ads fill every slot (all three on the home page
+	// have campaigns), leaving nothing for a placeholder and no AdSense script.
+	for _, env := range []string{"development", "production"} {
+		cfg := testConfig()
+		cfg.Env = env
+		body := get(newTestRouter(t, cfg), "/").Body.String()
+		if strings.Contains(body, "ad--placeholder") || strings.Contains(body, "adsbygoogle") {
+			t.Errorf("%s without AdSense: placeholder or AdSense markup rendered", env)
+		}
+		if n := strings.Count(body, "data-house>"); n != 3 {
+			t.Errorf("%s without AdSense: %d house slots, want 3", env, n)
+		}
 	}
 
 	// Configured: loader script plus real units for slots that have ids.
+	cfg := testConfig()
+	cfg.Env = "production"
 	cfg.AdSenseClient = "ca-pub-1234567890"
 	cfg.AdSlots = map[string]string{"incontent": "111", "sidebar": "222"}
-	body = get(newTestRouter(t, cfg), "/").Body.String()
+	body := get(newTestRouter(t, cfg), "/").Body.String()
 	for _, want := range []string{
 		`adsbygoogle.js?client=ca-pub-1234567890`,
 		`data-ad-slot="111"`,
@@ -193,6 +195,43 @@ func TestAdUnits(t *testing.T) {
 		if !strings.Contains(body, want) {
 			t.Errorf("body missing %q", want)
 		}
+	}
+	// House ads still ride along, as the fallback for unfilled AdSense.
+	if n := strings.Count(body, "data-house>"); n != 3 {
+		t.Errorf("with AdSense: %d house slots, want 3", n)
+	}
+}
+
+func TestHouseAdSlots(t *testing.T) {
+	// Every campaign targeting the slot is sent, with all its creatives, so
+	// app.js can rotate over the slots actually shown and fall back to a size
+	// that fits. Local creatives carry the asset version; remote ones don't.
+	hs := resolveHouseSlot("sidebar", "abc")
+	var got []string
+	for _, c := range hs.Campaigns {
+		for _, f := range c.Frames {
+			got = append(got, c.ID+" "+f.Src)
+		}
+	}
+	want := []string{
+		"grail-seekers /static/gs-banner.html?size=300x600&theme=dark&v=abc",
+		"grail-seekers /static/gs-banner.html?size=300x250&theme=dark&v=abc",
+		"han-jan-pocha " + hanJanSrc("square"),
+		"han-jan-pocha " + hanJanSrc("rect"),
+	}
+	if strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Errorf("sidebar creatives:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+	if resolveHouseSlot("nonexistent", "abc") != nil {
+		t.Error("slot with no campaigns should resolve to nil")
+	}
+}
+
+func TestHouseAdCreativeServed(t *testing.T) {
+	w := get(newTestRouter(t, testConfig()), "/static/gs-banner.html?size=300x250&theme=dark")
+	if w.Code != http.StatusOK || !strings.Contains(w.Body.String(), "utm_source=taptimer") {
+		t.Errorf("gs-banner.html: status %d, retagged utm_source present = %v",
+			w.Code, strings.Contains(w.Body.String(), "utm_source=taptimer"))
 	}
 }
 

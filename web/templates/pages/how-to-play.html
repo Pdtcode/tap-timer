@@ -26,7 +26,7 @@
 
   <p><a class="app-badge" href="/get?src=howto" data-cta="howto"><img src="{{asset "img/app-store-badge.svg"}}" width="144" height="48" alt="Download on the App Store"></a></p>
 
-  {{template "ad" (ad "incontent")}}
+  {{template "ad" (ad "incontent" .Ads)}}
 
   <h2>Tips for getting closer</h2>
   <ul>
@@ -52,6 +52,6 @@
 
   <p><a class="btn btn--primary" href="{{link "/"}}">Play now</a></p>
 
-  {{template "ad" (ad "footer")}}
+  {{template "ad" (ad "footer" .Ads)}}
 </div>
 {{end}}

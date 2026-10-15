@@ -55,7 +55,7 @@
 
     {{template "promo" "home"}}
 
-    {{template "ad" (ad "incontent")}}
+    {{template "ad" (ad "incontent" .Ads)}}
 
     <section class="steps" aria-labelledby="how-title">
       <h2 id="how-title">{{t "home.how_title"}}</h2>
@@ -90,11 +90,11 @@
       <a class="get-app" href="/get?src=compare" data-cta="compare">{{t "home.compare_cta"}}</a>
     </section>
 
-    {{template "ad" (ad "footer")}}
+    {{template "ad" (ad "footer" .Ads)}}
   </div>
 
   <aside class="home-side">
-    {{template "ad" (ad "sidebar")}}
+    {{template "ad" (ad "sidebar" .Ads)}}
   </aside>
 </div>
 {{end}}

@@ -29,6 +29,7 @@ type PageData struct {
 	Lang       i18n.Lang
 	Alternates []Alternate       // this page in every language, for hreflang and the picker
 	JS         map[string]string // app.js strings in this language
+	Ads        *AdRotation
 }
 
 // Alternate is one language version of the current page.
@@ -88,6 +89,7 @@ func (s *Server) pageData(c *gin.Context, l i18n.Lang, page, key string) PageDat
 		Alternates:  alts,
 		JS:          s.i18n.JS(l.Code),
 		Year:        time.Now().Year(),
+		Ads:         NewAdRotation(),
 		Site: SiteData{
 			BaseURL:       s.cfg.BaseURL,
 			AppStoreID:    s.cfg.AppStoreID,

@@ -622,6 +622,10 @@ kbd {
 .ad__label { display: block; font: 8px/1.6 var(--pixel); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
 /* AdSense marks a slot it couldn't fill; collapse it rather than leave a hole. */
 .ad:has(ins.adsbygoogle[data-ad-status="unfilled"]) { display: none; }
+/* House ad (see houseads.go). The inline style reserves its box before the
+   frame loads. Fixed units scroll inside the wrapper rather than pushing the
+   page sideways on a phone narrower than the unit. */
+.ad__house { display: flex; justify-content: center; max-width: 100%; margin-inline: auto; overflow-x: auto; }
 /* Development only: shows where a unit goes, at its real size, without a
    heavy box. Production renders nothing for unconfigured slots. */
 .ad--placeholder {

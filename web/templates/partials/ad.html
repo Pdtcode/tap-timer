@@ -1,17 +1,36 @@
 {{/*
-  Ad unit. Usage: {{template "ad" (ad "incontent")}}
+  Ad unit. Usage: {{template "ad" (ad "incontent" .Ads)}}
   Units are initialised by app.js only when visible, so a unit hidden by a
   media query never requests an ad. Keep units well away from tap targets:
   AdSense prohibits placements that invite accidental clicks.
+
+  House ads (internal/server/houseads.go) ride along as inert <template>s, one
+  per creative of every campaign targeting the slot. app.js picks the campaign
+  and a creative that suits the viewport and fits the slot, either right away
+  (no AdSense unit) or when AdSense reports the slot unfilled. Templates
+  download nothing until used.
 */}}
 {{define "ad"}}
-{{if .Enabled}}
-<aside class="ad ad--{{.Name}}" aria-label="{{t "ad.label"}}">
+{{if or .Enabled .House}}
+<aside class="ad ad--{{.Name}}" aria-label="{{t "ad.label"}}"{{if .House}} data-house{{end}}>
   <span class="ad__label">{{t "ad.label"}}</span>
+  {{if .Enabled}}
   <ins class="adsbygoogle" style="display:block"
        data-ad-client="{{.Client}}"
        data-ad-slot="{{.Slot}}"
        {{if eq .Name "sidebar"}}data-ad-format="vertical"{{else}}data-ad-format="auto" data-full-width-responsive="true"{{end}}></ins>
+  {{end}}
+  {{with .House}}{{range .Campaigns}}{{$id := .ID}}{{$title := .Title}}{{range .Frames}}
+  {{/* The creative supplies its own background, link and target: never wrap
+       it in an anchor or give it a border or background here. */}}
+  <template data-house-frame data-campaign="{{$id}}"{{if .Width}} data-width="{{.Width}}"{{end}}{{if .Viewport}} data-viewport="{{.Viewport}}"{{end}}>
+    <div class="ad__house" style="{{.BoxStyle}}">
+      <iframe src="{{.Src}}" title="{{$title}}" loading="lazy" scrolling="no"
+              {{if .Width}}width="{{.Width}}" height="{{.Height}}"{{end}}
+              style="border:0;display:block;{{.FrameStyle}}"></iframe>
+    </div>
+  </template>
+  {{end}}{{end}}{{end}}
 </aside>
 {{else if .Placeholder}}
 <aside class="ad ad--{{.Name}} ad--placeholder" aria-hidden="true">

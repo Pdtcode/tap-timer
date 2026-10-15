@@ -45,13 +45,21 @@ type App struct {
 
 // AdUnit is the data passed to the "ad" partial.
 type AdUnit struct {
-	Name        string
-	Client      string
-	Slot        string
+	Name   string
+	Client string
+	Slot   string
+	// House is our own campaigns for this slot (see houseads.go), or nil. One
+	// shows when AdSense is off for the slot, and app.js swaps one in when
+	// AdSense comes back unfilled.
+	House *HouseSlot
+	// HouseFirst reserves this slot for a house ad despite AdSense being
+	// available (HouseAdShare).
+	HouseFirst  bool
 	Placeholder bool // dev-only dashed box so layouts can be checked without AdSense
 }
 
-func (a AdUnit) Enabled() bool { return a.Client != "" && a.Slot != "" }
+// Enabled reports whether to render the AdSense unit.
+func (a AdUnit) Enabled() bool { return a.Client != "" && a.Slot != "" && !a.HouseFirst }
 
 // New returns just the handler (tests use this).
 func New(cfg config.Config) (*gin.Engine, error) {
@@ -176,11 +184,16 @@ func (s *Server) loadTemplates() error {
 		funcs := template.FuncMap{
 			"asset":       s.asset,
 			"appStoreURL": s.appStoreURL,
-			"ad": func(name string) AdUnit {
+			// Usage: (ad "incontent" .Ads). The slot count is per page view, so
+			// it comes from the page data rather than living here.
+			"ad": func(name string, r *AdRotation) AdUnit {
+				house := resolveHouseSlot(name, s.assetVersion)
 				return AdUnit{
 					Name:        name,
 					Client:      s.cfg.AdSenseClient,
 					Slot:        s.cfg.AdSlots[name],
+					House:       house,
+					HouseFirst:  house != nil && preemptWithHouseAd(r.next()),
 					Placeholder: !s.cfg.IsProduction(),
 				}
 			},

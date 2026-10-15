@@ -1528,12 +1528,78 @@
   // Hidden units (e.g. the desktop sidebar on a phone) are removed so AdSense
   // never tries to fill a zero-width slot.
   // ---------------------------------------------------------------------------
+  //
+  // House ads (our own campaigns, internal/server/houseads.go) wait in
+  // <template data-house-frame>s. They fill a slot with no AdSense unit, and
+  // take over a slot AdSense reports unfilled.
+  //
+  // Campaigns rotate over the slots actually SHOWN, which only the browser
+  // knows: counting hidden slots too put both visible slots on a wide screen
+  // on the same campaign. The count starts at random so a page's few slots
+  // don't open on the same campaign every visit.
+  // ---------------------------------------------------------------------------
+  const PHONE = window.matchMedia('(max-width: 559px)');
+  let houseTurn = Math.floor(Math.random() * 1000);
+  const houseSeen = new Map(); // campaign id -> its appearances on this page
+
+  // Insert a creative that suits this viewport and fits the slot. The check
+  // happens before insertion because a hidden iframe still downloads its
+  // creative in full. Returns false when nothing fits.
+  function showHouseAd(ad) {
+    const viewport = PHONE.matches ? 'mobile' : 'desktop';
+    const room = ad.clientWidth;
+    const fits = (t) =>
+      (!t.dataset.viewport || t.dataset.viewport === viewport) &&
+      (!t.dataset.width || Number(t.dataset.width) <= room);
+
+    const campaigns = new Map();
+    ad.querySelectorAll('template[data-house-frame]').forEach((t) => {
+      const id = t.dataset.campaign;
+      if (!campaigns.has(id)) campaigns.set(id, []);
+      campaigns.get(id).push(t);
+    });
+    const ids = [...campaigns.keys()];
+
+    // This turn's campaign first, then the others, so a slot only goes empty
+    // when nothing at all fits it.
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[(houseTurn + i) % ids.length];
+      const frames = campaigns.get(id);
+      // Each campaign cycles its own sizes per appearance, so the same box
+      // doesn't repeat: A₁ B₁ A₂ B₂ …
+      const seen = houseSeen.get(id) ?? Math.floor(Math.random() * frames.length);
+      for (let j = 0; j < frames.length; j++) {
+        const t = frames[(seen + j) % frames.length];
+        if (!fits(t)) continue;
+        ad.append(t.content.cloneNode(true));
+        houseSeen.set(id, seen + 1);
+        houseTurn += 1;
+        return true;
+      }
+    }
+    return false;
+  }
+
   function initAds() {
-    const units = document.querySelectorAll('ins.adsbygoogle:not([data-adsbygoogle-status])');
-    units.forEach((ins) => {
-      if (ins.offsetWidth === 0) {
-        ins.closest('.ad')?.remove();
+    document.querySelectorAll('.ad:not(.ad--placeholder)').forEach((ad) => {
+      if (ad.offsetWidth === 0) {
+        ad.remove();
         return;
+      }
+      const ins = ad.querySelector('ins.adsbygoogle:not([data-adsbygoogle-status])');
+      if (!ins) {
+        if (ad.hasAttribute('data-house') && !showHouseAd(ad)) ad.remove();
+        return;
+      }
+      if (ad.hasAttribute('data-house')) {
+        // Unsold inventory goes to our own campaigns instead of collapsing.
+        const mo = new MutationObserver(() => {
+          if (ins.dataset.adStatus !== 'unfilled') return;
+          mo.disconnect();
+          ins.remove();
+          if (!showHouseAd(ad)) ad.remove();
+        });
+        mo.observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] });
       }
       try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch { /* blocked */ }
     });
