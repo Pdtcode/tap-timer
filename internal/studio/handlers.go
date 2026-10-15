@@ -138,9 +138,10 @@ func (s *Studio) dashboard(c *gin.Context) {
 // postForm is what the post form (on New post and Record) needs.
 func (s *Studio) postForm(c *gin.Context, title string) gin.H {
 	// {link} is filled in here; the page fills {title} as you type.
+	site := strings.TrimPrefix(strings.TrimPrefix(s.cfg.BaseURL, "https://"), "http://")
 	captions := map[string]string{}
 	for _, p := range s.platforms {
-		captions[p.Name()] = strings.ReplaceAll(defaultTemplates[p.Name()], "{link}", s.bioLink(p))
+		captions[p.Name()] = strings.ReplaceAll(defaultTemplates[p.Name()], "{link}", site)
 	}
 	return gin.H{
 		"Title":     title,

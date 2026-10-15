@@ -25,7 +25,8 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html { background: var(--bg); }
+/* clip, not hidden: no sideways scroll, and the sticky header keeps working. */
+html { background: var(--bg); overflow-x: clip; }
 body.studio {
   margin: 0;
   min-height: 100dvh;
@@ -33,6 +34,8 @@ body.studio {
   color: var(--text);
   font: 16px/1.45 var(--sans);
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
+  overflow-wrap: anywhere; /* long links and error messages wrap, not widen the page */
 }
 a { color: var(--accent); }
 code { font-size: 0.85em; word-break: break-all; }
@@ -65,6 +68,10 @@ h2 { font-size: 1.05rem; }
   padding: 16px;
 }
 .st-card form, form.st-card { display: grid; gap: 14px; }
+/* Grid items and fieldsets default to "never narrower than my content", so
+   one long line can push a card past the screen edge. Let them shrink. */
+.st-main > *, form.st-card > *, .st-target > * { min-width: 0; }
+input, textarea, video, select { max-width: 100%; }
 .st-muted { color: var(--muted); margin: 4px 0 0; font-size: 0.92rem; }
 .st-error { color: var(--bad); margin: 4px 0 0; }
 .st-flash { color: var(--ok); margin: 0 0 12px; }
@@ -125,9 +132,9 @@ input:focus-visible, textarea:focus-visible, .st-btn:focus-visible { outline: 2p
 .st-conn__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 
 /* New post */
-.st-file input { font: inherit; color: var(--muted); }
+.st-file input { font: inherit; color: var(--muted); width: 100%; }
 .st-preview { width: min(100%, 240px); aspect-ratio: 9 / 16; border-radius: 12px; background: #000; justify-self: center; }
-.st-target { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px 12px; margin: 0; display: grid; gap: 8px; }
+.st-target { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px 12px; margin: 0; display: grid; gap: 8px; min-width: 0; min-inline-size: 0; }
 .st-target[disabled] { opacity: 0.55; }
 .st-target legend { display: flex; gap: 10px; align-items: center; padding: 0 4px; }
 .st-check { display: flex; align-items: center; gap: 8px; }
