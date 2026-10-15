@@ -58,6 +58,7 @@ type Studio struct {
 	YouTubeClientSecret string
 	MetaAppID           string // Meta developer app with Facebook Login for Business
 	MetaAppSecret       string
+	MetaLoginConfigID   string // optional: the Facebook Login for Business configuration to sign in with
 	TikTokClientKey     string // TikTok for Developers app with the Content Posting API
 	TikTokClientSecret  string
 
@@ -98,6 +99,7 @@ func Load() (Config, error) {
 			YouTubeClientSecret: os.Getenv("YOUTUBE_CLIENT_SECRET"),
 			MetaAppID:           os.Getenv("META_APP_ID"),
 			MetaAppSecret:       os.Getenv("META_APP_SECRET"),
+			MetaLoginConfigID:   os.Getenv("META_LOGIN_CONFIG_ID"),
 			TikTokClientKey:     os.Getenv("TIKTOK_CLIENT_KEY"),
 			TikTokClientSecret:  os.Getenv("TIKTOK_CLIENT_SECRET"),
 			Tokens:              map[string]string{},

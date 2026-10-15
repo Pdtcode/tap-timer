@@ -58,8 +58,9 @@ type Post struct {
 
 // Account is who a token belongs to, shown on the Accounts page.
 type Account struct {
-	ID     string
-	Handle string
+	ID      string
+	Handle  string
+	Expires time.Time // when the saved login stops working; zero if it doesn't
 }
 
 type Platform interface {
@@ -90,6 +91,8 @@ type Platform interface {
 // Credentials are a developer app's id and secret.
 type Credentials struct {
 	ID, Secret string
+	// LoginConfig is Instagram's Facebook Login for Business configuration id (optional).
+	LoginConfig string
 }
 
 // All returns the three platforms in display order.

@@ -3,13 +3,14 @@
   <h1>Accounts</h1>
   {{with .Flash}}<p class="st-flash" role="status">{{.}}</p>{{end}}
   <ul class="st-conns">
-    {{range .Platforms}}
+    {{range $p := .Platforms}}
     <li class="st-conn">
       <div class="st-conn__head">
         <strong>{{.Label}}</strong>
         {{if .Connected}}<span class="st-pill is-ok">{{with .Handle}}{{.}}{{else}}Connected{{end}}</span>{{end}}
       </div>
       {{with .Error}}<p class="st-error">{{.}}</p>{{end}}
+      {{with .Expires}}<p class="{{if $p.ExpiresSoon}}st-error{{else}}st-muted{{end}}">Login ends {{.}}: reconnect and save it again before then.</p>{{end}}
       {{if and .Connected (not .Saved)}}
         <p class="st-error">Not saved: this login is forgotten when the server restarts. Connect again and save the secret it shows.</p>
       {{end}}

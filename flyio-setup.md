@@ -141,7 +141,9 @@ grep -E '^YOUTUBE_CLIENT_(ID|SECRET)=' .env | fly secrets import --stage
 | `STUDIO_SECRET` | 32+ random characters; signs the login cookie. Required in production (locally it may be empty: a random one per run). Changing it signs you out |
 | `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET` | The Google OAuth client |
 | `YOUTUBE_REFRESH_TOKEN` | The saved YouTube login. After you connect, the studio shows the `fly secrets set` command to run |
-| `META_APP_ID`, `META_APP_SECRET`, `INSTAGRAM_ACCESS_TOKEN`, `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REFRESH_TOKEN` | For Instagram and TikTok, once they're built (stubs today) |
+| `META_APP_ID`, `META_APP_SECRET`, `META_LOGIN_CONFIG_ID` (optional) | The Meta app for Instagram |
+| `INSTAGRAM_ACCESS_TOKEN` | The saved Instagram login (about 60 days; the studio shows the date) |
+| `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REFRESH_TOKEN` | For TikTok, once it's built (stub today) |
 
 Set on `tap-timer` today: `STUDIO_PASSWORD`, `STUDIO_SECRET`, `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, plus a stray lowercase `base_url` the app ignores (`fly secrets unset base_url`). Full setup: `doc/studio.md`.
 

@@ -68,7 +68,7 @@ func New(cfg config.Config, funcs template.FuncMap) (*Studio, error) {
 		signer: newSigner(sc.Secret),
 		platforms: platform.All(
 			platform.Credentials{ID: sc.YouTubeClientID, Secret: sc.YouTubeClientSecret},
-			platform.Credentials{ID: sc.MetaAppID, Secret: sc.MetaAppSecret},
+			platform.Credentials{ID: sc.MetaAppID, Secret: sc.MetaAppSecret, LoginConfig: sc.MetaLoginConfigID},
 			platform.Credentials{ID: sc.TikTokClientKey, Secret: sc.TikTokClientSecret},
 		),
 		conns:      map[string]*conn{},

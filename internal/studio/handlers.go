@@ -84,6 +84,8 @@ type platformView struct {
 	Saved                          bool // survives restarts
 	Handle                         string
 	Error                          string
+	Expires                        string // when a login that runs out does, e.g. "Dec 14"
+	ExpiresSoon                    bool   // within a week: reconnect now
 }
 
 func (s *Studio) platformViews(c *gin.Context, errs map[string]string) []platformView {
@@ -102,6 +104,10 @@ func (s *Studio) platformViews(c *gin.Context, errs map[string]string) []platfor
 			switch {
 			case err == nil && acct != nil:
 				v.Handle = acct.Handle
+				if !acct.Expires.IsZero() {
+					v.Expires = acct.Expires.In(s.loc).Format("Jan 2")
+					v.ExpiresSoon = time.Until(acct.Expires) < 7*24*time.Hour
+				}
 			case err != nil && !errors.Is(err, platform.ErrNotImplemented) && v.Error == "":
 				v.Error = err.Error()
 			}
