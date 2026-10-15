@@ -204,7 +204,7 @@ func TestAdUnits(t *testing.T) {
 
 func TestHouseAdSlots(t *testing.T) {
 	// Every campaign targeting the slot is sent, with all its creatives, so
-	// app.js can rotate over the slots actually shown and fall back to a size
+	// app.js can rotate over the slots actually shown and pick the first size
 	// that fits. Local creatives carry the asset version; remote ones don't.
 	hs := resolveHouseSlot("sidebar", "abc")
 	var got []string
@@ -216,8 +216,7 @@ func TestHouseAdSlots(t *testing.T) {
 	want := []string{
 		"grail-seekers /static/gs-banner.html?size=300x600&theme=dark&v=abc",
 		"grail-seekers /static/gs-banner.html?size=300x250&theme=dark&v=abc",
-		"han-jan-pocha " + hanJanSrc("square"),
-		"han-jan-pocha " + hanJanSrc("rect"),
+		"han-jan-pocha " + hanJanSrc("halfpage"),
 	}
 	if strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Errorf("sidebar creatives:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))

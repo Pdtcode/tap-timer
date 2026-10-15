@@ -116,9 +116,10 @@ var houseAds = []HouseAd{
 				{Src: hanJanSrc("leaderboard"), Width: 728, Height: 90, Viewport: "desktop"},
 				{Src: hanJanSrc("strip"), AspectRatio: "16 / 5", MaxWidth: 560},
 			},
+			// halfpage is the creative's 300x600 sidebar layout; the square
+			// looked lost in the tall column.
 			"sidebar": {
-				{Src: hanJanSrc("square"), AspectRatio: "1 / 1", MaxWidth: 300},
-				{Src: hanJanSrc("rect"), Width: 300, Height: 250},
+				{Src: hanJanSrc("halfpage"), Width: 300, Height: 600},
 			},
 		},
 	},
